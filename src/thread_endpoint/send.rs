@@ -1,0 +1,79 @@
+use crossbeam_channel::Sender;
+
+use crate::{
+    element::Element, sender_couplet::SenderCouplet, thread_request::ThreadRequest,
+    thread_response::ThreadResponse,
+};
+
+use super::ThreadEndpoint;
+
+impl<E> ThreadEndpoint<E>
+where
+    E: Element,
+{
+    pub fn send<T>(&self, sender: &Sender<ThreadResponse<E::Response>>, request: T)
+    where
+        T: Into<ThreadRequest<E::Request>>,
+    {
+        self.sender
+            .send(SenderCouplet::<E>::new(sender.clone(), request.into()))
+            .expect("The receiver thread to always be available");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::thread::spawn;
+
+    use crossbeam_channel::unbounded;
+
+    use crate::{
+        samples::randoms::{
+            randoms_request::RandomsRequest, randoms_response::RandomsResponse, Randoms,
+        },
+        sender_couplet::SenderCouplet,
+        thread_endpoint::ThreadEndpoint,
+        thread_request::ThreadRequest,
+        thread_response::ThreadResponse,
+    };
+
+    #[test]
+    fn pass_echo_message_through_echo_message_received_at_other_end_of_channel() {
+        let echo_request = ThreadRequest::<RandomsRequest>::ThreadEcho(0, "hello".to_string());
+
+        // create a thread (which instantly terminates) purely for its join_handle
+        let join_handle = spawn(|| 1);
+
+        // create channels to send and receive responses
+        let (to_thread_sender, receiver_from_endpoint) = unbounded::<SenderCouplet<Randoms>>();
+        let (to_endpoint, from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+
+        let target = ThreadEndpoint {
+            sender: to_thread_sender,
+            join_handle: join_handle,
+        };
+
+        // call send
+        target.send(&to_endpoint, echo_request.clone());
+
+        // get the message sent
+        let sender_couplet = receiver_from_endpoint.recv().unwrap();
+
+        // confirm that it is in the expected form; it is difficult to confirm the correct sender was sent
+        assert_eq!(sender_couplet.get_thread_request(), &echo_request);
+
+        // create and send a response message
+        let response = ThreadResponse::<RandomsResponse>::ThreadEcho(0, 0, "hello".to_string());
+        sender_couplet
+            .get_return_to()
+            .send(response.clone())
+            .unwrap();
+        let response_result = from_thread.recv().unwrap();
+
+        // confirm that the message received is as expected
+        assert_eq!(response_result, response);
+
+        // join back to the thread
+        target.join_handle.join().unwrap();
+    }
+}
