@@ -4,7 +4,9 @@ pub mod randoms_batch_request;
 pub mod randoms_batch_response;
 
 use self::{
-    randoms_batch_request::{init_request::InitRequest, RandomsBatchRequest},
+    randoms_batch_request::{
+        randoms_batch_init_request::RandomsBatchInitRequest, RandomsBatchRequest,
+    },
     randoms_batch_response::RandomsBatchResponse,
 };
 use crate::{
@@ -14,8 +16,8 @@ use crate::{
         randoms_request::sum_request::SumRequest, randoms_response::sum_response::SumResponse,
         Randoms,
     },
-    thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
-    thread_shutdown_response::ThreadShutdownResponse,
+    thread_pool_batcher::ThreadPoolBatcherConcrete,
+    thread_response::ThreadShutdownResponse,
 };
 
 /// An example of an element that contains a child thread pool
@@ -32,10 +34,10 @@ pub struct RandomsBatch {
 
 impl RandomsBatch {
     pub fn new_from_init_request(
-        init_request: InitRequest,
+        init_request: RandomsBatchInitRequest,
         randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
     ) -> Self {
-        let InitRequest {
+        let RandomsBatchInitRequest {
             id,
             number_of_contained_randoms: _,
             thread_pool_size: _,

@@ -1,4 +1,4 @@
-use crate::{id_targeted::IdTargeted, thread_shutdown_response::ThreadShutdownResponse};
+use crate::id_targeted::IdTargeted;
 
 /// This enum represents a response returned from a PoolThread
 ///
@@ -31,13 +31,53 @@ where
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct ThreadShutdownResponse {
+    id: u64,
+    children: Vec<ThreadShutdownResponse>,
+}
+
+impl ThreadShutdownResponse {
+    pub fn new(id: u64, children: Vec<ThreadShutdownResponse>) -> Self {
+        Self { id, children }
+    }
+
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
+    pub fn children(&self) -> &[ThreadShutdownResponse] {
+        self.children.as_ref()
+    }
+
+    pub fn take_children(self) -> Vec<ThreadShutdownResponse> {
+        self.children
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{
-        id_targeted::IdTargeted, samples::*, thread_shutdown_response::ThreadShutdownResponse,
-    };
+    use crate::{id_targeted::IdTargeted, samples::*, thread_response::ThreadShutdownResponse};
 
     use super::ThreadResponse;
+
+    #[test]
+    fn children_non_empty_take_takes_vec() {
+        let children = vec![ThreadShutdownResponse::new(10, vec![])];
+        let target = ThreadShutdownResponse::new(1, children.clone());
+
+        assert_eq!(children, target.take_children());
+    }
+
+    #[test]
+    fn children_empty_take_takes_empty_vec() {
+        let target = ThreadShutdownResponse::new(1, vec![]);
+
+        assert_eq!(
+            Vec::<ThreadShutdownResponse>::default(),
+            target.take_children()
+        );
+    }
 
     #[test]
     fn thread_abort_targets_id_2_get_id_returns_2() {
@@ -56,7 +96,7 @@ mod tests {
     #[test]
     fn element_response_from_id_2_get_id_returns_2() {
         let target = ThreadResponse::<RandomsResponse>::ElementResponse(RandomsResponse::Init(
-            InitResponse { id: 2 },
+            randoms_init_response::RandomsInitResponse { id: 2 },
         ));
 
         assert_eq!(2, target.get_id());

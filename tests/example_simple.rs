@@ -1,6 +1,6 @@
 use messaging_thread_pool::{
     samples::*,
-    thread_pool_batcher::{basic_thread_pool_batcher::BasicThreadPoolBatcher, ThreadPoolBatcher},
+    thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request::ThreadRequest,
     thread_response::ThreadResponse,
 };
@@ -13,13 +13,13 @@ pub fn example_simple_one_level_thread_pool() {
 
     // create a 1000 requests to create 'Randoms'
     for i in 0..1000 {
-        thread_pool_batcher.batch_for_send(InitRequest { id: i });
+        thread_pool_batcher.batch_for_send(randoms_init_request::RandomsInitRequest { id: i });
     }
     // Send the request to create the 1000 Randoms. Each Randoms will be stored on the
     // thread where it is created
     // They will be assigned to one of the 4 threads based on their ids; [thread = id % 4]
     // This call will block until all 1000 Randoms have been created; the work will be spread across all 4 threads
-    let _: Vec<InitResponse> = thread_pool_batcher.send_batch();
+    let _: Vec<randoms_init_response::RandomsInitResponse> = thread_pool_batcher.send_batch();
 
     // now create 1000 messages asking them for the sum of their contained random numbers
     for i in 0..1000 {
@@ -48,7 +48,7 @@ pub fn example_simple_one_level_thread_pool() {
 
     // add a new element with id 1000
     let responses = thread_pool_batcher
-        .batch_for_send(InitRequest { id: 1000 })
+        .batch_for_send(randoms_init_request::RandomsInitRequest { id: 1000 })
         .send_batch::<ThreadResponse<RandomsResponse>>();
     println!("{:?}", responses);
 

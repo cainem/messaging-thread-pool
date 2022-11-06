@@ -1,4 +1,4 @@
-use crate::{element::Element, thread_shutdown_response::ThreadShutdownResponse};
+use crate::{element::Element, thread_response::ThreadShutdownResponse};
 
 use super::PoolThread;
 
@@ -24,8 +24,10 @@ mod tests {
     use crossbeam_channel::{bounded, unbounded};
 
     use crate::{
-        pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
-        thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse,
+        pool_thread::PoolThread,
+        samples::*,
+        sender_couplet::SenderCouplet,
+        thread_response::{ThreadResponse, ThreadShutdownResponse},
     };
 
     #[test]

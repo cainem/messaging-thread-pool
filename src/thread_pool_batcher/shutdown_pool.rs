@@ -1,4 +1,4 @@
-use crate::{element::Element, thread_shutdown_response::ThreadShutdownResponse};
+use crate::{element::Element, thread_response::ThreadShutdownResponse};
 
 use super::ThreadPoolBatcherConcrete;
 
@@ -23,8 +23,10 @@ mod tests {
     use std::sync::Arc;
 
     use crate::{
-        samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, thread_request::ThreadRequest,
-        thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse,
+        samples::*,
+        thread_pool_batcher::ThreadPoolBatcherConcrete,
+        thread_request::ThreadRequest,
+        thread_response::{ThreadResponse, ThreadShutdownResponse},
         ThreadPool,
     };
 

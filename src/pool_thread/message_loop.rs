@@ -1,8 +1,10 @@
 use tracing::{event, instrument, Level};
 
 use crate::{
-    element::Element, id_targeted::IdTargeted, thread_request::ThreadRequest,
-    thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse,
+    element::Element,
+    id_targeted::IdTargeted,
+    thread_request::ThreadRequest,
+    thread_response::{ThreadResponse, ThreadShutdownResponse},
 };
 
 use super::PoolThread;
@@ -143,15 +145,17 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
-        thread_request::ThreadRequest, thread_response::ThreadResponse,
-        thread_shutdown_response::ThreadShutdownResponse,
+        pool_thread::PoolThread,
+        samples::*,
+        sender_couplet::SenderCouplet,
+        thread_request::ThreadRequest,
+        thread_response::{ThreadResponse, ThreadShutdownResponse},
     };
 
     #[test]
     fn send_remove_element_with_id_12_expected_element_removed_from_hash_set() {
         let id = 12;
-        let init_request = InitRequest { id };
+        let init_request = randoms_init_request::RandomsInitRequest { id };
 
         let remove_element_request = ThreadRequest::RemoveElement(id);
 
@@ -199,7 +203,7 @@ mod tests {
     #[test]
     fn send_remove_element_with_id_2_expected_element_removed_from_hash_set() {
         let id = 2;
-        let init_request = InitRequest { id };
+        let init_request = randoms_init_request::RandomsInitRequest { id };
 
         let remove_element_request = ThreadRequest::RemoveElement(id);
 
@@ -246,8 +250,8 @@ mod tests {
 
     #[test]
     fn init_id_1_2_thread_shutdown_clears_the_elements_returns_expected_shutdown_threads() {
-        let init_request_0 = InitRequest { id: 1 };
-        let init_request_1 = InitRequest { id: 2 };
+        let init_request_0 = randoms_init_request::RandomsInitRequest { id: 1 };
+        let init_request_1 = randoms_init_request::RandomsInitRequest { id: 2 };
 
         let (response_send, response_receive) = unbounded::<ThreadResponse<RandomsResponse>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
@@ -302,8 +306,8 @@ mod tests {
 
     #[test]
     fn init_id_101_102_thread_shutdown_clears_the_elements_returns_expected_shutdown_threads() {
-        let init_request_0 = InitRequest { id: 101 };
-        let init_request_1 = InitRequest { id: 102 };
+        let init_request_0 = randoms_init_request::RandomsInitRequest { id: 101 };
+        let init_request_1 = randoms_init_request::RandomsInitRequest { id: 102 };
 
         let (response_send, response_receive) = unbounded::<ThreadResponse<RandomsResponse>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
@@ -359,8 +363,8 @@ mod tests {
     #[test]
     fn init_id_101_send_get_state_message_to_element_retrieved_expected_response() {
         let id = 101;
-        let init_request = InitRequest { id };
-        let get_state_request = SumRequest { id: 101 };
+        let init_request = randoms_init_request::RandomsInitRequest { id };
+        let get_state_request = sum_request::SumRequest { id: 101 };
 
         let (response_send, response_receive) = unbounded::<ThreadResponse<RandomsResponse>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
@@ -404,7 +408,7 @@ mod tests {
     #[test]
     fn send_init_id_2_expected_element_added_to_hash_set() {
         let id = 2;
-        let init_request = InitRequest { id };
+        let init_request = randoms_init_request::RandomsInitRequest { id };
 
         let (response_send, response_receive) = unbounded::<ThreadResponse<RandomsResponse>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
@@ -441,7 +445,7 @@ mod tests {
     #[test]
     fn send_init_id_1_expected_element_added_to_hash_set() {
         let id = 1;
-        let init_request = InitRequest { id };
+        let init_request = randoms_init_request::RandomsInitRequest { id };
 
         let (response_send, response_receive) = unbounded::<ThreadResponse<RandomsResponse>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();

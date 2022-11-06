@@ -1,18 +1,23 @@
-pub mod basic_thread_pool_batcher;
-pub mod batch_for_send;
-pub mod send_batch;
-pub mod shutdown_pool;
-pub mod thread_pool_batcher_concrete;
-pub mod thread_pool_batcher_mock;
+mod basic_thread_pool_batcher;
+mod batch_for_send;
+mod send_batch;
+mod shutdown_pool;
+mod thread_pool_batcher_concrete;
+mod thread_pool_batcher_mock;
+
+pub use basic_thread_pool_batcher::*;
+pub use thread_pool_batcher_concrete::ThreadPoolBatcherConcrete;
+pub use thread_pool_batcher_mock::ThreadPoolBatcherMock;
 
 use std::{num::NonZeroUsize, sync::Weak};
 
 use crate::{
-    element::Element, id_targeted::IdTargeted, thread_request::ThreadRequest,
-    thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse, ThreadPool,
+    element::Element,
+    id_targeted::IdTargeted,
+    thread_request::ThreadRequest,
+    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    ThreadPool,
 };
-
-use self::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete;
 
 /// This trait defines the interface of a ThreadPoolBatcher
 /// Doing this allows for the interface to the thread pool to be easily mocked
@@ -84,8 +89,7 @@ mod tests {
         samples::*,
         thread_pool_batcher::{ThreadPoolBatcher, ThreadPoolBatcherConcrete},
         thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        thread_shutdown_response::ThreadShutdownResponse,
+        thread_response::{ThreadResponse, ThreadShutdownResponse},
         ThreadPool,
     };
 

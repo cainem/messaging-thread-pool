@@ -1,13 +1,15 @@
 use crate::id_targeted::IdTargeted;
 
-use self::{init_response::InitResponse, sum_of_sums_response::SumOfSumsResponse};
+use self::{
+    randoms_batch_init_response::RandomsBatchInitResponse, sum_of_sums_response::SumOfSumsResponse,
+};
 
-pub mod init_response;
+pub mod randoms_batch_init_response;
 pub mod sum_of_sums_response;
 
 #[derive(Debug)]
 pub enum RandomsBatchResponse {
-    Init(InitResponse),
+    Init(RandomsBatchInitResponse),
     SumOfSums(SumOfSumsResponse),
 }
 
