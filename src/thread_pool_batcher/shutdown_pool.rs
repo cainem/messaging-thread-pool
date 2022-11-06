@@ -23,11 +23,8 @@ mod tests {
     use std::sync::Arc;
 
     use crate::{
-        samples::randoms::{randoms_response::RandomsResponse, Randoms},
-        thread_pool_batcher::ThreadPoolBatcherConcrete,
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        thread_shutdown_response::ThreadShutdownResponse,
+        samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, thread_request::ThreadRequest,
+        thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse,
         ThreadPool,
     };
 

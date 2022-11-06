@@ -2,13 +2,7 @@ use std::sync::Arc;
 
 use messaging_thread_pool::{
     id_provider::{id_provider_mutex::IdProviderMutex, sized_id_provider::SizedIdProvider},
-    samples::randoms_batch::{
-        randoms_batch_request::{init_request::InitRequest, sum_of_sums_request::SumOfSumsRequest},
-        randoms_batch_response::{
-            init_response::InitResponse, sum_of_sums_response::SumOfSumsResponse,
-        },
-        RandomsBatch,
-    },
+    samples::*,
     thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
     ThreadPool,
 };
@@ -53,10 +47,10 @@ pub fn example_random_batches_() {
 
     // send 10 requests for the sum of sums
     for i in 0..10 {
-        thread_pool_batcher.batch_for_send(SumOfSumsRequest { id: i % 10 });
+        thread_pool_batcher.batch_for_send(sum_of_sums_request::SumOfSumsRequest { id: i % 10 });
     }
     // this call distributes the work across the thread pool and blocks until all of the work is done
-    let means: Vec<SumOfSumsResponse> = thread_pool_batcher.send_batch();
+    let means: Vec<sum_of_sums_response::SumOfSumsResponse> = thread_pool_batcher.send_batch();
 
     dbg!(means);
 }

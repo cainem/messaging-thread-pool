@@ -39,14 +39,7 @@ mod tests {
     use std::cell::RefCell;
 
     use crate::{
-        samples::randoms::{
-            randoms_request::init_request::InitRequest,
-            randoms_response::{init_response::InitResponse, RandomsResponse},
-            Randoms,
-        },
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        ThreadPool,
+        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
     };
 
     #[test]

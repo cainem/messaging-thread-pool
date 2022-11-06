@@ -27,14 +27,8 @@ mod tests {
     use std::sync::Arc;
 
     use crate::{
-        samples::randoms::{
-            randoms_response::{mean_response::MeanResponse, RandomsResponse},
-            Randoms,
-        },
-        thread_pool_batcher::ThreadPoolBatcherConcrete,
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        ThreadPool,
+        samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, thread_request::ThreadRequest,
+        thread_response::ThreadResponse, ThreadPool,
     };
 
     #[test]
@@ -61,7 +55,7 @@ mod tests {
 
         let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        let result: Vec<MeanResponse> = target.send_batch();
+        let result: Vec<mean_response::MeanResponse> = target.send_batch();
 
         assert!(result.is_empty());
     }

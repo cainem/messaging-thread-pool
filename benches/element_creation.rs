@@ -2,11 +2,7 @@ use std::sync::Arc;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use messaging_thread_pool::{
-    samples::randoms::{
-        randoms_request::init_request::InitRequest, randoms_response::init_response::InitResponse,
-        Randoms,
-    },
-    thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
+    samples::*, thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
     ThreadPool,
 };
 

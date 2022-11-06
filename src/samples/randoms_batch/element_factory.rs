@@ -4,10 +4,8 @@ use once_cell::sync::OnceCell;
 
 use crate::{
     element::element_factory::ElementFactory,
-    samples::{
-        id_provider_static::IdProviderStatic,
-        randoms::{randoms_request, randoms_response, Randoms},
-    },
+    id_provider::IdProvider,
+    samples::randoms::{randoms_request, randoms_response, Randoms},
     thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
     ThreadPool,
 };
@@ -49,14 +47,11 @@ impl ElementFactory<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatch 
                 randoms_thread_pool_batcher,
             );
 
-            // the mechanism for providing the unique ids will also need to be shared amongst all of the RandomBatches
-            let id_provider = IdProviderStatic;
-
             // create the randoms that are controlled by the RandomBatches
             for _ in 0..init_request.number_of_contained_randoms {
                 random_batches.randoms_thread_pool_batcher().batch_for_send(
                     randoms_request::init_request::InitRequest {
-                        id: id_provider.get_next_id(),
+                        id: random_batches.id_provider.get_next_id(),
                     },
                 );
             }

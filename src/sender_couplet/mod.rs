@@ -38,13 +38,7 @@ where
 mod tests {
     use crossbeam_channel::unbounded;
 
-    use crate::{
-        samples::randoms::{
-            randoms_request::RandomsRequest, randoms_response::RandomsResponse, Randoms,
-        },
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-    };
+    use crate::{samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse};
 
     use super::SenderCouplet;
 

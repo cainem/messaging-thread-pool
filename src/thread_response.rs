@@ -34,11 +34,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        id_targeted::IdTargeted,
-        samples::randoms::randoms_response::{
-            init_response::InitResponse, sum_response::SumResponse, RandomsResponse,
-        },
-        thread_shutdown_response::ThreadShutdownResponse,
+        id_targeted::IdTargeted, samples::*, thread_shutdown_response::ThreadShutdownResponse,
     };
 
     use super::ThreadResponse;
@@ -68,11 +64,9 @@ mod tests {
 
     #[test]
     fn element_response_from_id_1_get_id_returns_1() {
-        let target =
-            ThreadResponse::<RandomsResponse>::ElementResponse(RandomsResponse::Sum(SumResponse {
-                id: 1,
-                sum: 5,
-            }));
+        let target = ThreadResponse::<RandomsResponse>::ElementResponse(RandomsResponse::Sum(
+            sum_response::SumResponse { id: 1, sum: 5 },
+        ));
 
         assert_eq!(1, target.get_id());
     }

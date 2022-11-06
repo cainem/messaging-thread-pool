@@ -24,11 +24,8 @@ mod tests {
     use crossbeam_channel::{bounded, unbounded};
 
     use crate::{
-        pool_thread::PoolThread,
-        samples::randoms::{randoms_response::RandomsResponse, Randoms},
-        sender_couplet::SenderCouplet,
-        thread_response::ThreadResponse,
-        thread_shutdown_response::ThreadShutdownResponse,
+        pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
+        thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse,
     };
 
     #[test]

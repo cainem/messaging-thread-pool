@@ -23,12 +23,7 @@ mod tests {
     use std::sync::Arc;
 
     use crate::{
-        samples::randoms::{
-            randoms_request::{mean_request::MeanRequest, RandomsRequest},
-            Randoms,
-        },
-        thread_pool_batcher::ThreadPoolBatcherConcrete,
-        thread_request::ThreadRequest,
+        samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, thread_request::ThreadRequest,
         ThreadPool,
     };
 
@@ -37,7 +32,7 @@ mod tests {
         let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
         let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        let request = MeanRequest { id: 1 };
+        let request = mean_request::MeanRequest { id: 1 };
         target.batch_for_send(request.clone());
 
         assert_eq!(1, target.to_send().borrow().len());

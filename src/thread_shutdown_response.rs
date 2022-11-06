@@ -31,10 +31,7 @@ mod tests {
         let children = vec![ThreadShutdownResponse::new(10, vec![])];
         let target = ThreadShutdownResponse::new(1, children.clone());
 
-        assert_eq!(
-            children,
-            target.take_children()
-        );
+        assert_eq!(children, target.take_children());
     }
 
     #[test]

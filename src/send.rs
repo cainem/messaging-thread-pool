@@ -50,10 +50,7 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        samples::randoms::{randoms_response::RandomsResponse, Randoms},
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        ThreadPool,
+        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
     };
 
     #[test]

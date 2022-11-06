@@ -43,7 +43,7 @@ where
 mod tests {
     use std::sync::{Arc, Weak};
 
-    use crate::{samples::randoms::Randoms, ThreadPool};
+    use crate::{samples::*, ThreadPool};
 
     use super::ThreadPoolBatcherConcrete;
 

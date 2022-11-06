@@ -49,14 +49,7 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        samples::randoms::{
-            randoms_request::init_request::InitRequest,
-            randoms_response::{init_response::InitResponse, RandomsResponse},
-            Randoms,
-        },
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        ThreadPool,
+        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
     };
     #[test]
     fn three_init_requests_two_thread_received_three_responses_received() {

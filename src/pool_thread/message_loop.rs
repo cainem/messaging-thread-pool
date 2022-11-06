@@ -143,15 +143,8 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        pool_thread::PoolThread,
-        samples::randoms::{
-            randoms_request::{init_request::InitRequest, sum_request::SumRequest, RandomsRequest},
-            randoms_response::RandomsResponse,
-            Randoms,
-        },
-        sender_couplet::SenderCouplet,
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
+        pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
+        thread_request::ThreadRequest, thread_response::ThreadResponse,
         thread_shutdown_response::ThreadShutdownResponse,
     };
 
