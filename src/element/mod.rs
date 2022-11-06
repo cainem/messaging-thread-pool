@@ -2,7 +2,7 @@ pub mod element_factory;
 pub mod element_tracing;
 pub mod message_processor;
 
-use crate::{id_targeted::IdTargeted, thread_shutdown_response::ThreadShutdownResponse};
+use crate::{id_targeted::IdTargeted, thread_response::ThreadShutdownResponse};
 
 use self::{
     element_factory::ElementFactory, element_tracing::ElementTracing,

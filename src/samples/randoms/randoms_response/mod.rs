@@ -1,16 +1,19 @@
 use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
 
-use self::{init_response::InitResponse, mean_response::MeanResponse, sum_response::SumResponse};
+use self::{
+    mean_response::MeanResponse, randoms_init_response::RandomsInitResponse,
+    sum_response::SumResponse,
+};
 
-pub mod init_response;
 pub mod mean_response;
+pub mod randoms_init_response;
 pub mod sum_response;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RandomsResponse {
     Mean(MeanResponse),
     Sum(SumResponse),
-    Init(InitResponse),
+    Init(RandomsInitResponse),
 }
 
 impl IdTargeted for RandomsResponse {

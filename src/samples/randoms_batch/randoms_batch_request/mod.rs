@@ -1,13 +1,15 @@
 use crate::id_targeted::IdTargeted;
 
-use self::{init_request::InitRequest, sum_of_sums_request::SumOfSumsRequest};
+use self::{
+    randoms_batch_init_request::RandomsBatchInitRequest, sum_of_sums_request::SumOfSumsRequest,
+};
 
-pub mod init_request;
+pub mod randoms_batch_init_request;
 pub mod sum_of_sums_request;
 
 #[derive(Debug, PartialEq)]
 pub enum RandomsBatchRequest {
-    Init(InitRequest),
+    Init(RandomsBatchInitRequest),
     SumOfSums(SumOfSumsRequest),
 }
 

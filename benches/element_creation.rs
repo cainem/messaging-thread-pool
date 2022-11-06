@@ -2,12 +2,7 @@ use std::sync::Arc;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use messaging_thread_pool::{
-    samples::randoms::{
-        randoms_request::init_request::InitRequest, randoms_response::init_response::InitResponse,
-        Randoms,
-    },
-    thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
-    ThreadPool,
+    samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, ThreadPool,
 };
 
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -17,9 +12,11 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let thread_pool_batcher =
                 ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
             for i in 0..1000 {
-                thread_pool_batcher.batch_for_send(InitRequest { id: i });
+                thread_pool_batcher
+                    .batch_for_send(randoms_init_request::RandomsInitRequest { id: i });
             }
-            let _: Vec<InitResponse> = thread_pool_batcher.send_batch();
+            let _: Vec<randoms_init_response::RandomsInitResponse> =
+                thread_pool_batcher.send_batch();
             thread_pool.shutdown();
         })
     });

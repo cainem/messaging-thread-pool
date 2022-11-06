@@ -15,11 +15,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        samples::randoms::{
-            randoms_request::RandomsRequest, randoms_response::RandomsResponse, Randoms,
-        },
-        sender_couplet::SenderCouplet,
-        thread_request::ThreadRequest,
+        samples::*, sender_couplet::SenderCouplet, thread_request::ThreadRequest,
         thread_response::ThreadResponse,
     };
     use crossbeam_channel::unbounded;

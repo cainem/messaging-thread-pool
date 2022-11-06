@@ -1,4 +1,4 @@
-use crate::{element::Element, thread_shutdown_response::ThreadShutdownResponse};
+use crate::{element::Element, thread_response::ThreadShutdownResponse};
 
 use super::PoolThread;
 
@@ -25,10 +25,9 @@ mod tests {
 
     use crate::{
         pool_thread::PoolThread,
-        samples::randoms::{randoms_response::RandomsResponse, Randoms},
+        samples::*,
         sender_couplet::SenderCouplet,
-        thread_response::ThreadResponse,
-        thread_shutdown_response::ThreadShutdownResponse,
+        thread_response::{ThreadResponse, ThreadShutdownResponse},
     };
 
     #[test]

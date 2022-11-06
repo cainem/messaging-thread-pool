@@ -17,12 +17,12 @@ use rand_xoshiro::Xoshiro256Plus;
 use crate::{
     element::{element_factory::ElementFactory, element_tracing::ElementTracing, Element},
     id_targeted::IdTargeted,
-    thread_shutdown_response::ThreadShutdownResponse,
+    thread_response::ThreadShutdownResponse,
 };
 
 use {
     randoms_request::RandomsRequest,
-    randoms_response::{init_response::InitResponse, RandomsResponse},
+    randoms_response::{randoms_init_response::RandomsInitResponse, RandomsResponse},
 };
 
 /// This represents a simple "element" which is hosted inside the thread pool
@@ -72,7 +72,7 @@ impl ElementFactory<RandomsRequest, RandomsResponse> for Randoms {
         match request {
             RandomsRequest::Init(init) => (
                 Some(Randoms::new(init.id)),
-                RandomsResponse::Init(InitResponse { id: init.id }),
+                RandomsResponse::Init(RandomsInitResponse { id: init.id }),
             ),
             _ => panic!("expected init only"),
         }
@@ -88,6 +88,10 @@ impl Element for Randoms {
         // as Randoms contains no child threads it really should not be
         // overridden (or it should return an empty vec)
         vec![ThreadShutdownResponse::new(self.id, vec![])]
+    }
+
+    fn name(&self) -> &str {
+        std::any::type_name::<Self>()
     }
 }
 

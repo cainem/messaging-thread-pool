@@ -3,17 +3,17 @@ use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
 use super::RandomsResponse;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct InitResponse {
+pub struct RandomsInitResponse {
     pub id: u64,
 }
 
-impl IdTargeted for InitResponse {
+impl IdTargeted for RandomsInitResponse {
     fn get_id(&self) -> u64 {
         self.id
     }
 }
 
-impl From<ThreadResponse<RandomsResponse>> for InitResponse {
+impl From<ThreadResponse<RandomsResponse>> for RandomsInitResponse {
     fn from(response: ThreadResponse<RandomsResponse>) -> Self {
         match response {
             ThreadResponse::ElementResponse(RandomsResponse::Init(init)) => init,
@@ -22,8 +22,8 @@ impl From<ThreadResponse<RandomsResponse>> for InitResponse {
     }
 }
 
-impl From<InitResponse> for RandomsResponse {
-    fn from(response: InitResponse) -> Self {
+impl From<RandomsInitResponse> for RandomsResponse {
+    fn from(response: RandomsInitResponse) -> Self {
         RandomsResponse::Init(response)
     }
 }

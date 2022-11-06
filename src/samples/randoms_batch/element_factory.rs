@@ -4,11 +4,9 @@ use once_cell::sync::OnceCell;
 
 use crate::{
     element::element_factory::ElementFactory,
-    samples::{
-        id_provider_static::IdProviderStatic,
-        randoms::{randoms_request, randoms_response, Randoms},
-    },
-    thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
+    id_provider::IdProvider,
+    samples::randoms::{randoms_request, randoms_response, Randoms},
+    thread_pool_batcher::*,
     ThreadPool,
 };
 
@@ -49,18 +47,15 @@ impl ElementFactory<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatch 
                 randoms_thread_pool_batcher,
             );
 
-            // the mechanism for providing the unique ids will also need to be shared amongst all of the RandomBatches
-            let id_provider = IdProviderStatic;
-
             // create the randoms that are controlled by the RandomBatches
             for _ in 0..init_request.number_of_contained_randoms {
                 random_batches.randoms_thread_pool_batcher().batch_for_send(
-                    randoms_request::init_request::InitRequest {
-                        id: id_provider.get_next_id(),
+                    randoms_request::randoms_init_request::RandomsInitRequest {
+                        id: random_batches.id_provider.get_next_id(),
                     },
                 );
             }
-            let responses: Vec<randoms_response::init_response::InitResponse> =
+            let responses: Vec<randoms_response::randoms_init_response::RandomsInitResponse> =
                 random_batches.randoms_thread_pool_batcher().send_batch();
 
             // store the ids of the Randoms controlled by this RandomBatches
@@ -70,7 +65,7 @@ impl ElementFactory<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatch 
 
             (
                 Some(random_batches),
-                randoms_batch_response::init_response::InitResponse {
+                randoms_batch_response::randoms_batch_init_response::RandomsBatchInitResponse {
                     id: init_request.id,
                 }
                 .into(),

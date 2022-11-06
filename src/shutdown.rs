@@ -1,8 +1,10 @@
 use crossbeam_channel::bounded;
 
 use crate::{
-    element::Element, thread_request::ThreadRequest, thread_response::ThreadResponse,
-    thread_shutdown_response::ThreadShutdownResponse, ThreadPool,
+    element::Element,
+    thread_request::ThreadRequest,
+    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    ThreadPool,
 };
 
 impl<E> ThreadPool<E>
@@ -69,13 +71,7 @@ mod tests {
     use std::sync::Arc;
 
     use crate::{
-        samples::randoms::{
-            randoms_request::init_request::InitRequest,
-            randoms_response::init_response::InitResponse, Randoms,
-        },
-        thread_pool_batcher::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete,
-        thread_shutdown_response::ThreadShutdownResponse,
-        ThreadPool,
+        samples::*, thread_pool_batcher::*, thread_response::ThreadShutdownResponse, ThreadPool,
     };
 
     #[test]
@@ -88,9 +84,9 @@ mod tests {
         let thread_pool_batcher =
             ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&target));
 
-        thread_pool_batcher.batch_for_send(InitRequest { id: 0 });
-        thread_pool_batcher.batch_for_send(InitRequest { id: 1 });
-        let _: Vec<InitResponse> = thread_pool_batcher.send_batch();
+        thread_pool_batcher.batch_for_send(randoms_init_request::RandomsInitRequest { id: 0 });
+        thread_pool_batcher.batch_for_send(randoms_init_request::RandomsInitRequest { id: 1 });
+        let _: Vec<randoms_init_response::RandomsInitResponse> = thread_pool_batcher.send_batch();
 
         // thread had id 0, 1
         assert_eq!(

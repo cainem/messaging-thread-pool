@@ -49,14 +49,7 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        samples::randoms::{
-            randoms_request::init_request::InitRequest,
-            randoms_response::{init_response::InitResponse, RandomsResponse},
-            Randoms,
-        },
-        thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-        ThreadPool,
+        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
     };
     #[test]
     fn three_init_requests_two_thread_received_three_responses_received() {
@@ -92,12 +85,15 @@ mod tests {
 
         let (send_to_pool, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
 
-        let requests: Vec<_> = (0..1u64).map(|id| InitRequest { id }).collect();
+        let requests: Vec<_> = (0..1u64)
+            .map(|id| randoms_init_request::RandomsInitRequest { id })
+            .collect();
         let requests = RefCell::new(requests);
 
         target.send(send_to_pool, &requests);
 
-        let result = target.receive::<InitResponse>(1, receive_from_thread);
+        let result =
+            target.receive::<randoms_init_response::RandomsInitResponse>(1, receive_from_thread);
 
         assert_eq!(1, result.len());
         assert_eq!(0, result[0].id);

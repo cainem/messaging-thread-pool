@@ -43,3 +43,9 @@ impl PartialEq for SizedIdProvider {
         self.id_provider.clone().get_next_id() == other.id_provider.clone().get_next_id()
     }
 }
+
+impl IdProvider for SizedIdProvider {
+    fn get_next_id(&self) -> u64 {
+        self.id_provider.get_next_id()
+    }
+}

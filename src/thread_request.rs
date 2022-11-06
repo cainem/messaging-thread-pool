@@ -33,13 +33,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        id_targeted::IdTargeted,
-        samples::randoms::randoms_request::{
-            mean_request::MeanRequest, sum_request::SumRequest, RandomsRequest,
-        },
-        thread_request::ThreadRequest,
-    };
+    use crate::{id_targeted::IdTargeted, samples::*, thread_request::ThreadRequest};
 
     #[test]
     fn thread_abort_id_1_returns_1() {
@@ -57,20 +51,18 @@ mod tests {
 
     #[test]
     fn element_request_id_1_returns_1() {
-        let target =
-            ThreadRequest::<RandomsRequest>::ElementRequest(RandomsRequest::Mean(MeanRequest {
-                id: 1,
-            }));
+        let target = ThreadRequest::<RandomsRequest>::ElementRequest(RandomsRequest::Mean(
+            mean_request::MeanRequest { id: 1 },
+        ));
 
         assert_eq!(1, target.get_id());
     }
 
     #[test]
     fn element_request_id_0_returns_0() {
-        let target =
-            ThreadRequest::<RandomsRequest>::ElementRequest(RandomsRequest::Sum(SumRequest {
-                id: 0,
-            }));
+        let target = ThreadRequest::<RandomsRequest>::ElementRequest(RandomsRequest::Sum(
+            sum_request::SumRequest { id: 0 },
+        ));
 
         assert_eq!(0, target.get_id());
     }

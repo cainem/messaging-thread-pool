@@ -4,8 +4,11 @@ use std::{
 };
 
 use crate::{
-    element::Element, id_targeted::IdTargeted, thread_request::ThreadRequest,
-    thread_response::ThreadResponse, thread_shutdown_response::ThreadShutdownResponse, ThreadPool,
+    element::Element,
+    id_targeted::IdTargeted,
+    thread_request::ThreadRequest,
+    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    ThreadPool,
 };
 
 use super::ThreadPoolBatcher;
