@@ -13,8 +13,8 @@ use crate::{
 
 use super::{thread_pool_batcher_concrete::ThreadPoolBatcherConcrete, ThreadPoolBatcher};
 
-/// This is a ThreadPoolBatcher which encapsulates the thread pool that it is using
-/// This is suitable for simple scenarios where a long lived thread pool is not required
+/// This is a ThreadPoolBatcher which encapsulates the thread pool that it is using.\
+/// This is suitable for simple scenarios.
 pub struct BasicThreadPoolBatcher<E>
 where
     E: Element + 'static,

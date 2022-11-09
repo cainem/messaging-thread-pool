@@ -2,6 +2,7 @@ use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
 
 use super::RandomsResponse;
 
+/// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MeanResponse {
     pub id: u64,

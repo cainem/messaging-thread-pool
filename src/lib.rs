@@ -4,22 +4,21 @@
 //! which holds a collection of objects all of the same type.
 //!
 //! Instances of the objects are identified by an id which is unique within the thread pool.
+//!
 //! Objects are distributed across the pool based on their id and they always live on the thread
 //! on which they were created and any state they have is stored there.
 //!
 //! They are communicated with via a defined set of messages which effectively form an api.
 //! These messages are sent and received over crossbeam channels.
 //!
-//! The object then implements a set of simple traits to allow the thread pool infrastructure to
-//! handle the objects and to route messages to them.
+//! The object need to implement a set of simple traits and define a set of request/response messages
+//! to allow the thread pool infrastructure to handle the objects and to route messages to them.
 //!
-//! The original motivation was to provide a hierarchy of simple, independent thread pools that wouldn't
-//! be prone to starving each other.
-//! The elements in the thread pools were all CPU bound and so there was no need for any async/await support.
+//! The lifetimes of the objects are easy to reason about as is the behaviour of the thread pools themselves.
 //!
-//! Once the donkey work of defining the messages and implementing the necessary traits has been done it does provide
-//! a clean interface.
-//! The lifetimes of the objects are easy to reason about as is the behaviour of the thread pools themselves
+//! The original motivation was to provide support for a hierarchy of dependent objects that each required their
+//! own thread pools to avoid complex threading dependencies
+//! The objects in the thread pools were all CPU bound and so there was no need for any async/await support.
 //!
 //! # Example
 //! ```
@@ -81,7 +80,38 @@
 //!    // the threads are shutdown and joined back the the main thread
 //!    drop(thread_pool_batcher);
 //! ```
-
+//!
+//! # Panics
+//!
+//! There are a whole host of reasons currently why the thread pool will panic.\
+//! Due to my own selfish requirements if anything goes wrong the thread pool panics.
+//!
+//! The list of reasons includes the following:-
+//!
+//! * If a request is made to create an element whose id already exists.
+//! * If a request is made to remove an element that doesn't exist.
+//! * If a request for a given id does not receive a response with the corresponding id.
+//! * If a request is made to shutdown or abort a thread with a given id does not exist.
+//!
+//! Also if any of the internal elements themselves panic there is no protection provided against this
+//! and the thread panic, which in turn causes the thread pool to eventually panic.
+//!
+//! # Limitations
+//!
+//! As mentioned previous it was written specifically with one use case in mind.
+//! The handling of errors and panics is poor.\
+//! There is an underlying assumption that if anything goes wrong then there is no value in continuing.
+//!
+//! The thread pool cannot be dynamically sized.\
+//! It is fixed at creation.\
+//! As there is a ThreadShutdown request it could be implied that therefore there should be a ThreadCreation request.
+//! This is not the case and it is not intended that individual threads will be shutdown in isolation and in fact
+//! this will lead to the thread pool panicking.\
+//! The shutdown request is intended to be called only when the whole thread pool is finished with and in fact it
+//! is probably best to avoid using it and to just drop the thread pool (which internally sends out all the required shutdown messages).\
+//!
+//! It was not intended for anything other than long-lived CPU bound elements.
+//!
 use std::{num::NonZeroUsize, sync::RwLock};
 
 use element::Element;

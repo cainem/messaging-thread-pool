@@ -3,11 +3,14 @@ use std::sync::Arc;
 use super::IdProvider;
 
 /// This struct wraps an id provider in such a way that it supports
-/// clone and partial eq
-/// This is to allow for an IdProvider to be passed in a request.
+/// clone and partial eq.
+///
+/// This is to allow for an IdProvider to be passed in a request which is required
+/// if it is to be shared amongst all elements.
+///
 /// Requests are required to implement clone and partial eq, although I suspect
 /// that this was only for convenience reasons and there may be scope
-/// for removing that constraint
+/// for removing that constraint.
 #[derive(Debug)]
 pub struct SizedIdProvider {
     id_provider: Arc<dyn IdProvider>,

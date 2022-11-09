@@ -22,8 +22,15 @@ use crate::{
 
 /// An example of an element that contains a child thread pool
 ///
-/// RandomsBatches are managed by a thread pool and internally they have a collection of Randoms which
+/// RandomsBatches and Randoms form a hierarchy.
+/// A RandomsBatch contains many Randoms.
+///
+/// RandomsBatches are managed by a one thread pool and internally they have a collection of Randoms which
 /// are managed in a separate "child" thread pool
+/// In this example all of the Randoms share a single thread pool regardless of which RandomsBatch created them
+///
+/// For this reason the RandomsBatches need to share an id_provider which provides globally unique ids
+/// (ids, must be unique across the thread pool for obvious reasons)
 #[derive(Debug)]
 pub struct RandomsBatch {
     pub id: u64,

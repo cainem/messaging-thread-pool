@@ -7,6 +7,9 @@ use self::{
 pub mod randoms_batch_init_request;
 pub mod sum_of_sums_request;
 
+/// This defines all of the request that a RandomsBatch can receive.
+///
+/// It is in essence the api support the the RandomsBatch struct.
 #[derive(Debug, PartialEq)]
 pub enum RandomsBatchRequest {
     Init(RandomsBatchInitRequest),

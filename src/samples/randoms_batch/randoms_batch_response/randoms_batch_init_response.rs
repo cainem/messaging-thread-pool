@@ -2,6 +2,7 @@ use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
 
 use super::RandomsBatchResponse;
 
+/// This response is returned from a request to create a new RandomBatch
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RandomsBatchInitResponse {
     pub id: u64,

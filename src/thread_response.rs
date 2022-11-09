@@ -3,7 +3,9 @@ use crate::id_targeted::IdTargeted;
 /// This enum represents a response returned from a PoolThread
 ///
 /// There are a 4 thread management variants ThreadAbort, ThreadShutdown, EchoThread, and RemoveElement
-/// and 1 variant for handling actual responses from elements within the PoolThread (ElementResponse)
+/// and 1 variant for handling actual responses from elements within the PoolThread (ElementResponse).
+///
+/// See [`super::thread_request::ThreadRequest`] for more detailed explanation of the individual messages.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ThreadResponse<Res>
 where
@@ -31,6 +33,9 @@ where
     }
 }
 
+/// This struct represents the information returned from a shutdown request.\
+/// It contains the id of the shutdown thread and potentially a vec of shutdown
+/// responses from any child threads. This vec will be empty if there are no child threads.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadShutdownResponse {
     id: u64,

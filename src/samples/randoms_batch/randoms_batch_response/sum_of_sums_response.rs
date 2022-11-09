@@ -2,6 +2,7 @@ use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
 
 use super::RandomsBatchResponse;
 
+/// This response is returned from a request to calculate the sum of sums of all contained Randoms
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SumOfSumsResponse {
     pub id: u64,
