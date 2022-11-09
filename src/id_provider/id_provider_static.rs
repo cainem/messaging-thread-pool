@@ -6,8 +6,8 @@ static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 /// This is an example implementation of how to implement a static id provider
 ///
-/// It could be used but unfortunately it is tied to the name of the static variable
-/// so it is not of much use if multiple Id providers are required
+/// It is tied to the name of the static variable
+/// so it is not of much use if multiple Id providers are required.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct IdProviderStatic;
 

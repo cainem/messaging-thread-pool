@@ -18,13 +18,16 @@ use super::{
 
 static RANDOMS_THREAD_POOL: OnceCell<Arc<ThreadPool<Randoms>>> = OnceCell::new();
 
-/// This is an example of how to implement an element that contains elements that are also in a thread
+/// This is an example of how to implement an element that contains elements that are also in a (child) thread
 /// pool.
+///
 /// Here RandomBatches each contain Randoms.
 /// Randoms are required to have the own distinct thread pool from that of RandomBatches so as Randoms and RandomBatches
 /// are not able to starve each other
 ///
-/// The Randoms thread pool needs to be Static so that it can be shared between all of the RandomBatches
+/// The Randoms thread pool needs to be Static so that it can be shared between all of the RandomBatches.
+/// This doesn't have to be the case. Each RandomBatch could have its own thread pool for Randoms but
+/// there are huge reuse benefits from sharing a thread pool
 impl ElementFactory<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatch {
     #[inline(always)]
     fn new_element(request: &RandomsBatchRequest) -> (Option<Self>, RandomsBatchResponse) {

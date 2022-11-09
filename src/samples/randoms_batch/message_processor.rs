@@ -8,6 +8,11 @@ use super::{
     RandomsBatch,
 };
 
+/// The implementation of this trait defines how RandomsBatch responds to the requests
+/// it receives.
+///
+/// In this example RandomsBatch can only receive one type of message, which is a request
+/// to calculate a sum of sums for all the the Randoms it contains
 impl MessageProcessor<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatch {
     fn process_message(&mut self, request: &RandomsBatchRequest) -> RandomsBatchResponse {
         match request {
@@ -19,7 +24,7 @@ impl MessageProcessor<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatc
                     sum: self.sum_of_sums(),
                 }
                 .into();
-                // simulate a long delay here
+                // simulate a long delay here for testing purposes
                 thread::sleep(Duration::from_millis(100));
                 result
             }

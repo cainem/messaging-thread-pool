@@ -7,11 +7,12 @@ use super::{
 };
 
 /// The implementation of this trait defines the supported interface i.e. the operations that can be routed
-/// to the underlying element, in this case SampleInterface
+/// to the underlying element, in this case a Randoms struct
 ///
 /// Each request is expected to match a branch of processing within the process message
 /// It is expected to return a response for every request.
-/// In addition it is possible that a new element is created
+/// The only exception is the request to create a new Random. This message is processed elsewhere
+/// and should never reach the process_message function
 impl MessageProcessor<RandomsRequest, RandomsResponse> for Randoms {
     fn process_message(&mut self, request: &RandomsRequest) -> RandomsResponse {
         match request {
@@ -20,10 +21,11 @@ impl MessageProcessor<RandomsRequest, RandomsResponse> for Randoms {
                 mean: self.mean(),
             }
             .into(),
-            RandomsRequest::Sum(_get_state) => RandomsResponse::Sum(SumResponse {
+            RandomsRequest::Sum(_get_state) => SumResponse {
                 id: self.id,
                 sum: self.sum(),
-            }),
+            }
+            .into(),
             // process_message is called when a message arrives processing an existing element
             // The init message is for creating new elements and therefore should never turn up here
             RandomsRequest::Init(_) => panic!(

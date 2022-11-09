@@ -2,6 +2,7 @@ use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
 
 use super::RandomsResponse;
 
+/// This is the response from a request to calculate the sum of the contained random numbers
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SumResponse {
     pub id: u64,

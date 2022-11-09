@@ -11,6 +11,7 @@ impl<E> ThreadEndpoint<E>
 where
     E: Element,
 {
+    /// This function send an asynchronous request to a thread pool
     pub fn send<T>(&self, sender: &Sender<ThreadResponse<E::Response>>, request: T)
     where
         T: Into<ThreadRequest<E::Request>>,

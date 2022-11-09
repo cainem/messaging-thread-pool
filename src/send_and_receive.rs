@@ -15,8 +15,6 @@ where
     /// This function sends a request to a worker thread and receives a response back
     ///
     /// The request is received as a vec and the responses are received back in a vec
-    /// The idea here is that size of these vecs is restricted to a single compartments
-    /// worth of requests
     #[instrument(skip(self, requests))]
     pub fn send_and_receive<T, U>(&self, requests: &RefCell<Vec<T>>) -> Vec<U>
     where

@@ -7,6 +7,9 @@ use self::{
 pub mod randoms_batch_init_response;
 pub mod sum_of_sums_response;
 
+/// This enum defines all of the response that can be returned from a RandomsBatch
+///
+/// Every request is required to return a response
 #[derive(Debug)]
 pub enum RandomsBatchResponse {
     Init(RandomsBatchInitResponse),

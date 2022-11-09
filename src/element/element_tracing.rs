@@ -1,11 +1,9 @@
 use tracing::subscriber::DefaultGuard;
 use tracing_appender::non_blocking::WorkerGuard;
 
-/// This trait needs to be implemented by Elements
-///
+/// This trait needs to be implemented by Elements.\
 /// It provides a hook to optionally provide tracing based on id.
-/// The default implementation add no tracing
-///
+/// The default implementation adds no tracing.
 pub trait ElementTracing {
     /// This method is called to optionally add tracing before each message is processed.
     /// The tracing is removed once the message is processed.

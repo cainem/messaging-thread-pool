@@ -2,6 +2,7 @@ use crate::{id_targeted::IdTargeted, thread_request::ThreadRequest};
 
 use super::RandomsRequest;
 
+/// This is message that sent to request the creation of a new Randoms struct with the specified id
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RandomsInitRequest {
     pub id: u64,

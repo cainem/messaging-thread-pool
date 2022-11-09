@@ -9,10 +9,9 @@ use self::{
     message_processor::MessageProcessor,
 };
 
-/// This is the trait that needs to be implemented by the elements that a PoolThread contains
-///
+/// This is the trait that needs to be implemented by the elements that a PoolThread contains.\
 /// It has 2 associated types that correspond to the types of the requests and the responses that can be
-/// sent to the element
+/// sent to the element.
 pub trait Element:
     ElementFactory<Self::Request, Self::Response>
     + MessageProcessor<Self::Request, Self::Response>
@@ -21,12 +20,14 @@ pub trait Element:
     type Request: IdTargeted + PartialEq;
     type Response: IdTargeted;
 
+    /// used for debug only
     fn name(&self) -> &str {
         std::any::type_name::<Self>()
     }
     /// if an element is itself using a thread pool, i.e. there is a hierarchy of thread pools
     /// then an element needs to be able to shutdown its contained pool.
-    /// Defaults to empty array indicating no child threads
+    ///
+    /// Defaults to an empty array indicating no child threads
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
         Vec::<ThreadShutdownResponse>::default()
     }

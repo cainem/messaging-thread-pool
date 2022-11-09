@@ -9,6 +9,10 @@ pub mod mean_response;
 pub mod randoms_init_response;
 pub mod sum_response;
 
+/// This enum defines the full range of responses that can received back from a Randoms request.
+///
+/// The protocol currently requires that every request provides a response and therefore it makes
+/// sense that the naming of the responses mirrors that of the the requests
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RandomsResponse {
     Mean(MeanResponse),
