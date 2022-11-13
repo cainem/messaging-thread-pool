@@ -45,7 +45,7 @@ where
             !expected_requests
                 .iter()
                 .zip(responses.iter())
-                .any(|(req, res)| req.get_id() != res.get_id()),
+                .any(|(req, res)| req.id() != res.id()),
             "requests and responses must targetting the same id"
         );
 

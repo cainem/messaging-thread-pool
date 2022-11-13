@@ -10,7 +10,7 @@ pub struct SumOfSumsRequest {
 }
 
 impl IdTargeted for SumOfSumsRequest {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

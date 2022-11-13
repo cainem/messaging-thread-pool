@@ -22,13 +22,13 @@ impl<Res> IdTargeted for ThreadResponse<Res>
 where
     Res: IdTargeted,
 {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         match self {
             ThreadResponse::ThreadAbort(id) => *id,
             ThreadResponse::ThreadShutdown(thread_shutdown_payload) => thread_shutdown_payload.id(),
             ThreadResponse::ThreadEcho(id, _, _) => *id,
             ThreadResponse::RemoveElement(id) => *id,
-            ThreadResponse::ElementResponse(request) => request.get_id(),
+            ThreadResponse::ElementResponse(request) => request.id(),
         }
     }
 }
@@ -88,14 +88,14 @@ mod tests {
     fn thread_abort_targets_id_2_get_id_returns_2() {
         let target = ThreadResponse::<RandomsResponse>::ThreadAbort(2);
 
-        assert_eq!(2, target.get_id());
+        assert_eq!(2, target.id());
     }
 
     #[test]
     fn thread_abort_targets_id_1_get_id_returns_1() {
         let target = ThreadResponse::<RandomsResponse>::ThreadAbort(1);
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod tests {
             randoms_init_response::RandomsInitResponse { id: 2 },
         ));
 
-        assert_eq!(2, target.get_id());
+        assert_eq!(2, target.id());
     }
 
     #[test]
@@ -113,35 +113,35 @@ mod tests {
             sum_response::SumResponse { id: 1, sum: 5 },
         ));
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
     fn remove_element_from_id_2_get_id_returns_2() {
         let target = ThreadResponse::<RandomsResponse>::RemoveElement(2);
 
-        assert_eq!(2, target.get_id());
+        assert_eq!(2, target.id());
     }
 
     #[test]
     fn remove_element_from_id_1_get_id_returns_1() {
         let target = ThreadResponse::<RandomsResponse>::RemoveElement(1);
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
     fn thread_echo_from_id_2_get_id_returns_2() {
         let target = ThreadResponse::<RandomsResponse>::ThreadEcho(2, 0, "ping".to_string());
 
-        assert_eq!(2, target.get_id());
+        assert_eq!(2, target.id());
     }
 
     #[test]
     fn thread_echo_from_id_1_get_id_returns_1() {
         let target = ThreadResponse::<RandomsResponse>::ThreadEcho(1, 0, "ping".to_string());
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
@@ -150,7 +150,7 @@ mod tests {
             ThreadShutdownResponse::new(2, vec![]),
         );
 
-        assert_eq!(2, target.get_id());
+        assert_eq!(2, target.id());
     }
 
     #[test]
@@ -159,6 +159,6 @@ mod tests {
             ThreadShutdownResponse::new(1, vec![]),
         );
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 }

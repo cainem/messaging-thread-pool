@@ -21,11 +21,11 @@ pub enum RandomsResponse {
 }
 
 impl IdTargeted for RandomsResponse {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         match self {
-            RandomsResponse::Mean(do_work) => do_work.get_id(),
-            RandomsResponse::Init(init) => init.get_id(),
-            RandomsResponse::Sum(get_state) => get_state.get_id(),
+            RandomsResponse::Mean(do_work) => do_work.id(),
+            RandomsResponse::Init(init) => init.id(),
+            RandomsResponse::Sum(get_state) => get_state.id(),
         }
     }
 }

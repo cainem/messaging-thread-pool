@@ -10,7 +10,7 @@ pub struct SumResponse {
 }
 
 impl IdTargeted for SumResponse {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

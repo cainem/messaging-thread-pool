@@ -127,13 +127,17 @@ pub mod thread_response;
 
 mod drop;
 mod new;
+pub mod pool_item;
 mod pool_thread;
+mod pool_thread_2;
 mod receive;
 mod send;
 mod send_and_receive;
 mod sender_couplet;
+pub mod sender_couplet_2;
 mod shutdown;
 mod thread_endpoint;
+pub mod thread_request_response;
 
 /// This struct represents a pool of threads that can target a particular type of
 /// resource (a resource being a struct that implements Element)

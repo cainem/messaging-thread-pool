@@ -10,7 +10,7 @@ pub struct MeanResponse {
 }
 
 impl IdTargeted for MeanResponse {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

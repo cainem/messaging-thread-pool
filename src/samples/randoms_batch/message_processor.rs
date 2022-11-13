@@ -32,7 +32,7 @@ impl MessageProcessor<RandomsBatchRequest, RandomsBatchResponse> for RandomsBatc
             // The init message is for creating new elements and therefore should never turn up here
             RandomsBatchRequest::Init(_) => panic!(
                 "trying to create a key that already exists {}",
-                request.get_id()
+                request.id()
             ),
         }
     }

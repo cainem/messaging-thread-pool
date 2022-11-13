@@ -18,11 +18,11 @@ where
     fn process_message_checked(&mut self, request: &Req) -> Res {
         if cfg!(debug_assertions) {
             // check that the response matches the request
-            let targeted_id = request.get_id();
+            let targeted_id = request.id();
             let response = self.process_message(request);
             assert_eq!(
                 targeted_id,
-                response.get_id(),
+                response.id(),
                 "the request and response ids should always match"
             );
 

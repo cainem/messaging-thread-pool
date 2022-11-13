@@ -9,7 +9,7 @@ pub struct RandomsBatchInitResponse {
 }
 
 impl IdTargeted for RandomsBatchInitResponse {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

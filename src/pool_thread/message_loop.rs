@@ -41,7 +41,7 @@ where
 
             let response = match sender_couplet.get_thread_request() {
                 ThreadRequest::ElementRequest(request) => {
-                    let id = request.get_id();
+                    let id = request.id();
 
                     // optionally add tracing at what is effectively the element level this allows for the ability
                     // to do sampling.

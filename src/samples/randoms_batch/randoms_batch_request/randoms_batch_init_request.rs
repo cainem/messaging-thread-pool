@@ -19,7 +19,7 @@ pub struct RandomsBatchInitRequest {
 }
 
 impl IdTargeted for RandomsBatchInitRequest {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

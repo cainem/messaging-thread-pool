@@ -1,6 +1,7 @@
 pub mod element_factory;
 pub mod element_tracing;
 pub mod message_processor;
+pub mod request_response_pair;
 
 use crate::{id_targeted::IdTargeted, thread_response::ThreadShutdownResponse};
 

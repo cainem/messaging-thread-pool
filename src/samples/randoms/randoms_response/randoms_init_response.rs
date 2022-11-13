@@ -9,7 +9,7 @@ pub struct RandomsInitResponse {
 }
 
 impl IdTargeted for RandomsInitResponse {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

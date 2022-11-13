@@ -1,4 +1,6 @@
 pub mod message_processor;
+pub mod pool_item;
+pub mod randoms_api;
 pub mod randoms_request;
 pub mod randoms_response;
 
@@ -87,7 +89,7 @@ impl Element for Randoms {
 }
 
 impl IdTargeted for Randoms {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         self.id
     }
 }

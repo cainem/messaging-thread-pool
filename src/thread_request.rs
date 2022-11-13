@@ -42,13 +42,13 @@ impl<Req> IdTargeted for ThreadRequest<Req>
 where
     Req: IdTargeted,
 {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         match self {
             ThreadRequest::ThreadShutdown(id) => *id,
             ThreadRequest::ThreadAbort(id) => *id,
             ThreadRequest::ThreadEcho(id, _) => *id,
             ThreadRequest::RemoveElement(id) => *id,
-            ThreadRequest::ElementRequest(request) => request.get_id(),
+            ThreadRequest::ElementRequest(request) => request.id(),
         }
     }
 }
@@ -61,14 +61,14 @@ mod tests {
     fn thread_abort_id_1_returns_1() {
         let target = ThreadRequest::<RandomsRequest>::ThreadAbort(1);
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
     fn thread_abort_id_0_returns_0() {
         let target = ThreadRequest::<RandomsRequest>::ThreadAbort(0);
 
-        assert_eq!(0, target.get_id());
+        assert_eq!(0, target.id());
     }
 
     #[test]
@@ -77,7 +77,7 @@ mod tests {
             mean_request::MeanRequest { id: 1 },
         ));
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
@@ -86,48 +86,48 @@ mod tests {
             sum_request::SumRequest { id: 0 },
         ));
 
-        assert_eq!(0, target.get_id());
+        assert_eq!(0, target.id());
     }
 
     #[test]
     fn remove_element_id_1_returns_1() {
         let target = ThreadRequest::<RandomsRequest>::RemoveElement(1);
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
     fn remove_element_id_0_returns_0() {
         let target = ThreadRequest::<RandomsRequest>::RemoveElement(0);
 
-        assert_eq!(0, target.get_id());
+        assert_eq!(0, target.id());
     }
 
     #[test]
     fn thread_echo_id_1_returns_1() {
         let target = ThreadRequest::<RandomsRequest>::ThreadEcho(1, "ping".to_string());
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
     fn thread_echo_id_0_returns_0() {
         let target = ThreadRequest::<RandomsRequest>::ThreadEcho(0, "ping".to_string());
 
-        assert_eq!(0, target.get_id());
+        assert_eq!(0, target.id());
     }
 
     #[test]
     fn thread_shutdown_id_1_returns_1() {
         let target = ThreadRequest::<RandomsRequest>::ThreadShutdown(1);
 
-        assert_eq!(1, target.get_id());
+        assert_eq!(1, target.id());
     }
 
     #[test]
     fn thread_shutdown_id_0_returns_0() {
         let target = ThreadRequest::<RandomsRequest>::ThreadShutdown(0);
 
-        assert_eq!(0, target.get_id());
+        assert_eq!(0, target.id());
     }
 }

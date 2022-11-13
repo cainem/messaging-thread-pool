@@ -17,10 +17,10 @@ pub enum RandomsBatchRequest {
 }
 
 impl IdTargeted for RandomsBatchRequest {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> u64 {
         match self {
-            RandomsBatchRequest::Init(init_request) => init_request.get_id(),
-            RandomsBatchRequest::SumOfSums(sum_of_sums_request) => sum_of_sums_request.get_id(),
+            RandomsBatchRequest::Init(init_request) => init_request.id(),
+            RandomsBatchRequest::SumOfSums(sum_of_sums_request) => sum_of_sums_request.id(),
         }
     }
 }
