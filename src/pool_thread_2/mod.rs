@@ -1,4 +1,5 @@
 mod message_loop;
+pub mod new;
 pub mod shutdown_child_pool;
 
 use std::collections::HashMap;

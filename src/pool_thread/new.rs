@@ -2,13 +2,16 @@ use std::collections::HashMap;
 
 use crossbeam_channel::Receiver;
 
-use crate::{element::Element, sender_couplet::SenderCouplet};
+use crate::{
+    element::Element, pool_item::PoolItem, sender_couplet::SenderCouplet,
+    sender_couplet_2::SenderCouplet2,
+};
 
 use super::PoolThread;
 
 impl<E> PoolThread<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     /// This function creates a new PoolThread
     /// This represents a single thread in the thread pool
@@ -21,7 +24,7 @@ where
     ///
     /// The PoolThread spins around its message_loop function processing messages until a request is
     /// received to shutdown.
-    pub fn new(id: u64, pool_thread_receiver: Receiver<SenderCouplet<E>>) -> Self {
+    pub fn new(id: u64, pool_thread_receiver: Receiver<SenderCouplet2<E>>) -> Self {
         Self {
             id,
             pool_thread_receiver,
@@ -42,29 +45,34 @@ mod tests {
     };
 
     #[test]
-    fn new_constructs_as_expected() {
-        // thread channel
-        let (send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
-
-        // request/response channel
-        let (send_back, _receive_back_from) = bounded::<ThreadResponse<RandomsResponse>>(0);
-
-        let result = PoolThread::<Randoms>::new(1, receive_from_caller);
-
-        let request = ThreadRequest::ThreadEcho(1, "ping".to_string());
-        let message = SenderCouplet::new(send_back, request.clone());
-
-        send_to_thread.send(message).expect("send to work");
-
-        assert_eq!(1, result.id);
-        assert_eq!(HashMap::default(), result.element_hash_map);
-        assert_eq!(
-            &request,
-            result
-                .pool_thread_receiver
-                .recv()
-                .unwrap()
-                .get_thread_request()
-        );
+    fn todo() {
+        todo!();
     }
+
+    // #[test]
+    // fn new_constructs_as_expected() {
+    //     // thread channel
+    //     let (send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
+
+    //     // request/response channel
+    //     let (send_back, _receive_back_from) = bounded::<ThreadResponse<RandomsResponse>>(0);
+
+    //     let result = PoolThread::<Randoms>::new(1, receive_from_caller);
+
+    //     let request = ThreadRequest::ThreadEcho(1, "ping".to_string());
+    //     let message = SenderCouplet::new(send_back, request.clone());
+
+    //     send_to_thread.send(message).expect("send to work");
+
+    //     assert_eq!(1, result.id);
+    //     assert_eq!(HashMap::default(), result.element_hash_map);
+    //     assert_eq!(
+    //         &request,
+    //         result
+    //             .pool_thread_receiver
+    //             .recv()
+    //             .unwrap()
+    //             .get_thread_request()
+    //     );
+    // }
 }

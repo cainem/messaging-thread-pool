@@ -1,8 +1,8 @@
-use crate::{element::Element, ThreadPool};
+use crate::{pool_item::PoolItem, ThreadPool};
 
 impl<E> Drop for ThreadPool<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     /// implement drop to shutdown all of the thread pools threads
     fn drop(&mut self) {

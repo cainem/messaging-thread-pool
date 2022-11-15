@@ -3,7 +3,9 @@ pub mod remove_response;
 pub mod thread_echo;
 pub mod thread_shutdown_response;
 
-use crate::{element::request_response_pair::RequestResponse, pool_item::PoolItem};
+use crate::{
+    element::request_response_pair::RequestResponse, id_targeted::IdTargeted, pool_item::PoolItem,
+};
 
 use self::{
     add_response::AddResponse,
@@ -12,7 +14,7 @@ use self::{
     thread_shutdown_response::ThreadShutdownResponse,
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ThreadRequestResponse<P>
 where
     P: PoolItem,
@@ -38,5 +40,26 @@ where
             ThreadRequestResponse::AddElement(_) => todo!(),
             ThreadRequestResponse::CallElement(payload) => todo!(),
         }
+    }
+
+    pub fn is_response(&self) -> bool {
+        !self.is_request()
+    }
+}
+
+impl<P> IdTargeted for ThreadRequestResponse<P>
+where
+    P: PoolItem,
+{
+    fn id(&self) -> u64 {
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn todo() {
+        todo!();
     }
 }

@@ -1,4 +1,7 @@
-use crate::{id_targeted::IdTargeted, thread_response::ThreadResponse};
+use crate::{
+    element::request_response_pair::RequestResponse, id_targeted::IdTargeted,
+    samples::randoms::randoms_api::RandomsApi, thread_response::ThreadResponse,
+};
 
 use super::RandomsResponse;
 
@@ -21,6 +24,12 @@ impl From<ThreadResponse<RandomsResponse>> for MeanResponse {
             ThreadResponse::ElementResponse(RandomsResponse::Mean(mean)) => mean,
             _ => panic!("cannot unwrap"),
         }
+    }
+}
+
+impl From<MeanResponse> for RandomsApi {
+    fn from(response: MeanResponse) -> Self {
+        RandomsApi::Mean(RequestResponse::Response(response))
     }
 }
 

@@ -4,10 +4,11 @@ use std::{
 };
 
 use crate::{
-    element::Element,
     id_targeted::IdTargeted,
-    thread_request::ThreadRequest,
-    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    pool_item::PoolItem,
+    thread_request_response::{
+        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
+    },
     ThreadPool,
 };
 
@@ -18,23 +19,24 @@ use super::ThreadPoolBatcher;
 /// hard coded responses to those requests
 ///
 /// It validates that the requests received are indeed the ones received.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ThreadPoolBatcherMock<Req, Res>
+#[derive(Debug)]
+pub struct ThreadPoolBatcherMock<E>
 where
-    Req: IdTargeted,
-    Res: IdTargeted,
+    E: PoolItem,
 {
-    expected_requests: RefCell<Vec<ThreadRequest<Req>>>,
-    responses: RefCell<Vec<ThreadResponse<Res>>>,
+    expected_requests: RefCell<Vec<ThreadRequestResponse<E>>>,
+    responses: RefCell<Vec<ThreadRequestResponse<E>>>,
     shutdown_called: Cell<bool>,
 }
 
-impl<Req, Res> ThreadPoolBatcherMock<Req, Res>
+impl<E> ThreadPoolBatcherMock<E>
 where
-    Req: IdTargeted,
-    Res: IdTargeted,
+    E: PoolItem,
 {
-    pub fn new(mut expected_requests: Vec<Req>, mut responses: Vec<Res>) -> Self {
+    pub fn new(
+        mut expected_requests: Vec<ThreadRequestResponse<E>>,
+        mut responses: Vec<ThreadRequestResponse<E>>,
+    ) -> Self {
         assert_eq!(
             expected_requests.len(),
             responses.len(),
@@ -48,20 +50,18 @@ where
                 .any(|(req, res)| req.id() != res.id()),
             "requests and responses must targetting the same id"
         );
+        assert!(
+            !expected_requests.iter().any(|r| r.is_response()),
+            "all expected requests must be requests"
+        );
+        assert!(
+            !responses.iter().any(|r| r.is_request()),
+            "all responses must be responses"
+        );
 
         let result = Self {
-            expected_requests: RefCell::new(
-                expected_requests
-                    .drain(..)
-                    .map(|request| ThreadRequest::ElementRequest(request))
-                    .collect(),
-            ),
-            responses: RefCell::new(
-                responses
-                    .drain(..)
-                    .map(|response| ThreadResponse::ElementResponse(response))
-                    .collect(),
-            ),
+            expected_requests: RefCell::new(expected_requests.drain(..).collect()),
+            responses: RefCell::new(responses.drain(..).collect()),
             shutdown_called: Cell::default(),
         };
 
@@ -78,13 +78,15 @@ where
     }
 }
 
-impl<E> ThreadPoolBatcher<E> for ThreadPoolBatcherMock<E::Request, E::Response>
+impl<E> ThreadPoolBatcher<E> for ThreadPoolBatcherMock<E>
 where
-    E: Element,
+    E: PoolItem + PartialEq,
+    E::Init: PartialEq,
+    E::Api: PartialEq,
 {
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequest<E::Request>> + IdTargeted,
+        U: Into<ThreadRequestResponse<E>> + IdTargeted,
     {
         assert_eq!(request.into(), self.expected_requests.borrow()[0]);
         self.expected_requests.borrow_mut().remove(0);
@@ -93,7 +95,7 @@ where
 
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadResponse<E::Response>> + IdTargeted,
+        V: From<ThreadRequestResponse<E>> + IdTargeted,
     {
         let responses_len = self.responses.borrow().len();
         let expected_requests_len = self.expected_requests.borrow().len();

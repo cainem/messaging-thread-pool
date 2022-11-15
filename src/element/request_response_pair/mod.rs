@@ -6,7 +6,7 @@ use crate::id_targeted::IdTargeted;
 //     fn is_request(&self) -> bool;
 // }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum RequestResponse<Req, Res>
 where
     Req: IdTargeted,

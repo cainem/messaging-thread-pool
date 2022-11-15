@@ -4,10 +4,11 @@ use std::{
 };
 
 use crate::{
-    element::Element,
     id_targeted::IdTargeted,
-    thread_request::ThreadRequest,
-    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    pool_item::PoolItem,
+    thread_request_response::{
+        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
+    },
     ThreadPool,
 };
 
@@ -17,7 +18,7 @@ use super::{thread_pool_batcher_concrete::ThreadPoolBatcherConcrete, ThreadPoolB
 /// This is suitable for simple scenarios.
 pub struct BasicThreadPoolBatcher<E>
 where
-    E: Element + 'static,
+    E: PoolItem + 'static,
 {
     thread_pool: Arc<ThreadPool<E>>,
     thread_pool_batcher: ThreadPoolBatcherConcrete<E>,
@@ -25,7 +26,7 @@ where
 
 impl<E> BasicThreadPoolBatcher<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     pub fn new(threads_in_pool: usize) -> Self {
         assert!(
@@ -45,11 +46,11 @@ where
 
 impl<E> ThreadPoolBatcher<E> for BasicThreadPoolBatcher<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequest<E::Request>> + IdTargeted,
+        U: Into<ThreadRequestResponse<E>> + IdTargeted,
     {
         self.thread_pool_batcher.batch_for_send(request);
         self
@@ -57,7 +58,7 @@ where
 
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadResponse<E::Response>> + IdTargeted,
+        V: From<ThreadRequestResponse<E>> + IdTargeted,
     {
         self.thread_pool_batcher.send_batch()
     }

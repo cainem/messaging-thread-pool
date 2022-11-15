@@ -4,7 +4,7 @@ use crate::{
 
 use super::ThreadRequestResponse;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct AddResponse {
     id: u64,
     success: bool,
@@ -31,12 +31,14 @@ where
     }
 }
 
-// impl From<ThreadRequestResponse<Randoms>> for MeanResponse {
-//     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-//         let ThreadRequestResponse::CallElement(RandomsApi::Mean(
-//             RequestResponse::Response(result))) = response else {
-//                 panic!("must be a response to a call to the element")
-//             };
-//         result
-//     }
-// }
+impl<P> From<ThreadRequestResponse<P>> for AddResponse
+where
+    P: PoolItem,
+{
+    fn from(response: ThreadRequestResponse<P>) -> Self {
+        let ThreadRequestResponse::<P>::AddElement(RequestResponse::Response(response)) = response else {
+            panic!("unexpected")
+        };
+        response
+    }
+}

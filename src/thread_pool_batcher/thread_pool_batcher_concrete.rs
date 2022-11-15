@@ -3,8 +3,10 @@ use std::{cell::RefCell, num::NonZeroUsize, sync::Weak};
 use crate::{
     element::Element,
     id_targeted::IdTargeted,
-    thread_request::ThreadRequest,
-    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    pool_item::PoolItem,
+    thread_request_response::{
+        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
+    },
     ThreadPool,
 };
 
@@ -20,15 +22,15 @@ use super::ThreadPoolBatcher;
 #[derive(Debug)]
 pub struct ThreadPoolBatcherConcrete<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     thread_pool: Weak<ThreadPool<E>>,
-    to_send: RefCell<Vec<ThreadRequest<E::Request>>>,
+    to_send: RefCell<Vec<ThreadRequestResponse<E>>>,
 }
 
 impl<E> ThreadPoolBatcherConcrete<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     /// This function creates a new ThreadPoolBatcher
     pub fn new(thread_pool: Weak<ThreadPool<E>>) -> Self {
@@ -42,7 +44,7 @@ where
         &self.thread_pool
     }
 
-    pub(super) fn to_send(&self) -> &RefCell<Vec<ThreadRequest<E::Request>>> {
+    pub(super) fn to_send(&self) -> &RefCell<Vec<ThreadRequestResponse<E>>> {
         &self.to_send
     }
 }
@@ -51,18 +53,18 @@ where
 /// ThreadPoolBatcherConcrete which provides an implementation for the trait
 impl<E> ThreadPoolBatcher<E> for ThreadPoolBatcherConcrete<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequest<<E as Element>::Request>> + IdTargeted,
+        U: Into<ThreadRequestResponse<E>> + IdTargeted,
     {
         ThreadPoolBatcherConcrete::<E>::batch_for_send(self, request)
     }
 
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadResponse<<E as Element>::Response>> + IdTargeted,
+        V: From<ThreadRequestResponse<E>> + IdTargeted,
     {
         ThreadPoolBatcherConcrete::<E>::send_batch(self)
     }
@@ -98,90 +100,95 @@ mod tests {
     use super::ThreadPoolBatcherConcrete;
 
     #[test]
-    fn thread_pool_size_2_returns_2() {
-        let thread_pool = Arc::new(ThreadPool::<Randoms>::new(2));
-
-        let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
-
-        let result = ThreadPoolBatcher::<Randoms>::get_thread_pool_size(&target);
-
-        assert_eq!(2usize, usize::from(result));
-
-        ThreadPoolBatcher::<Randoms>::shutdown_pool(&target);
+    fn todo() {
+        todo!();
     }
 
-    #[test]
-    fn thread_pool_size_1_returns_1() {
-        let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
+    // #[test]
+    // fn thread_pool_size_2_returns_2() {
+    //     let thread_pool = Arc::new(ThreadPool::<Randoms>::new(2));
 
-        let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
+    //     let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        let result = ThreadPoolBatcher::<Randoms>::get_thread_pool_size(&target);
+    //     let result = ThreadPoolBatcher::<Randoms>::get_thread_pool_size(&target);
 
-        assert_eq!(1usize, usize::from(result));
+    //     assert_eq!(2usize, usize::from(result));
 
-        ThreadPoolBatcher::<Randoms>::shutdown_pool(&target);
-    }
+    //     ThreadPoolBatcher::<Randoms>::shutdown_pool(&target);
+    // }
 
-    #[test]
-    fn two_threads_in_thread_pool_shutdown_results_in_2_return_codes() {
-        let thread_pool = Arc::new(ThreadPool::<Randoms>::new(2));
+    // #[test]
+    // fn thread_pool_size_1_returns_1() {
+    //     let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
 
-        let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
+    //     let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        let result = ThreadPoolBatcher::<Randoms>::shutdown_pool(&target);
-        assert_eq!(2, result.len());
-        assert_eq!(ThreadShutdownResponse::new(0, vec![]), result[0]);
-        assert_eq!(ThreadShutdownResponse::new(1, vec![]), result[1])
-    }
+    //     let result = ThreadPoolBatcher::<Randoms>::get_thread_pool_size(&target);
 
-    #[test]
-    fn trait_new_constructs_as_expected() {
-        let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
+    //     assert_eq!(1usize, usize::from(result));
 
-        let result: ThreadPoolBatcherConcrete<Randoms> =
-            ThreadPoolBatcher::<Randoms>::new(Arc::downgrade(&thread_pool));
+    //     ThreadPoolBatcher::<Randoms>::shutdown_pool(&target);
+    // }
 
-        assert!(result.to_send().borrow().is_empty());
-        assert!(std::ptr::eq(
-            thread_pool.as_ref(),
-            Weak::upgrade(&result.thread_pool()).unwrap().as_ref()
-        ));
-    }
+    // #[test]
+    // fn two_threads_in_thread_pool_shutdown_results_in_2_return_codes() {
+    //     let thread_pool = Arc::new(ThreadPool::<Randoms>::new(2));
 
-    #[test]
-    fn batch_single_request_get_expected_single_response() {
-        let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
+    //     let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
+    //     let result = ThreadPoolBatcher::<Randoms>::shutdown_pool(&target);
+    //     assert_eq!(2, result.len());
+    //     assert_eq!(ThreadShutdownResponse::new(0, vec![]), result[0]);
+    //     assert_eq!(ThreadShutdownResponse::new(1, vec![]), result[1])
+    // }
 
-        let request = ThreadRequest::ThreadEcho(0, "hello".to_string());
-        target.batch_for_send(request.clone());
-        let result: Vec<ThreadResponse<RandomsResponse>> =
-            ThreadPoolBatcher::<Randoms>::send_batch(&target);
+    // #[test]
+    // fn trait_new_constructs_as_expected() {
+    //     let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
 
-        let expected_response = ThreadResponse::ThreadEcho(0, 0, "hello [0]".to_string());
+    //     let result: ThreadPoolBatcherConcrete<Randoms> =
+    //         ThreadPoolBatcher::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        assert_eq!(1, result.len());
-        assert_eq!(expected_response, result[0]);
-        // the vec to_send is left empty
-        assert!(target.to_send().borrow().is_empty());
-    }
+    //     assert!(result.to_send().borrow().is_empty());
+    //     assert!(std::ptr::eq(
+    //         thread_pool.as_ref(),
+    //         Weak::upgrade(&result.thread_pool()).unwrap().as_ref()
+    //     ));
+    // }
 
-    #[test]
-    fn send_for_batch_adds_request_to_internal_vec() {
-        let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
-        let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
+    // #[test]
+    // fn batch_single_request_get_expected_single_response() {
+    //     let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
 
-        let request = mean_request::MeanRequest { id: 1 };
-        ThreadPoolBatcher::<Randoms>::batch_for_send(&target, request.clone());
+    //     let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
 
-        assert_eq!(1, target.to_send().borrow().len());
-        assert_eq!(
-            ThreadRequest::<RandomsRequest>::ElementRequest(RandomsRequest::Mean(request)),
-            target.to_send().borrow()[0]
-        );
-    }
+    //     let request = ThreadRequest::ThreadEcho(0, "hello".to_string());
+    //     target.batch_for_send(request.clone());
+    //     let result: Vec<ThreadResponse<RandomsResponse>> =
+    //         ThreadPoolBatcher::<Randoms>::send_batch(&target);
+
+    //     let expected_response = ThreadResponse::ThreadEcho(0, 0, "hello [0]".to_string());
+
+    //     assert_eq!(1, result.len());
+    //     assert_eq!(expected_response, result[0]);
+    //     // the vec to_send is left empty
+    //     assert!(target.to_send().borrow().is_empty());
+    // }
+
+    // #[test]
+    // fn send_for_batch_adds_request_to_internal_vec() {
+    //     let thread_pool = Arc::new(ThreadPool::<Randoms>::new(1));
+    //     let target = ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
+
+    //     let request = mean_request::MeanRequest { id: 1 };
+    //     ThreadPoolBatcher::<Randoms>::batch_for_send(&target, request.clone());
+
+    //     assert_eq!(1, target.to_send().borrow().len());
+    //     assert_eq!(
+    //         ThreadRequest::<RandomsRequest>::ElementRequest(RandomsRequest::Mean(request)),
+    //         target.to_send().borrow()[0]
+    //     );
+    // }
 
     #[test]
     fn concrete_new_constructs_as_expected() {

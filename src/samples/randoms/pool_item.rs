@@ -1,6 +1,10 @@
 use crate::{
-    element::request_response_pair::RequestResponse, pool_item::PoolItem,
-    samples::randoms_init_request::RandomsInitRequest,
+    element::request_response_pair::RequestResponse,
+    pool_item::PoolItem,
+    samples::{
+        mean_response::MeanResponse, randoms_init_request::RandomsInitRequest,
+        sum_response::SumResponse,
+    },
     thread_request_response::add_response::AddResponse,
 };
 
@@ -11,10 +15,24 @@ impl PoolItem for Randoms {
     type Api = RandomsApi;
 
     fn process_message(&mut self, request: &Self::Api) -> Self::Api {
-        todo!()
+        match request {
+            RandomsApi::Mean(request) => MeanResponse {
+                id: request.request().id,
+                mean: self.mean(),
+            }
+            .into(),
+            RandomsApi::Sum(request) => SumResponse {
+                id: request.request().id,
+                sum: self.sum(),
+            }
+            .into(),
+        }
     }
 
     fn new_pool_item(request: &RequestResponse<Self::Init, AddResponse>) -> Result<Self, ()> {
-        todo!()
+        let RequestResponse::Request(init) = request else {
+            panic!("not expected")
+        };
+        Ok(Randoms::new(init.id))
     }
 }

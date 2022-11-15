@@ -1,4 +1,10 @@
-use crate::{id_targeted::IdTargeted, thread_request::ThreadRequest};
+use crate::{
+    element::request_response_pair::RequestResponse,
+    id_targeted::IdTargeted,
+    samples::{randoms::randoms_api::RandomsApi, Randoms},
+    thread_request::ThreadRequest,
+    thread_request_response::ThreadRequestResponse,
+};
 
 use super::RandomsRequest;
 
@@ -23,5 +29,13 @@ impl From<SumRequest> for ThreadRequest<RandomsRequest> {
 impl From<SumRequest> for RandomsRequest {
     fn from(request: SumRequest) -> Self {
         RandomsRequest::Sum(request)
+    }
+}
+
+impl From<SumRequest> for ThreadRequestResponse<Randoms> {
+    fn from(request: SumRequest) -> Self {
+        ThreadRequestResponse::<Randoms>::CallElement(RandomsApi::Sum(RequestResponse::Request(
+            request,
+        )))
     }
 }

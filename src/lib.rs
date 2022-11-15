@@ -115,6 +115,7 @@
 use std::{num::NonZeroUsize, sync::RwLock};
 
 use element::Element;
+use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
 pub mod element;
@@ -127,6 +128,7 @@ pub mod thread_response;
 
 mod drop;
 mod new;
+pub mod new2;
 pub mod pool_item;
 mod pool_thread;
 mod pool_thread_2;
@@ -149,14 +151,14 @@ pub mod thread_request_response;
 #[derive(Debug)]
 pub struct ThreadPool<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     thread_endpoints: RwLock<Vec<ThreadEndpoint<E>>>,
 }
 
 impl<E> ThreadPool<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     /// This function returns the number of threads in the thread pool
     pub fn thread_count(&self) -> NonZeroUsize {

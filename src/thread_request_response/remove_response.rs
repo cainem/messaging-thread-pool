@@ -4,7 +4,7 @@ use crate::{
 
 use super::ThreadRequestResponse;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct RemoveResponse {
     id: u64,
     success: bool,
@@ -36,5 +36,17 @@ where
 {
     fn from(request: RemoveResponse) -> Self {
         ThreadRequestResponse::RemoveElement(RequestResponse::Response(request))
+    }
+}
+
+impl<P> From<ThreadRequestResponse<P>> for RemoveResponse
+where
+    P: PoolItem,
+{
+    fn from(response: ThreadRequestResponse<P>) -> Self {
+        let ThreadRequestResponse::RemoveElement(RequestResponse::Response(response)) = response else {
+            panic!("not expected");
+        };
+        response
     }
 }

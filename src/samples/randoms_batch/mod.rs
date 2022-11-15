@@ -1,13 +1,8 @@
-mod element_factory;
-pub mod message_processor;
 pub mod randoms_batch_request;
 pub mod randoms_batch_response;
 
-use self::{
-    randoms_batch_request::{
-        randoms_batch_init_request::RandomsBatchInitRequest, RandomsBatchRequest,
-    },
-    randoms_batch_response::RandomsBatchResponse,
+use self::randoms_batch_request::{
+    randoms_batch_init_request::RandomsBatchInitRequest, RandomsBatchRequest,
 };
 use crate::{
     element::{element_tracing::ElementTracing, Element},
@@ -61,13 +56,14 @@ impl RandomsBatch {
     pub fn sum_of_sums(&self) -> u128 {
         // to get the sum of sums need to message the controls Randoms to get their sums
         // and then add them all up
-        for contained_id in self.contained_random_ids.iter() {
-            self.randoms_thread_pool_batcher
-                .batch_for_send(SumRequest { id: *contained_id });
-        }
-        let sum_of_sums_responses: Vec<SumResponse> = self.randoms_thread_pool_batcher.send_batch();
+        // for contained_id in self.contained_random_ids.iter() {
+        //     self.randoms_thread_pool_batcher
+        //         .batch_for_send(SumRequest { id: *contained_id });
+        // }
+        // let sum_of_sums_responses: Vec<SumResponse> = self.randoms_thread_pool_batcher.send_batch();
 
-        sum_of_sums_responses.iter().map(|e| e.sum).sum()
+        // sum_of_sums_responses.iter().map(|e| e.sum).sum()
+        todo!()
     }
 
     pub fn contained_random_ids_mut(&mut self) -> &mut Vec<u64> {
@@ -79,13 +75,21 @@ impl RandomsBatch {
     }
 }
 
-impl ElementTracing for RandomsBatch {}
-
-impl Element for RandomsBatch {
-    type Request = RandomsBatchRequest;
-    type Response = RandomsBatchResponse;
-
-    fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
-        self.randoms_thread_pool_batcher().shutdown_pool()
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn todo() {
+        todo!();
     }
 }
+
+// impl ElementTracing for RandomsBatch {}
+
+// impl Element for RandomsBatch {
+//     type Request = RandomsBatchRequest;
+//     type Response = RandomsBatchResponse;
+
+//     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
+//         self.randoms_thread_pool_batcher().shutdown_pool()
+//     }
+// }

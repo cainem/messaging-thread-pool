@@ -12,10 +12,11 @@ pub use thread_pool_batcher_mock::ThreadPoolBatcherMock;
 use std::{num::NonZeroUsize, sync::Weak};
 
 use crate::{
-    element::Element,
     id_targeted::IdTargeted,
-    thread_request::ThreadRequest,
-    thread_response::{ThreadResponse, ThreadShutdownResponse},
+    pool_item::PoolItem,
+    thread_request_response::{
+        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
+    },
     ThreadPool,
 };
 
@@ -25,12 +26,12 @@ use crate::{
 /// (see [`ThreadPoolBatcherMock`])
 pub trait ThreadPoolBatcher<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     /// This function queues a message for sending adding it to an internal buffer
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequest<E::Request>> + IdTargeted;
+        U: Into<ThreadRequestResponse<E>> + IdTargeted;
 
     /// This function sends all messages stored in the internal buffer.\
     /// This call blocks until all messages have been acted upon and their responses returned.\
@@ -38,7 +39,7 @@ where
     /// of the ThreadPoolBatcher's pool threads.\
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadResponse<E::Response>> + IdTargeted;
+        V: From<ThreadRequestResponse<E>> + IdTargeted;
 
     /// Creates a new ThreadPoolBatcher that will use the passed in thread pool
     fn new(thread_pool: Weak<ThreadPool<E>>) -> Self;

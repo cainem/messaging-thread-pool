@@ -1,4 +1,7 @@
-use crate::{id_targeted::IdTargeted, thread_request::ThreadRequest};
+use crate::{
+    element::request_response_pair::RequestResponse, id_targeted::IdTargeted, samples::Randoms,
+    thread_request_response::ThreadRequestResponse,
+};
 
 use super::RandomsRequest;
 
@@ -14,9 +17,9 @@ impl IdTargeted for RandomsInitRequest {
     }
 }
 
-impl From<RandomsInitRequest> for ThreadRequest<RandomsRequest> {
+impl From<RandomsInitRequest> for ThreadRequestResponse<Randoms> {
     fn from(init_request: RandomsInitRequest) -> Self {
-        ThreadRequest::ElementRequest(RandomsRequest::Init(init_request))
+        ThreadRequestResponse::<Randoms>::AddElement(RequestResponse::Request(init_request))
     }
 }
 

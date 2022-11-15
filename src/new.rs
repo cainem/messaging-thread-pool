@@ -4,7 +4,7 @@ use crossbeam_channel::unbounded;
 use tracing::{event, Level};
 
 use crate::{
-    element::Element, pool_thread::PoolThread, sender_couplet::SenderCouplet,
+    pool_item::PoolItem, pool_thread::PoolThread, sender_couplet_2::SenderCouplet2,
     thread_endpoint::ThreadEndpoint, ThreadPool,
 };
 
@@ -12,7 +12,7 @@ impl<E> ThreadPool<E>
 where
     // 'static - the Element cannot contain any references as it isn't guaranteed to live long enough
     // due to it being passed to another thread
-    E: Element + 'static,
+    E: PoolItem + 'static,
 {
     /// This function creates a new [`ThreadPool`]
     ///
@@ -30,7 +30,7 @@ where
         let mut building = Vec::<ThreadEndpoint<E>>::new();
 
         for i in 0..thread_pool_size as u64 {
-            let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet<E>>();
+            let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet2<E>>();
 
             let join_handle = spawn(move || {
                 // set default tracing subscribers for thread
@@ -65,7 +65,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{samples::*, thread_response::ThreadShutdownResponse, ThreadPool};
+    use crate::{
+        samples::*, thread_request_response::thread_shutdown_response::ThreadShutdownResponse,
+        ThreadPool,
+    };
 
     #[test]
     fn new_called_with_thread_pool_size_2_two_threads_created() {

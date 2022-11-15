@@ -2,12 +2,13 @@ use crossbeam_channel::Receiver;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    element::Element, id_targeted::IdTargeted, thread_response::ThreadResponse, ThreadPool,
+    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
+    ThreadPool,
 };
 
 impl<E> ThreadPool<E>
 where
-    E: Element,
+    E: PoolItem,
 {
     /// This function sends a request to a worker thread and receives a response back
     ///
@@ -18,10 +19,10 @@ where
     pub(super) fn receive<T>(
         &self,
         requests_len: usize,
-        receive_from_worker: Receiver<ThreadResponse<E::Response>>,
+        receive_from_worker: Receiver<ThreadRequestResponse<E>>,
     ) -> Vec<T>
     where
-        T: From<ThreadResponse<E::Response>> + IdTargeted,
+        T: From<ThreadRequestResponse<E>> + IdTargeted,
     {
         // for every request there will be a response
         let mut building_responses = Vec::with_capacity(requests_len);
@@ -51,51 +52,57 @@ mod tests {
     use crate::{
         samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
     };
-    #[test]
-    fn three_init_requests_two_thread_received_three_responses_received() {
-        let target = ThreadPool::<Randoms>::new(2);
-
-        let (send_to_pool, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
-
-        let requests: Vec<_> = (0..3u64)
-            .map(|id| ThreadRequest::ThreadEcho(id, format!("ping {}", id)))
-            .collect();
-        let requests = RefCell::new(requests);
-
-        target.send(send_to_pool, &requests);
-
-        let result = target.receive::<ThreadResponse<RandomsResponse>>(3, receive_from_thread);
-
-        assert_eq!(3, result.len());
-        let messages: Vec<_> = result
-            .iter()
-            .map(|e| match e {
-                ThreadResponse::ThreadEcho(_targeted, _actual, s) => s,
-                _ => panic!("not expected"),
-            })
-            .collect();
-        assert!(messages.contains(&&"ping 0 [0]".to_string()));
-        assert!(messages.contains(&&"ping 1 [1]".to_string()));
-        assert!(messages.contains(&&"ping 2 [0]".to_string()));
-    }
 
     #[test]
-    fn single_init_request_on_a_single_thread_received_single_response_received() {
-        let target = ThreadPool::<Randoms>::new(1);
-
-        let (send_to_pool, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
-
-        let requests: Vec<_> = (0..1u64)
-            .map(|id| randoms_init_request::RandomsInitRequest { id })
-            .collect();
-        let requests = RefCell::new(requests);
-
-        target.send(send_to_pool, &requests);
-
-        let result =
-            target.receive::<randoms_init_response::RandomsInitResponse>(1, receive_from_thread);
-
-        assert_eq!(1, result.len());
-        assert_eq!(0, result[0].id);
+    fn todo() {
+        todo!();
     }
+
+    // #[test]
+    // fn three_init_requests_two_thread_received_three_responses_received() {
+    //     let target = ThreadPool::<Randoms>::new(2);
+
+    //     let (send_to_pool, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+
+    //     let requests: Vec<_> = (0..3u64)
+    //         .map(|id| ThreadRequest::ThreadEcho(id, format!("ping {}", id)))
+    //         .collect();
+    //     let requests = RefCell::new(requests);
+
+    //     target.send(send_to_pool, &requests);
+
+    //     let result = target.receive::<ThreadResponse<RandomsResponse>>(3, receive_from_thread);
+
+    //     assert_eq!(3, result.len());
+    //     let messages: Vec<_> = result
+    //         .iter()
+    //         .map(|e| match e {
+    //             ThreadResponse::ThreadEcho(_targeted, _actual, s) => s,
+    //             _ => panic!("not expected"),
+    //         })
+    //         .collect();
+    //     assert!(messages.contains(&&"ping 0 [0]".to_string()));
+    //     assert!(messages.contains(&&"ping 1 [1]".to_string()));
+    //     assert!(messages.contains(&&"ping 2 [0]".to_string()));
+    // }
+
+    // #[test]
+    // fn single_init_request_on_a_single_thread_received_single_response_received() {
+    //     let target = ThreadPool::<Randoms>::new(1);
+
+    //     let (send_to_pool, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+
+    //     let requests: Vec<_> = (0..1u64)
+    //         .map(|id| randoms_init_request::RandomsInitRequest { id })
+    //         .collect();
+    //     let requests = RefCell::new(requests);
+
+    //     target.send(send_to_pool, &requests);
+
+    //     let result =
+    //         target.receive::<randoms_init_response::RandomsInitResponse>(1, receive_from_thread);
+
+    //     assert_eq!(1, result.len());
+    //     assert_eq!(0, result[0].id);
+    // }
 }

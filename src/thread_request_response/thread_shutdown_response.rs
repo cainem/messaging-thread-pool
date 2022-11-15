@@ -14,6 +14,10 @@ impl ThreadShutdownResponse {
     pub fn new(id: u64, children: Vec<ThreadShutdownResponse>) -> Self {
         Self { id, children }
     }
+
+    pub fn take_children(self) -> Vec<ThreadShutdownResponse> {
+        self.children
+    }
 }
 
 impl IdTargeted for ThreadShutdownResponse {
@@ -28,5 +32,13 @@ where
 {
     fn from(request: ThreadShutdownResponse) -> Self {
         ThreadRequestResponse::ThreadShutdown(RequestResponse::Response(request))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn todo() {
+        todo!();
     }
 }

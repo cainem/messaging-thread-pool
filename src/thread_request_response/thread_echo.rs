@@ -1,9 +1,9 @@
 use crate::id_targeted::IdTargeted;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct ThreadEchoRequest {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct ThreadEchoResponse {}
 
 impl IdTargeted for ThreadEchoRequest {
