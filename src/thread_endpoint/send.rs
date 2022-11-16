@@ -1,7 +1,7 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    pool_item::PoolItem, sender_couplet::SenderCouplet, sender_couplet_2::SenderCouplet2,
+    pool_item::PoolItem, sender_couplet_2::SenderCouplet2,
     thread_request_response::ThreadRequestResponse,
 };
 
@@ -29,8 +29,8 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        samples::*, sender_couplet::SenderCouplet, thread_endpoint::ThreadEndpoint,
-        thread_request::ThreadRequest, thread_response::ThreadResponse,
+        samples::*, thread_endpoint::ThreadEndpoint, thread_request::ThreadRequest,
+        thread_response::ThreadResponse,
     };
 
     #[test]

@@ -1,5 +1,5 @@
 use messaging_thread_pool::{
-    element::request_response_pair::RequestResponse,
+    request_response_pair::RequestResponse,
     samples::*,
     thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request_response::{

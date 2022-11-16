@@ -3,9 +3,7 @@ pub mod remove_response;
 pub mod thread_echo;
 pub mod thread_shutdown_response;
 
-use crate::{
-    element::request_response_pair::RequestResponse, id_targeted::IdTargeted, pool_item::PoolItem,
-};
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response_pair::RequestResponse};
 
 use self::{
     add_response::AddResponse,

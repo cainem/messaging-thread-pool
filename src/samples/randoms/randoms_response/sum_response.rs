@@ -1,6 +1,6 @@
 use crate::{
-    element::request_response_pair::RequestResponse,
     id_targeted::IdTargeted,
+    request_response_pair::RequestResponse,
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
     thread_response::ThreadResponse,

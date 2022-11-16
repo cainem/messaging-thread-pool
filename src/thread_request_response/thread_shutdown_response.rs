@@ -1,6 +1,4 @@
-use crate::{
-    element::request_response_pair::RequestResponse, id_targeted::IdTargeted, pool_item::PoolItem,
-};
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response_pair::RequestResponse};
 
 use super::ThreadRequestResponse;
 

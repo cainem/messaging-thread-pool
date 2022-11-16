@@ -2,8 +2,8 @@ use tracing::subscriber::DefaultGuard;
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::{
-    element::request_response_pair::RequestResponse,
     id_targeted::IdTargeted,
+    request_response_pair::RequestResponse,
     thread_request_response::{
         add_response::AddResponse, thread_shutdown_response::ThreadShutdownResponse,
     },

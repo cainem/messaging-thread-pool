@@ -28,7 +28,6 @@ mod tests {
     use crate::{
         pool_thread::PoolThread,
         samples::*,
-        sender_couplet::SenderCouplet,
         thread_response::{ThreadResponse, ThreadShutdownResponse},
     };
 

@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use crossbeam_channel::Receiver;
 
-use crate::{
-    element::Element, pool_item::PoolItem, sender_couplet::SenderCouplet,
-    sender_couplet_2::SenderCouplet2,
-};
+use crate::{pool_item::PoolItem, sender_couplet_2::SenderCouplet2};
 
 use super::PoolThread;
 
@@ -40,8 +37,8 @@ mod tests {
     use crossbeam_channel::{bounded, unbounded};
 
     use crate::{
-        pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
-        thread_request::ThreadRequest, thread_response::ThreadResponse,
+        pool_thread::PoolThread, samples::*, thread_request::ThreadRequest,
+        thread_response::ThreadResponse,
     };
 
     #[test]

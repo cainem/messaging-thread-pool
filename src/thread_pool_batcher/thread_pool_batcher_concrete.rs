@@ -1,7 +1,6 @@
 use std::{cell::RefCell, num::NonZeroUsize, sync::Weak};
 
 use crate::{
-    element::Element,
     id_targeted::IdTargeted,
     pool_item::PoolItem,
     thread_request_response::{

@@ -1,7 +1,6 @@
 use tracing::{event, instrument, Level};
 
 use crate::{
-    element::Element,
     id_targeted::IdTargeted,
     pool_item::PoolItem,
     thread_request::ThreadRequest,
@@ -148,7 +147,6 @@ mod tests {
     use crate::{
         pool_thread::PoolThread,
         samples::*,
-        sender_couplet::SenderCouplet,
         thread_request::ThreadRequest,
         thread_response::{ThreadResponse, ThreadShutdownResponse},
     };

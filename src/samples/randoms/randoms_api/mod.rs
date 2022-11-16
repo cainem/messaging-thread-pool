@@ -1,7 +1,7 @@
 use crate::{
-    element::request_response_pair::RequestResponse,
     id_targeted::IdTargeted,
     pool_item::PoolItemApi,
+    request_response_pair::RequestResponse,
     samples::{
         mean_request::MeanRequest, mean_response::MeanResponse, sum_request::SumRequest,
         sum_response::SumResponse,

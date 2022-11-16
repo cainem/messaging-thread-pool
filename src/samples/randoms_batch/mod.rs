@@ -1,18 +1,10 @@
 pub mod randoms_batch_request;
 pub mod randoms_batch_response;
 
-use self::randoms_batch_request::{
-    randoms_batch_init_request::RandomsBatchInitRequest, RandomsBatchRequest,
-};
+use self::randoms_batch_request::randoms_batch_init_request::RandomsBatchInitRequest;
 use crate::{
-    element::{element_tracing::ElementTracing, Element},
-    id_provider::sized_id_provider::SizedIdProvider,
-    samples::randoms::{
-        randoms_request::sum_request::SumRequest, randoms_response::sum_response::SumResponse,
-        Randoms,
-    },
+    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms,
     thread_pool_batcher::ThreadPoolBatcherConcrete,
-    thread_response::ThreadShutdownResponse,
 };
 
 /// An example of an element that contains a child thread pool
@@ -82,14 +74,3 @@ mod tests {
         todo!();
     }
 }
-
-// impl ElementTracing for RandomsBatch {}
-
-// impl Element for RandomsBatch {
-//     type Request = RandomsBatchRequest;
-//     type Response = RandomsBatchResponse;
-
-//     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
-//         self.randoms_thread_pool_batcher().shutdown_pool()
-//     }
-// }

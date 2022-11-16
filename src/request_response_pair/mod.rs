@@ -1,11 +1,5 @@
 use crate::id_targeted::IdTargeted;
 
-// pub trait RequesterResponder<Req, Res> {
-//     fn request(&self) -> &Req;
-//     fn response(&self) -> &Res;
-//     fn is_request(&self) -> bool;
-// }
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum RequestResponse<Req, Res>
 where

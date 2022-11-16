@@ -1,5 +1,5 @@
 use crate::{
-    element::request_response_pair::RequestResponse, id_targeted::IdTargeted, samples::Randoms,
+    id_targeted::IdTargeted, request_response_pair::RequestResponse, samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };
 

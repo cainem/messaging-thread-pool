@@ -114,11 +114,9 @@
 //!
 use std::{num::NonZeroUsize, sync::RwLock};
 
-use element::Element;
 use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
-pub mod element;
 pub mod id_provider;
 pub mod id_targeted;
 pub mod samples;
@@ -133,9 +131,9 @@ pub mod pool_item;
 mod pool_thread;
 mod pool_thread_2;
 mod receive;
+pub mod request_response_pair;
 mod send;
 mod send_and_receive;
-mod sender_couplet;
 pub mod sender_couplet_2;
 mod shutdown;
 mod thread_endpoint;

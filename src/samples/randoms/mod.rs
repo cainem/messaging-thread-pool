@@ -7,11 +7,7 @@ pub mod randoms_response;
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
 
-use crate::{
-    element::{element_factory::ElementFactory, element_tracing::ElementTracing, Element},
-    id_targeted::IdTargeted,
-    thread_response::ThreadShutdownResponse,
-};
+use crate::{id_targeted::IdTargeted, thread_response::ThreadShutdownResponse};
 
 use {
     randoms_request::RandomsRequest,
@@ -59,39 +55,8 @@ impl Randoms {
     }
 }
 
-impl ElementFactory<RandomsRequest, RandomsResponse> for Randoms {
-    #[inline(always)]
-    fn new_element(request: &RandomsRequest) -> (Option<Self>, RandomsResponse) {
-        match request {
-            RandomsRequest::Init(init) => (
-                Some(Randoms::new(init.id)),
-                RandomsResponse::Init(RandomsInitResponse { id: init.id }),
-            ),
-            _ => panic!("expected init only"),
-        }
-    }
-}
-
-impl Element for Randoms {
-    type Request = RandomsRequest;
-    type Response = RandomsResponse;
-
-    fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
-        // to mock shutdown (for test purposes) return id
-        // as Randoms contains no child threads it really should not be
-        // overridden (or it should return an empty vec)
-        vec![ThreadShutdownResponse::new(self.id, vec![])]
-    }
-
-    fn name(&self) -> &str {
-        std::any::type_name::<Self>()
-    }
-}
-
 impl IdTargeted for Randoms {
     fn id(&self) -> u64 {
         self.id
     }
 }
-
-impl ElementTracing for Randoms {}

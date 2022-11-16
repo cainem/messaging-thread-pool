@@ -1,6 +1,6 @@
 use crate::{
-    element::request_response_pair::RequestResponse,
     pool_item::PoolItem,
+    request_response_pair::RequestResponse,
     samples::{
         mean_response::MeanResponse, randoms_init_request::RandomsInitRequest,
         sum_response::SumResponse,
