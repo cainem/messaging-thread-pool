@@ -4,7 +4,7 @@ use crossbeam_channel::unbounded;
 use tracing::{event, Level};
 
 use crate::{
-    pool_item::PoolItem, pool_thread_2::PoolThread2, sender_couplet::SenderCouplet,
+    pool_item::PoolItem, pool_thread::PoolThread, sender_couplet::SenderCouplet,
     thread_endpoint::ThreadEndpoint, ThreadPool,
 };
 
@@ -37,7 +37,7 @@ where
                 let tracing_guards = P::add_pool_thread_tracing(i);
 
                 // start a new thread with id i
-                let mut pool_thread = PoolThread2::<P>::new(i, receive_from_pool);
+                let mut pool_thread = PoolThread::<P>::new(i, receive_from_pool);
 
                 event!(Level::INFO, "starting message loop");
 

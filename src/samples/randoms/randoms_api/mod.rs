@@ -1,12 +1,18 @@
+pub mod mean_request;
+pub mod mean_response;
+pub mod randoms_init_request;
+pub mod randoms_init_response;
+pub mod sum_request;
+pub mod sum_response;
+
 use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItemApi,
-    request_response_pair::RequestResponse,
-    samples::{
-        mean_request::MeanRequest, mean_response::MeanResponse, sum_request::SumRequest,
-        sum_response::SumResponse,
-    },
-    thread_request_response::ThreadRequestResponse,
+    id_targeted::IdTargeted, pool_item::pool_item_api::PoolItemApi,
+    request_response_pair::RequestResponse, thread_request_response::ThreadRequestResponse,
+};
+
+use self::{
+    mean_request::MeanRequest, mean_response::MeanResponse, sum_request::SumRequest,
+    sum_response::SumResponse,
 };
 
 use super::Randoms;

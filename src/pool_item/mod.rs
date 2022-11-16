@@ -1,3 +1,5 @@
+pub mod pool_item_api;
+
 use tracing::subscriber::DefaultGuard;
 use tracing_appender::non_blocking::WorkerGuard;
 
@@ -9,6 +11,8 @@ use crate::{
     },
 };
 use std::fmt::Debug;
+
+use self::pool_item_api::PoolItemApi;
 
 pub trait PoolItem: Debug
 where
@@ -50,12 +54,5 @@ where
     #[allow(unused_variables)]
     fn add_pool_thread_tracing(id: u64) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
         None
-    }
-}
-
-pub trait PoolItemApi {
-    fn is_request(&self) -> bool;
-    fn is_response(&self) -> bool {
-        !self.is_request()
     }
 }

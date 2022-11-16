@@ -1,14 +1,15 @@
 use crate::{
-    pool_item::PoolItem,
-    request_response_pair::RequestResponse,
-    samples::{
-        mean_response::MeanResponse, randoms_init_request::RandomsInitRequest,
-        sum_response::SumResponse,
-    },
+    pool_item::PoolItem, request_response_pair::RequestResponse,
     thread_request_response::add_response::AddResponse,
 };
 
-use super::{randoms_api::RandomsApi, Randoms};
+use super::{
+    randoms_api::{
+        mean_response::MeanResponse, randoms_init_request::RandomsInitRequest,
+        sum_response::SumResponse, RandomsApi,
+    },
+    Randoms,
+};
 
 impl PoolItem for Randoms {
     type Init = RandomsInitRequest;

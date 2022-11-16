@@ -36,7 +36,7 @@ where
             ThreadRequestResponse::ThreadEcho(_) => todo!(),
             ThreadRequestResponse::RemoveElement(_) => todo!(),
             ThreadRequestResponse::AddElement(_) => todo!(),
-            ThreadRequestResponse::CallElement(payload) => todo!(),
+            ThreadRequestResponse::CallElement(_payload) => todo!(),
         }
     }
 

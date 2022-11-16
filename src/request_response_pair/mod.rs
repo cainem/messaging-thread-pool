@@ -39,24 +39,6 @@ where
     }
 }
 
-// impl<Req, Res> RequesterResponder<Req, Res> for RequestResponse<Req, Res>
-// where
-//     Req: IdTargeted,
-//     Res: IdTargeted,
-// {
-//     fn request(&self) -> &Req {
-//         todo!()
-//     }
-
-//     fn response(&self) -> &Res {
-//         todo!()
-//     }
-
-//     fn is_request(&self) -> bool {
-//         todo!()
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     #[test]
