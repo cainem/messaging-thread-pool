@@ -36,9 +36,7 @@ where
 mod tests {
     use std::cell::RefCell;
 
-    use crate::{
-        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
-    };
+    use crate::{samples::*, ThreadPool};
 
     #[test]
     fn todo() {

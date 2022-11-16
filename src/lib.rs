@@ -121,8 +121,6 @@ pub mod id_provider;
 pub mod id_targeted;
 pub mod samples;
 pub mod thread_pool_batcher;
-pub mod thread_request;
-pub mod thread_response;
 
 mod drop;
 mod new;
@@ -134,7 +132,7 @@ mod receive;
 pub mod request_response_pair;
 mod send;
 mod send_and_receive;
-pub mod sender_couplet_2;
+pub mod sender_couplet;
 mod shutdown;
 mod thread_endpoint;
 pub mod thread_request_response;

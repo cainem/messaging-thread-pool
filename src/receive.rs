@@ -49,9 +49,7 @@ mod tests {
 
     use crossbeam_channel::unbounded;
 
-    use crate::{
-        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
-    };
+    use crate::{samples::*, ThreadPool};
 
     #[test]
     fn todo() {

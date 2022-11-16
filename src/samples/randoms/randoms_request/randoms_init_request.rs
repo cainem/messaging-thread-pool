@@ -3,8 +3,6 @@ use crate::{
     thread_request_response::ThreadRequestResponse,
 };
 
-use super::RandomsRequest;
-
 /// This is message that sent to request the creation of a new Randoms struct with the specified id
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RandomsInitRequest {
@@ -20,11 +18,5 @@ impl IdTargeted for RandomsInitRequest {
 impl From<RandomsInitRequest> for ThreadRequestResponse<Randoms> {
     fn from(init_request: RandomsInitRequest) -> Self {
         ThreadRequestResponse::<Randoms>::AddElement(RequestResponse::Request(init_request))
-    }
-}
-
-impl From<RandomsInitRequest> for RandomsRequest {
-    fn from(request: RandomsInitRequest) -> Self {
-        RandomsRequest::Init(request)
     }
 }

@@ -1,7 +1,4 @@
-use crate::{
-    id_provider::sized_id_provider::SizedIdProvider, id_targeted::IdTargeted,
-    thread_request::ThreadRequest,
-};
+use crate::{id_provider::sized_id_provider::SizedIdProvider, id_targeted::IdTargeted};
 
 use super::RandomsBatchRequest;
 
@@ -21,12 +18,6 @@ pub struct RandomsBatchInitRequest {
 impl IdTargeted for RandomsBatchInitRequest {
     fn id(&self) -> u64 {
         self.id
-    }
-}
-
-impl From<RandomsBatchInitRequest> for ThreadRequest<RandomsBatchRequest> {
-    fn from(init_request: RandomsBatchInitRequest) -> Self {
-        ThreadRequest::ElementRequest(RandomsBatchRequest::Init(init_request))
     }
 }
 

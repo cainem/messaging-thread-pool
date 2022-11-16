@@ -1,7 +1,7 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    pool_item::PoolItem, sender_couplet_2::SenderCouplet2,
+    pool_item::PoolItem, sender_couplet::SenderCouplet,
     thread_request_response::ThreadRequestResponse,
 };
 
@@ -17,7 +17,7 @@ where
         T: Into<ThreadRequestResponse<E>>,
     {
         self.sender
-            .send(SenderCouplet2::<E>::new(sender.clone(), request.into()))
+            .send(SenderCouplet::<E>::new(sender.clone(), request.into()))
             .expect("The receiver thread to always be available");
     }
 }
@@ -28,10 +28,7 @@ mod tests {
 
     use crossbeam_channel::unbounded;
 
-    use crate::{
-        samples::*, thread_endpoint::ThreadEndpoint, thread_request::ThreadRequest,
-        thread_response::ThreadResponse,
-    };
+    use crate::{samples::*, thread_endpoint::ThreadEndpoint};
 
     #[test]
     fn todo() {

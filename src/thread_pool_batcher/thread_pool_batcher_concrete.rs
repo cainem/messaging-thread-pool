@@ -88,13 +88,7 @@ where
 mod tests {
     use std::sync::{Arc, Weak};
 
-    use crate::{
-        samples::*,
-        thread_pool_batcher::ThreadPoolBatcher,
-        thread_request::ThreadRequest,
-        thread_response::{ThreadResponse, ThreadShutdownResponse},
-        ThreadPool,
-    };
+    use crate::{samples::*, thread_pool_batcher::ThreadPoolBatcher, ThreadPool};
 
     use super::ThreadPoolBatcherConcrete;
 

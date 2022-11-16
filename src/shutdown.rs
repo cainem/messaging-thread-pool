@@ -75,9 +75,7 @@ where
 mod tests {
     use std::sync::Arc;
 
-    use crate::{
-        samples::*, thread_pool_batcher::*, thread_response::ThreadShutdownResponse, ThreadPool,
-    };
+    use crate::{samples::*, thread_pool_batcher::*, ThreadPool};
 
     #[cfg(test)]
     mod tests {

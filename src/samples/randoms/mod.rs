@@ -7,12 +7,7 @@ pub mod randoms_response;
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
 
-use crate::{id_targeted::IdTargeted, thread_response::ThreadShutdownResponse};
-
-use {
-    randoms_request::RandomsRequest,
-    randoms_response::{randoms_init_response::RandomsInitResponse, RandomsResponse},
-};
+use crate::id_targeted::IdTargeted;
 
 /// This represents a simple collection of random numbers which is hosted inside the thread pool
 ///

@@ -28,10 +28,7 @@ where
 mod tests {
     use std::sync::Arc;
 
-    use crate::{
-        samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, thread_request::ThreadRequest,
-        thread_response::ThreadResponse, ThreadPool,
-    };
+    use crate::{samples::*, thread_pool_batcher::ThreadPoolBatcherConcrete, ThreadPool};
 
     #[test]
     fn todo() {

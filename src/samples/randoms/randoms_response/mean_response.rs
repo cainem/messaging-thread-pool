@@ -1,9 +1,7 @@
 use crate::{
     id_targeted::IdTargeted, request_response_pair::RequestResponse,
-    samples::randoms::randoms_api::RandomsApi, thread_response::ThreadResponse,
+    samples::randoms::randoms_api::RandomsApi,
 };
-
-use super::RandomsResponse;
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,23 +16,8 @@ impl IdTargeted for MeanResponse {
     }
 }
 
-impl From<ThreadResponse<RandomsResponse>> for MeanResponse {
-    fn from(response: ThreadResponse<RandomsResponse>) -> Self {
-        match response {
-            ThreadResponse::ElementResponse(RandomsResponse::Mean(mean)) => mean,
-            _ => panic!("cannot unwrap"),
-        }
-    }
-}
-
 impl From<MeanResponse> for RandomsApi {
     fn from(response: MeanResponse) -> Self {
         RandomsApi::Mean(RequestResponse::Response(response))
-    }
-}
-
-impl From<MeanResponse> for RandomsResponse {
-    fn from(response: MeanResponse) -> Self {
-        RandomsResponse::Mean(response)
     }
 }

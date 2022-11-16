@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crossbeam_channel::Receiver;
 
-use crate::{pool_item::PoolItem, sender_couplet_2::SenderCouplet2};
+use crate::{pool_item::PoolItem, sender_couplet::SenderCouplet};
 
 use super::PoolThread2;
 
@@ -21,7 +21,7 @@ where
     ///
     /// The PoolThread spins around its message_loop function processing messages until a request is
     /// received to shutdown.
-    pub fn new(id: u64, pool_thread_receiver: Receiver<SenderCouplet2<E>>) -> Self {
+    pub fn new(id: u64, pool_thread_receiver: Receiver<SenderCouplet<E>>) -> Self {
         Self {
             id,
             pool_thread_receiver,

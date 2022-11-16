@@ -25,11 +25,7 @@ where
 mod tests {
     use crossbeam_channel::{bounded, unbounded};
 
-    use crate::{
-        pool_thread::PoolThread,
-        samples::*,
-        thread_response::{ThreadResponse, ThreadShutdownResponse},
-    };
+    use crate::samples::*;
 
     #[test]
     fn todo() {
