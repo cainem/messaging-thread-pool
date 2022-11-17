@@ -75,10 +75,7 @@ where
 mod tests {
     use crate::{
         request_response::RequestResponse,
-        samples::{
-            mean_request::MeanRequest, randoms_init_request::RandomsInitRequest, Randoms,
-            RandomsApi,
-        },
+        samples::{randoms_init_request::RandomsInitRequest, Randoms, RandomsApi},
         thread_request_response::ThreadRequestResponse,
     };
 
@@ -123,7 +120,7 @@ mod tests {
 
     #[test]
     fn message_pool_item_thread_request_response_contains_request_is_request_true() {
-        let message = RandomsApi::Mean(RequestResponse::Request(MeanRequest { id: 1 }));
+        let message = RandomsApi::Mean(RequestResponse::Request(1));
 
         let target = ThreadRequestResponse::<Randoms>::MessagePoolItem(message);
         assert!(target.is_request())

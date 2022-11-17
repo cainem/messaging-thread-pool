@@ -1,5 +1,5 @@
 use crate::{
-    pool_item::PoolItem, request_response::RequestResponse,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
     thread_request_response::add_response::AddResponse,
 };
 
@@ -18,12 +18,12 @@ impl PoolItem for Randoms {
     fn process_message(&mut self, request: &Self::Api) -> Self::Api {
         match request {
             RandomsApi::Mean(request) => MeanResponse {
-                id: request.request().id,
+                id: request.request().id(),
                 mean: self.mean(),
             }
             .into(),
             RandomsApi::Sum(request) => SumResponse {
-                id: request.request().id,
+                id: request.request().id(),
                 sum: self.sum(),
             }
             .into(),

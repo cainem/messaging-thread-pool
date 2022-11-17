@@ -1,8 +1,5 @@
-pub mod mean_request;
 pub mod mean_response;
 pub mod randoms_init_request;
-pub mod randoms_init_response;
-pub mod sum_request;
 pub mod sum_response;
 
 use crate::{
@@ -10,17 +7,14 @@ use crate::{
     request_response::RequestResponse, thread_request_response::ThreadRequestResponse,
 };
 
-use self::{
-    mean_request::MeanRequest, mean_response::MeanResponse, sum_request::SumRequest,
-    sum_response::SumResponse,
-};
+use self::{mean_response::MeanResponse, sum_response::SumResponse};
 
 use super::Randoms;
 
 #[derive(Debug)]
 pub enum RandomsApi {
-    Mean(RequestResponse<MeanRequest, MeanResponse>),
-    Sum(RequestResponse<SumRequest, SumResponse>),
+    Mean(RequestResponse<usize, MeanResponse>),
+    Sum(RequestResponse<usize, SumResponse>),
 }
 
 impl IdTargeted for RandomsApi {
@@ -38,18 +32,17 @@ impl PoolItemApi for RandomsApi {
     }
 }
 
-impl From<MeanRequest> for ThreadRequestResponse<Randoms> {
-    fn from(request: MeanRequest) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(request)))
-    }
-}
-
-impl From<ThreadRequestResponse<Randoms>> for MeanResponse {
+impl From<ThreadRequestResponse<Randoms>> for RandomsApi {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(
-            RequestResponse::Response(result))) = response else {
+        let ThreadRequestResponse::MessagePoolItem(result) = response else {
                 panic!("must be a response to a call to the element")
             };
         result
+    }
+}
+
+impl From<RandomsApi> for ThreadRequestResponse<Randoms> {
+    fn from(request_response: RandomsApi) -> Self {
+        ThreadRequestResponse::MessagePoolItem(request_response)
     }
 }

@@ -25,7 +25,7 @@ pub fn example_simple_one_level_thread_pool() {
 
     // now create 1000 messages asking them for the sum of their contained random numbers
     for i in 0..1000 {
-        thread_pool_batcher.batch_for_send(sum_request::SumRequest { id: i });
+        thread_pool_batcher.batch_for_send(RandomsApi::Mean(RequestResponse::Request(i)));
     }
     // Send the messages
     // The message will be routed to the thread to where the targeted element resides
@@ -36,7 +36,7 @@ pub fn example_simple_one_level_thread_pool() {
     // get the mean of the randoms for element with id 0, this will execute on thread 0
     // this call will block until complete
     let mean0 = thread_pool_batcher
-        .batch_for_send(mean_request::MeanRequest { id: 0 })
+        .batch_for_send(RandomsApi::Mean(RequestResponse::Request(0)))
         .send_batch::<mean_response::MeanResponse>()[0]
         .mean;
     println!("{}", mean0);

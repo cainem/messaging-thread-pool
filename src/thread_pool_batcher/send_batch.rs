@@ -1,6 +1,4 @@
-use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
-};
+use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse};
 
 use super::ThreadPoolBatcherConcrete;
 
@@ -15,7 +13,7 @@ where
     /// With debug_assertions it checks that there is one appropriately targeted response for each request
     pub fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<E>> + IdTargeted,
+        V: From<ThreadRequestResponse<E>>,
     {
         self.thread_pool()
             .upgrade()
