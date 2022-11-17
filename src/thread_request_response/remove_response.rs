@@ -1,19 +1,19 @@
-use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response_pair::RequestResponse};
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct RemoveResponse {
-    id: u64,
+    id: usize,
     success: bool,
 }
 
 impl RemoveResponse {
-    pub fn new(id: u64, success: bool) -> Self {
+    pub fn new(id: usize, success: bool) -> Self {
         Self { id, success }
     }
 
-    pub fn id(&self) -> u64 {
+    pub fn id(&self) -> usize {
         self.id
     }
 
@@ -23,7 +23,7 @@ impl RemoveResponse {
 }
 
 impl IdTargeted for RemoveResponse {
-    fn id(&self) -> u64 {
+    fn id(&self) -> usize {
         todo!()
     }
 }
@@ -33,7 +33,7 @@ where
     T: PoolItem,
 {
     fn from(request: RemoveResponse) -> Self {
-        ThreadRequestResponse::RemoveElement(RequestResponse::Response(request))
+        ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(request))
     }
 }
 
@@ -42,7 +42,7 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::RemoveElement(RequestResponse::Response(response)) = response else {
+        let ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(response)) = response else {
             panic!("not expected");
         };
         response

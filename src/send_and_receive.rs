@@ -18,8 +18,8 @@ where
     #[instrument(skip(self, requests))]
     pub fn send_and_receive<T, U>(&self, requests: &RefCell<Vec<T>>) -> Vec<U>
     where
-        T: Into<ThreadRequestResponse<E>> + IdTargeted,
-        U: From<ThreadRequestResponse<E>> + IdTargeted,
+        T: Into<ThreadRequestResponse<E>>,
+        U: From<ThreadRequestResponse<E>>,
     {
         let requests_len = requests.borrow().len();
 

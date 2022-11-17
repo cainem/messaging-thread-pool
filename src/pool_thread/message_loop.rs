@@ -43,7 +43,7 @@ where
             let response = match sender_couplet.request() {
                 ThreadRequestResponse::ThreadAbort(_) => todo!(),
                 ThreadRequestResponse::ThreadEcho(_) => todo!(),
-                ThreadRequestResponse::AddElement(request) => {
+                ThreadRequestResponse::AddPoolItem(request) => {
                     let new_pool_item = E::new_pool_item(request);
                     let id = request.id();
 
@@ -75,10 +75,10 @@ where
                     };
                     AddResponse::new(id, success).into()
                 }
-                ThreadRequestResponse::CallElement(request) => {
+                ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
 
-                    let response = ThreadRequestResponse::<E>::CallElement(
+                    let response = ThreadRequestResponse::<E>::MessagePoolItem(
                         if let Some(targeted) = self.element_hash_map.get_mut(&id) {
                             // if the id already exists then it must be a message that needs processing that needs processing against an
                             // existing element
@@ -90,7 +90,7 @@ where
 
                     response
                 }
-                ThreadRequestResponse::RemoveElement(request) => {
+                ThreadRequestResponse::RemovePoolItem(request) => {
                     let id = request.request().id();
                     let success = self.element_hash_map.remove(&id).is_some();
                     RemoveResponse::new(id, success).into()
@@ -99,7 +99,7 @@ where
                 ThreadRequestResponse::ThreadShutdown(request) => {
                     let id = request.request().id();
                     debug_assert_eq!(
-                        self.id as u64, id,
+                        self.id, id,
                         "this messages should have targeted this thread"
                     );
                     // this call to shutdown the child threads and consequently empty the internal hash map

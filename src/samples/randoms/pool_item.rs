@@ -1,5 +1,5 @@
 use crate::{
-    pool_item::PoolItem, request_response_pair::RequestResponse,
+    pool_item::PoolItem, request_response::RequestResponse,
     thread_request_response::add_response::AddResponse,
 };
 

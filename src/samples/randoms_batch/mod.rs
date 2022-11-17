@@ -20,7 +20,7 @@ use crate::{
 /// (ids, must be unique across the thread pool for obvious reasons)
 #[derive(Debug)]
 pub struct RandomsBatch {
-    pub id: u64,
+    pub id: usize,
     pub contained_random_ids: Vec<u64>,
     pub randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
     pub id_provider: SizedIdProvider,

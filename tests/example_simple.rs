@@ -1,5 +1,5 @@
 use messaging_thread_pool::{
-    request_response_pair::RequestResponse,
+    request_response::RequestResponse,
     samples::*,
     thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request_response::{
@@ -44,7 +44,7 @@ pub fn example_simple_one_level_thread_pool() {
     // remove element with id 1
     // it wil be dropped from the thread where it was residing
     let responses = thread_pool_batcher
-        .batch_for_send(ThreadRequestResponse::RemoveElement(
+        .batch_for_send(ThreadRequestResponse::RemovePoolItem(
             RequestResponse::Request(1),
         ))
         .send_batch::<RemoveResponse>();

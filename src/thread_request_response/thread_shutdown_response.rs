@@ -1,15 +1,15 @@
-use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response_pair::RequestResponse};
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadShutdownResponse {
-    id: u64,
+    id: usize,
     children: Vec<ThreadShutdownResponse>,
 }
 
 impl ThreadShutdownResponse {
-    pub fn new(id: u64, children: Vec<ThreadShutdownResponse>) -> Self {
+    pub fn new(id: usize, children: Vec<ThreadShutdownResponse>) -> Self {
         Self { id, children }
     }
 
@@ -19,7 +19,7 @@ impl ThreadShutdownResponse {
 }
 
 impl IdTargeted for ThreadShutdownResponse {
-    fn id(&self) -> u64 {
+    fn id(&self) -> usize {
         todo!()
     }
 }

@@ -1,17 +1,17 @@
 use crate::{
-    id_targeted::IdTargeted, request_response_pair::RequestResponse,
+    id_targeted::IdTargeted, request_response::RequestResponse,
     samples::randoms::randoms_api::RandomsApi,
 };
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MeanResponse {
-    pub id: u64,
+    pub id: usize,
     pub mean: u128,
 }
 
 impl IdTargeted for MeanResponse {
-    fn id(&self) -> u64 {
+    fn id(&self) -> usize {
         self.id
     }
 }

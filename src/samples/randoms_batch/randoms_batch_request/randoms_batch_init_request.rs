@@ -9,14 +9,14 @@ use super::RandomsBatchRequest;
 /// RandomsBatches will also need to share a common "source of ids" for the Randoms that it will create
 #[derive(Debug, PartialEq, Clone)]
 pub struct RandomsBatchInitRequest {
-    pub id: u64,
+    pub id: usize,
     pub number_of_contained_randoms: u64,
     pub thread_pool_size: usize,
     pub id_provider: SizedIdProvider,
 }
 
 impl IdTargeted for RandomsBatchInitRequest {
-    fn id(&self) -> u64 {
+    fn id(&self) -> usize {
         self.id
     }
 }

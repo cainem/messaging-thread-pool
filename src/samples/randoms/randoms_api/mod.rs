@@ -7,7 +7,7 @@ pub mod sum_response;
 
 use crate::{
     id_targeted::IdTargeted, pool_item::pool_item_api::PoolItemApi,
-    request_response_pair::RequestResponse, thread_request_response::ThreadRequestResponse,
+    request_response::RequestResponse, thread_request_response::ThreadRequestResponse,
 };
 
 use self::{
@@ -24,7 +24,7 @@ pub enum RandomsApi {
 }
 
 impl IdTargeted for RandomsApi {
-    fn id(&self) -> u64 {
+    fn id(&self) -> usize {
         todo!()
     }
 }
@@ -40,13 +40,13 @@ impl PoolItemApi for RandomsApi {
 
 impl From<MeanRequest> for ThreadRequestResponse<Randoms> {
     fn from(request: MeanRequest) -> Self {
-        ThreadRequestResponse::CallElement(RandomsApi::Mean(RequestResponse::Request(request)))
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(request)))
     }
 }
 
 impl From<ThreadRequestResponse<Randoms>> for MeanResponse {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::CallElement(RandomsApi::Mean(
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(
             RequestResponse::Response(result))) = response else {
                 panic!("must be a response to a call to the element")
             };

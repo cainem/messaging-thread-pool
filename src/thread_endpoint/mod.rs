@@ -15,5 +15,5 @@ where
     E: PoolItem,
 {
     pub sender: Sender<SenderCouplet<E>>,
-    pub join_handle: JoinHandle<u64>,
+    pub join_handle: JoinHandle<usize>,
 }

@@ -25,7 +25,7 @@ where
         send_back_to: Sender<ThreadRequestResponse<E>>,
         requests: &RefCell<Vec<T>>,
     ) where
-        T: Into<ThreadRequestResponse<E>> + IdTargeted,
+        T: Into<ThreadRequestResponse<E>>,
     {
         let thread_count = self
             .thread_endpoints
@@ -33,6 +33,7 @@ where
             .expect("no poisoned locks")
             .len();
         for request in requests.borrow_mut().drain(..) {
+            let request: ThreadRequestResponse<E> = request.into();
             // route to correct thread; share the load based on id and the mod of the thread count
             let targeted = request.id() as usize % thread_count;
             event!(Level::DEBUG, "Sending to target {}", request.id());

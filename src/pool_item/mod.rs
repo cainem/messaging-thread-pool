@@ -5,7 +5,7 @@ use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::{
     id_targeted::IdTargeted,
-    request_response_pair::RequestResponse,
+    request_response::RequestResponse,
     thread_request_response::{
         add_response::AddResponse, thread_shutdown_response::ThreadShutdownResponse,
     },
@@ -45,14 +45,14 @@ where
     /// The tracing is removed once the message is processed.
     /// If the tracing is being written to a file it is important that the file is not truncated
     #[allow(unused_variables)]
-    fn add_element_request_tracing(id: u64) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
+    fn add_element_request_tracing(id: usize) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
         None
     }
 
     /// This method provides any required tracing in the elements thread pool threads
     /// This tracing is added when the thread is spawned and remains in place until the thread dies
     #[allow(unused_variables)]
-    fn add_pool_thread_tracing(id: u64) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
+    fn add_pool_thread_tracing(id: usize) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
         None
     }
 }

@@ -29,7 +29,7 @@ where
 
         let mut building = Vec::<ThreadEndpoint<P>>::new();
 
-        for i in 0..thread_pool_size as u64 {
+        for i in 0..thread_pool_size {
             let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet<P>>();
 
             let join_handle = spawn(move || {

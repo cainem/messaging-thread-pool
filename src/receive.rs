@@ -22,7 +22,7 @@ where
         receive_from_worker: Receiver<ThreadRequestResponse<E>>,
     ) -> Vec<T>
     where
-        T: From<ThreadRequestResponse<E>> + IdTargeted,
+        T: From<ThreadRequestResponse<E>>,
     {
         // for every request there will be a response
         let mut building_responses = Vec::with_capacity(requests_len);

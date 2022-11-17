@@ -12,7 +12,7 @@ pub struct PoolThread<P>
 where
     P: PoolItem,
 {
-    id: u64, // this will correspond to the vec index in the containing ThreadPool
+    id: usize, // this will correspond to the vec index in the containing ThreadPool
     pool_thread_receiver: Receiver<SenderCouplet<P>>, // the channel on which requests will be received
-    element_hash_map: HashMap<u64, P>,
+    element_hash_map: HashMap<usize, P>,
 }

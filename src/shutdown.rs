@@ -3,7 +3,7 @@ use crossbeam_channel::bounded;
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response_pair::RequestResponse,
+    request_response::RequestResponse,
     thread_request_response::{
         thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
     },
@@ -37,7 +37,7 @@ where
             // send straight to each of the thread endpoints
             endpoint.send(
                 &send_to_pool,
-                ThreadRequestResponse::<E>::ThreadShutdown(RequestResponse::Request(id as u64)),
+                ThreadRequestResponse::<E>::ThreadShutdown(RequestResponse::Request(id)),
             );
 
             let mut child_threads = Vec::<ThreadShutdownResponse>::default();
@@ -52,7 +52,7 @@ where
                 )) => {
                     assert_eq!(
                         thread_shutdown_payload.id(),
-                        id as u64,
+                        id,
                         "the passed and returned ids should be the same"
                     );
                     child_threads.append(&mut thread_shutdown_payload.take_children());

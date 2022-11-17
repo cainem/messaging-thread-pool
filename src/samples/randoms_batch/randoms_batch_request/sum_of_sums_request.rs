@@ -6,11 +6,11 @@ use super::RandomsBatchRequest;
 /// sums of its contained Randoms
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SumOfSumsRequest {
-    pub id: u64,
+    pub id: usize,
 }
 
 impl IdTargeted for SumOfSumsRequest {
-    fn id(&self) -> u64 {
+    fn id(&self) -> usize {
         self.id
     }
 }

@@ -129,7 +129,7 @@ pub mod pool_item;
 mod pool_thread;
 mod pool_thread_old;
 mod receive;
-pub mod request_response_pair;
+pub mod request_response;
 mod send;
 mod send_and_receive;
 pub mod sender_couplet;
