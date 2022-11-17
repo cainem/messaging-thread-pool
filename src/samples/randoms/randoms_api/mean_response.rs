@@ -18,9 +18,11 @@ impl IdTargeted for MeanResponse {
     }
 }
 
-impl From<MeanResponse> for RandomsApi {
+impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: MeanResponse) -> Self {
-        RandomsApi::Mean(RequestResponse::Response(response))
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(
+            response,
+        )))
     }
 }
 

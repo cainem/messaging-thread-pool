@@ -1,8 +1,18 @@
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse};
+
+use super::ThreadRequestResponse;
+
 /// For debug purposes only send a message to a thread within the thread pool
 #[derive(Debug, PartialEq, Eq)]
 pub struct ThreadEchoRequest {
     thread_id: usize,
     message: String,
+}
+
+impl IdTargeted for ThreadEchoRequest {
+    fn id(&self) -> usize {
+        self.thread_id
+    }
 }
 
 impl ThreadEchoRequest {
@@ -19,10 +29,32 @@ impl ThreadEchoRequest {
     }
 }
 
+impl<P> From<ThreadEchoRequest> for ThreadRequestResponse<P>
+where
+    P: PoolItem,
+{
+    fn from(request: ThreadEchoRequest) -> Self {
+        ThreadRequestResponse::ThreadEcho(RequestResponse::Request(request))
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::{
+        id_targeted::IdTargeted, thread_request_response::thread_echo_request::ThreadEchoRequest,
+    };
+
     #[test]
-    fn todo() {
-        todo!();
+    fn request_id_2_id_returns_2() {
+        let target = ThreadEchoRequest::new(2, "".to_string());
+
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn request_id_1_id_returns_1() {
+        let target = ThreadEchoRequest::new(1, "".to_string());
+
+        assert_eq!(1, target.id());
     }
 }

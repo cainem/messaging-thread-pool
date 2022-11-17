@@ -1,14 +1,24 @@
 pub mod add_response;
-pub mod remove_response;
+pub mod remove_pool_item_request;
+pub mod remove_pool_item_response;
+pub mod thread_abort_request;
+pub mod thread_abort_response;
 pub mod thread_echo_request;
 pub mod thread_echo_response;
+pub mod thread_shutdown_request;
 pub mod thread_shutdown_response;
 
-use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse};
+use crate::{
+    id_targeted::IdTargeted,
+    pool_item::{pool_item_api::PoolItemApi, PoolItem},
+    request_response::RequestResponse,
+};
 
 use self::{
-    add_response::AddResponse, remove_response::RemoveResponse,
-    thread_echo_request::ThreadEchoRequest, thread_echo_response::ThreadEchoResponse,
+    add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
+    remove_pool_item_response::RemovePoolItemResponse, thread_abort_request::ThreadAbortRequest,
+    thread_abort_response::ThreadAbortResponse, thread_echo_request::ThreadEchoRequest,
+    thread_echo_response::ThreadEchoResponse, thread_shutdown_request::ThreadShutdownRequest,
     thread_shutdown_response::ThreadShutdownResponse,
 };
 
@@ -22,9 +32,9 @@ where
 {
     /// Causes the message loop of the thread to be exited and the thread is rejoined to the main thread
     /// Give contained pool items the opportunity to (optionally) shut down a child thread pool
-    ThreadShutdown(RequestResponse<usize, ThreadShutdownResponse>),
+    ThreadShutdown(RequestResponse<ThreadShutdownRequest, ThreadShutdownResponse>),
     /// As shutdown but leaves all of the state thread state intact (for use in testing)
-    ThreadAbort(RequestResponse<usize, usize>),
+    ThreadAbort(RequestResponse<ThreadAbortRequest, ThreadAbortResponse>),
     /// For testing thread communications in test
     ThreadEcho(RequestResponse<ThreadEchoRequest, ThreadEchoResponse>),
     /// Add a new pool item to the thread pool
@@ -34,7 +44,7 @@ where
     AddPoolItem(RequestResponse<P::Init, AddResponse>),
     /// Requests that an item be removed from the thread pool
     /// The request is routed to the thread that has ownership and the pool item is dropped
-    RemovePoolItem(RequestResponse<usize, RemoveResponse>),
+    RemovePoolItem(RequestResponse<RemovePoolItemRequest, RemovePoolItemResponse>),
     /// Send a message from the pool items defined api to a given pool item
     /// The message is routed to the owning thread and any work is performed there
     MessagePoolItem(P::Api),
@@ -48,11 +58,13 @@ where
     pub fn is_request(&self) -> bool {
         match self {
             ThreadRequestResponse::ThreadShutdown(payload) => payload.is_request(),
-            ThreadRequestResponse::ThreadAbort(_) => todo!(),
-            ThreadRequestResponse::ThreadEcho(_) => todo!(),
-            ThreadRequestResponse::RemovePoolItem(_) => todo!(),
-            ThreadRequestResponse::AddPoolItem(_) => todo!(),
-            ThreadRequestResponse::MessagePoolItem(_payload) => todo!(),
+            ThreadRequestResponse::ThreadAbort(payload) => payload.is_request(),
+            ThreadRequestResponse::ThreadEcho(payload) => payload.is_request(),
+            ThreadRequestResponse::RemovePoolItem(payload) => payload.is_request(),
+            ThreadRequestResponse::AddPoolItem(payload) => payload.is_request(),
+            ThreadRequestResponse::MessagePoolItem(payload) => {
+                (payload as &dyn PoolItemApi).is_request()
+            }
         }
     }
 
@@ -67,62 +79,199 @@ where
     P: PoolItem,
 {
     fn id(&self) -> usize {
-        todo!()
+        match self {
+            ThreadRequestResponse::ThreadShutdown(payload) => payload.id(),
+            ThreadRequestResponse::ThreadAbort(payload) => payload.id(),
+            ThreadRequestResponse::ThreadEcho(payload) => payload.id(),
+            ThreadRequestResponse::RemovePoolItem(payload) => payload.id(),
+            ThreadRequestResponse::AddPoolItem(payload) => payload.id(),
+            ThreadRequestResponse::MessagePoolItem(payload) => (payload as &dyn PoolItemApi).id(),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        request_response::RequestResponse,
-        samples::{randoms_init_request::RandomsInitRequest, Randoms, RandomsApi},
-        thread_request_response::ThreadRequestResponse,
+        id_targeted::IdTargeted,
+        samples::{
+            mean_request::MeanRequest, mean_response::MeanResponse,
+            randoms_add_request::RandomsAddRequest, Randoms,
+        },
+        thread_request_response::{
+            add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
+            remove_pool_item_response::RemovePoolItemResponse,
+            thread_abort_request::ThreadAbortRequest, thread_abort_response::ThreadAbortResponse,
+            thread_echo_response::ThreadEchoResponse,
+            thread_shutdown_request::ThreadShutdownRequest,
+            thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
+        },
     };
 
+    use super::thread_echo_request::ThreadEchoRequest;
+
     #[test]
-    fn todo() {
-        todo!();
+    fn thread_shutdown_request_id_2_id_returns_2() {
+        let target: ThreadRequestResponse<Randoms> = ThreadShutdownRequest(2).into();
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn thread_abort_request_id_2_id_returns_2() {
+        let target: ThreadRequestResponse<Randoms> = ThreadAbortRequest(2).into();
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn thread_echo_request_id_2_id_returns_2() {
+        let target: ThreadRequestResponse<Randoms> =
+            ThreadEchoRequest::new(2, "hello".to_string()).into();
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn remove_pool_item_request_id_2_id_returns_2() {
+        let target: ThreadRequestResponse<Randoms> = RemovePoolItemRequest(2).into();
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn add_pool_item_request_id_2_id_returns_2() {
+        let target: ThreadRequestResponse<Randoms> = RandomsAddRequest(2).into();
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn message_pool_item_request_id_2_id_returns_2() {
+        let target: ThreadRequestResponse<Randoms> = MeanRequest(2).into();
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn thread_shutdown_request_id_1_id_returns_1() {
+        let target: ThreadRequestResponse<Randoms> = ThreadShutdownRequest(1).into();
+        assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn thread_abort_request_id_1_id_returns_1() {
+        let target: ThreadRequestResponse<Randoms> = ThreadAbortRequest(1).into();
+        assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn thread_echo_request_id_1_id_returns_1() {
+        let target: ThreadRequestResponse<Randoms> =
+            ThreadEchoRequest::new(1, "hello".to_string()).into();
+        assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn remove_pool_item_request_id_1_id_returns_1() {
+        let target: ThreadRequestResponse<Randoms> = RemovePoolItemRequest(1).into();
+        assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn add_pool_item_request_id_1_id_returns_1() {
+        let target: ThreadRequestResponse<Randoms> = RandomsAddRequest(1).into();
+        assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn message_pool_item_request_id_1_id_returns_1() {
+        let target: ThreadRequestResponse<Randoms> = MeanRequest(1).into();
+        assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn thread_shutdown_thread_request_response_contains_response_is_request_false() {
+        let target: ThreadRequestResponse<Randoms> = ThreadShutdownResponse::new(2, vec![]).into();
+        assert!(!target.is_request());
+        assert!(target.is_response());
     }
 
     #[test]
     fn thread_shutdown_thread_request_response_contains_request_is_request_true() {
-        let target = ThreadRequestResponse::<Randoms>::ThreadShutdown(RequestResponse::Request(1));
+        let target: ThreadRequestResponse<Randoms> = ThreadShutdownRequest(1).into();
         assert!(target.is_request());
+        assert!(!target.is_response());
     }
 
     #[test]
     fn thread_abort_thread_request_response_contains_request_is_request_true() {
-        let target = ThreadRequestResponse::<Randoms>::ThreadAbort(RequestResponse::Request(1));
-        assert!(target.is_request())
+        let target: ThreadRequestResponse<Randoms> = ThreadAbortRequest(1).into();
+
+        assert!(target.is_request());
+        assert!(!target.is_response());
     }
 
-    // #[test]
-    // fn thread_echo_thread_request_response_contains_request_is_request_true() {
-    //     let message = RequestResponse::Request(ThreadEchoRequest {});
+    #[test]
+    fn thread_abort_thread_request_response_contains_response_is_request_false() {
+        let target: ThreadRequestResponse<Randoms> = ThreadAbortResponse(1).into();
 
-    //     let target = ThreadRequestResponse::<Randoms>::ThreadEcho(message);
-    //     assert!(target.is_request())
-    // }
+        assert!(!target.is_request());
+        assert!(target.is_response());
+    }
+
+    #[test]
+    fn thread_echo_thread_request_response_contains_request_is_request_true() {
+        let target: ThreadRequestResponse<Randoms> =
+            ThreadEchoRequest::new(1, "message".to_string()).into();
+
+        assert!(target.is_request());
+        assert!(!target.is_response());
+    }
+
+    #[test]
+    fn thread_echo_thread_request_response_contains_response_is_request_false() {
+        let target: ThreadRequestResponse<Randoms> =
+            ThreadEchoResponse::new(1, "message".to_string(), 1).into();
+
+        assert!(!target.is_request());
+        assert!(target.is_response());
+    }
 
     #[test]
     fn remove_pool_item_thread_request_response_contains_request_is_request_true() {
-        let target = ThreadRequestResponse::<Randoms>::RemovePoolItem(RequestResponse::Request(1));
-        assert!(target.is_request())
+        let target: ThreadRequestResponse<Randoms> = RemovePoolItemRequest(1).into();
+        assert!(target.is_request());
+        assert!(!target.is_response());
+    }
+
+    #[test]
+    fn remove_pool_item_thread_request_response_contains_response_is_request_false() {
+        let target: ThreadRequestResponse<Randoms> = RemovePoolItemResponse::new(1, true).into();
+        assert!(!target.is_request());
+        assert!(target.is_response());
     }
 
     #[test]
     fn add_pool_item_thread_request_response_contains_request_is_request_true() {
-        let message = RequestResponse::Request(RandomsInitRequest { id: 1 });
+        let target: ThreadRequestResponse<Randoms> = RandomsAddRequest(1).into();
+        assert!(target.is_request());
+        assert!(!target.is_response());
+    }
 
-        let target = ThreadRequestResponse::<Randoms>::AddPoolItem(message);
-        assert!(target.is_request())
+    #[test]
+    fn add_pool_item_thread_request_response_contains_response_is_request_false() {
+        let target: ThreadRequestResponse<Randoms> = AddResponse::new(1, true).into();
+        assert!(!target.is_request());
+        assert!(target.is_response());
     }
 
     #[test]
     fn message_pool_item_thread_request_response_contains_request_is_request_true() {
-        let message = RandomsApi::Mean(RequestResponse::Request(1));
+        let target: ThreadRequestResponse<Randoms> = MeanRequest(1).into();
+        assert!(target.is_request());
+        assert!(!target.is_response());
+    }
 
-        let target = ThreadRequestResponse::<Randoms>::MessagePoolItem(message);
-        assert!(target.is_request())
+    #[test]
+    fn message_pool_item_thread_request_response_contains_response_is_request_false() {
+        let target: ThreadRequestResponse<Randoms> = MeanResponse { id: 1, mean: 123 }.into();
+
+        assert!(!target.is_request());
+        assert!(target.is_response());
     }
 }

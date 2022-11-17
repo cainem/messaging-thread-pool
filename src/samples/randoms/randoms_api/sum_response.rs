@@ -18,9 +18,9 @@ impl IdTargeted for SumResponse {
     }
 }
 
-impl From<SumResponse> for RandomsApi {
+impl From<SumResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: SumResponse) -> Self {
-        RandomsApi::Sum(RequestResponse::Response(response))
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Response(response)))
     }
 }
 

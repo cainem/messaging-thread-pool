@@ -4,7 +4,7 @@ use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
     thread_request_response::{
-        add_response::AddResponse, remove_response::RemoveResponse,
+        add_response::AddResponse, remove_pool_item_response::RemovePoolItemResponse,
         thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
     },
 };
@@ -78,22 +78,20 @@ where
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
 
-                    let response = ThreadRequestResponse::<E>::MessagePoolItem(
-                        if let Some(targeted) = self.element_hash_map.get_mut(&id) {
-                            // if the id already exists then it must be a message that needs processing that needs processing against an
-                            // existing element
-                            targeted.process_message(request)
-                        } else {
-                            E::id_not_found(request)
-                        },
-                    );
+                    let response = if let Some(targeted) = self.element_hash_map.get_mut(&id) {
+                        // if the id already exists then it must be a message that needs processing that needs processing against an
+                        // existing element
+                        targeted.process_message(request)
+                    } else {
+                        E::id_not_found(request)
+                    };
 
                     response
                 }
                 ThreadRequestResponse::RemovePoolItem(request) => {
                     let id = request.request().id();
                     let success = self.element_hash_map.remove(&id).is_some();
-                    RemoveResponse::new(id, success).into()
+                    RemovePoolItemResponse::new(id, success).into()
                     //ThreadRequestResponse::<E>::RemoveElement(RequestResponse::Response(id))
                 }
                 ThreadRequestResponse::ThreadShutdown(request) => {

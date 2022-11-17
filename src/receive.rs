@@ -1,10 +1,7 @@
 use crossbeam_channel::Receiver;
 use tracing::{event, instrument, Level};
 
-use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
-    ThreadPool,
-};
+use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse, ThreadPool};
 
 impl<E> ThreadPool<E>
 where

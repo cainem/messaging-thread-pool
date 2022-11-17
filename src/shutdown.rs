@@ -5,6 +5,7 @@ use crate::{
     pool_item::PoolItem,
     request_response::RequestResponse,
     thread_request_response::{
+        thread_shutdown_request::ThreadShutdownRequest,
         thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
     },
     ThreadPool,
@@ -35,10 +36,7 @@ where
             .enumerate()
         {
             // send straight to each of the thread endpoints
-            endpoint.send(
-                &send_to_pool,
-                ThreadRequestResponse::<E>::ThreadShutdown(RequestResponse::Request(id)),
-            );
+            endpoint.send(&send_to_pool, ThreadShutdownRequest(id));
 
             let mut child_threads = Vec::<ThreadShutdownResponse>::default();
 

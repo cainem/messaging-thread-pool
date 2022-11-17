@@ -13,8 +13,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let thread_pool_batcher =
                 ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&thread_pool));
             for i in 0..1000 {
-                thread_pool_batcher
-                    .batch_for_send(randoms_init_request::RandomsInitRequest { id: i });
+                thread_pool_batcher.batch_for_send(randoms_add_request::RandomsAddRequest(i));
             }
             let _: Vec<AddResponse> = thread_pool_batcher.send_batch();
             thread_pool.shutdown();

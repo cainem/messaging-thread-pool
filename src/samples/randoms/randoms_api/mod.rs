@@ -1,5 +1,6 @@
+pub mod mean_request;
 pub mod mean_response;
-pub mod randoms_init_request;
+pub mod randoms_add_request;
 pub mod sum_response;
 
 use crate::{
@@ -7,19 +8,22 @@ use crate::{
     request_response::RequestResponse, thread_request_response::ThreadRequestResponse,
 };
 
-use self::{mean_response::MeanResponse, sum_response::SumResponse};
+use self::{mean_request::MeanRequest, mean_response::MeanResponse, sum_response::SumResponse};
 
 use super::Randoms;
 
 #[derive(Debug)]
 pub enum RandomsApi {
-    Mean(RequestResponse<usize, MeanResponse>),
+    Mean(RequestResponse<MeanRequest, MeanResponse>),
     Sum(RequestResponse<usize, SumResponse>),
 }
 
 impl IdTargeted for RandomsApi {
     fn id(&self) -> usize {
-        todo!()
+        match self {
+            RandomsApi::Mean(payload) => payload.id(),
+            RandomsApi::Sum(payload) => payload.id(),
+        }
     }
 }
 

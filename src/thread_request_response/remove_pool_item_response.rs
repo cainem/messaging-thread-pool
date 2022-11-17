@@ -3,12 +3,12 @@ use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::Requ
 use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct RemoveResponse {
+pub struct RemovePoolItemResponse {
     id: usize,
     success: bool,
 }
 
-impl RemoveResponse {
+impl RemovePoolItemResponse {
     pub fn new(id: usize, success: bool) -> Self {
         Self { id, success }
     }
@@ -22,22 +22,22 @@ impl RemoveResponse {
     }
 }
 
-impl IdTargeted for RemoveResponse {
+impl IdTargeted for RemovePoolItemResponse {
     fn id(&self) -> usize {
         todo!()
     }
 }
 
-impl<T> From<RemoveResponse> for ThreadRequestResponse<T>
+impl<T> From<RemovePoolItemResponse> for ThreadRequestResponse<T>
 where
     T: PoolItem,
 {
-    fn from(request: RemoveResponse) -> Self {
+    fn from(request: RemovePoolItemResponse) -> Self {
         ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(request))
     }
 }
 
-impl<P> From<ThreadRequestResponse<P>> for RemoveResponse
+impl<P> From<ThreadRequestResponse<P>> for RemovePoolItemResponse
 where
     P: PoolItem,
 {

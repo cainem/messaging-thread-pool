@@ -1,9 +1,10 @@
 use messaging_thread_pool::{
     request_response::RequestResponse,
-    samples::*,
+    samples::{mean_request::MeanRequest, *},
     thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request_response::{
-        add_response::AddResponse, remove_response::RemoveResponse, ThreadRequestResponse,
+        add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
+        remove_pool_item_response::RemovePoolItemResponse, ThreadRequestResponse,
     },
 };
 
@@ -15,7 +16,7 @@ pub fn example_simple_one_level_thread_pool() {
 
     // create a 1000 requests to create 'Randoms'
     for i in 0..1000 {
-        thread_pool_batcher.batch_for_send(randoms_init_request::RandomsInitRequest { id: i });
+        thread_pool_batcher.batch_for_send(randoms_add_request::RandomsAddRequest(i));
     }
     // Send the request to create the 1000 Randoms. Each Randoms will be stored on the
     // thread where it is created
@@ -25,7 +26,7 @@ pub fn example_simple_one_level_thread_pool() {
 
     // now create 1000 messages asking them for the sum of their contained random numbers
     for i in 0..1000 {
-        thread_pool_batcher.batch_for_send(RandomsApi::Mean(RequestResponse::Request(i)));
+        thread_pool_batcher.batch_for_send(MeanRequest(i));
     }
     // Send the messages
     // The message will be routed to the thread to where the targeted element resides
@@ -36,7 +37,7 @@ pub fn example_simple_one_level_thread_pool() {
     // get the mean of the randoms for element with id 0, this will execute on thread 0
     // this call will block until complete
     let mean0 = thread_pool_batcher
-        .batch_for_send(RandomsApi::Mean(RequestResponse::Request(0)))
+        .batch_for_send(MeanRequest(0))
         .send_batch::<mean_response::MeanResponse>()[0]
         .mean;
     println!("{}", mean0);
@@ -44,16 +45,14 @@ pub fn example_simple_one_level_thread_pool() {
     // remove element with id 1
     // it wil be dropped from the thread where it was residing
     let responses = thread_pool_batcher
-        .batch_for_send(ThreadRequestResponse::RemovePoolItem(
-            RequestResponse::Request(1),
-        ))
-        .send_batch::<RemoveResponse>();
+        .batch_for_send(RemovePoolItemRequest(1))
+        .send_batch::<RemovePoolItemResponse>();
     println!("{:?}", responses);
 
     // add a new element with id 1000
-    let responses = thread_pool_batcher
-        .batch_for_send(randoms_init_request::RandomsInitRequest { id: 1000 })
-        .send_batch::<AddResponse>();
+    let responses: Vec<AddResponse> = thread_pool_batcher
+        .batch_for_send(randoms_add_request::RandomsAddRequest(1000))
+        .send_batch();
     println!("{:?}", responses);
 
     // all elements are dropped when the basic thread pool batcher is dropped

@@ -3,10 +3,7 @@ use std::cell::RefCell;
 use crossbeam_channel::unbounded;
 use tracing::{event, instrument, Level};
 
-use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
-    ThreadPool,
-};
+use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse, ThreadPool};
 
 impl<E> ThreadPool<E>
 where

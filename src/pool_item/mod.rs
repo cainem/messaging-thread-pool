@@ -8,6 +8,7 @@ use crate::{
     request_response::RequestResponse,
     thread_request_response::{
         add_response::AddResponse, thread_shutdown_response::ThreadShutdownResponse,
+        ThreadRequestResponse,
     },
 };
 use std::fmt::Debug;
@@ -18,14 +19,14 @@ pub trait PoolItem: Debug
 where
     Self: Sized,
     Self::Init: IdTargeted,
-    Self::Api: IdTargeted + PoolItemApi,
+    Self::Api: PoolItemApi + Debug,
 {
     type Init;
     type Api;
 
-    fn process_message(&mut self, request: &Self::Api) -> Self::Api;
+    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self>;
 
-    fn id_not_found(request: &Self::Api) -> Self::Api {
+    fn id_not_found(request: &Self::Api) -> ThreadRequestResponse<Self> {
         // default behaviour is to panic
         panic!("pool item with id {} not found", request.id());
     }
