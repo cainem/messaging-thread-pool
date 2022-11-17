@@ -36,7 +36,7 @@ where
         std::any::type_name::<Self>()
     }
 
-    fn new_pool_item(request: &RequestResponse<Self::Init, AddResponse>) -> Result<Self, ()>;
+    fn new_pool_item(request: &Self::Init) -> Result<Self, ()>;
 
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
         Vec::<ThreadShutdownResponse>::default()

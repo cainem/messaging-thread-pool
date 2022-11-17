@@ -4,23 +4,30 @@ use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadShutdownResponse {
-    id: usize,
+    thread_id: usize,
     children: Vec<ThreadShutdownResponse>,
 }
 
 impl ThreadShutdownResponse {
     pub fn new(id: usize, children: Vec<ThreadShutdownResponse>) -> Self {
-        Self { id, children }
+        Self {
+            thread_id: id,
+            children,
+        }
     }
 
     pub fn take_children(self) -> Vec<ThreadShutdownResponse> {
         self.children
     }
+
+    pub fn children(&self) -> &[ThreadShutdownResponse] {
+        self.children.as_ref()
+    }
 }
 
 impl IdTargeted for ThreadShutdownResponse {
     fn id(&self) -> usize {
-        todo!()
+        self.thread_id
     }
 }
 
@@ -33,10 +40,35 @@ where
     }
 }
 
+impl<P> From<ThreadRequestResponse<P>> for ThreadShutdownResponse
+where
+    P: PoolItem,
+{
+    fn from(response: ThreadRequestResponse<P>) -> Self {
+        let ThreadRequestResponse::<P>::ThreadShutdown(RequestResponse::Response(response)) = response else {
+            panic!("unexpected")
+        };
+        response
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::id_targeted::IdTargeted;
+
+    use super::ThreadShutdownResponse;
+
     #[test]
-    fn todo() {
-        todo!();
+    fn id_2_id_returns_2() {
+        let target = ThreadShutdownResponse::new(2, vec![]);
+
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn id_1_id_returns_1() {
+        let target = ThreadShutdownResponse::new(1, vec![]);
+
+        assert_eq!(1, target.id());
     }
 }

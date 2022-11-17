@@ -1,8 +1,9 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response::RequestResponse,
-    thread_request_response::{add_response::AddResponse, ThreadRequestResponse},
+    thread_request_response::{
+        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
+    },
 };
 
 use super::{
@@ -32,10 +33,12 @@ impl PoolItem for Randoms {
         }
     }
 
-    fn new_pool_item(request: &RequestResponse<Self::Init, AddResponse>) -> Result<Self, ()> {
-        let RequestResponse::Request(init) = request else {
-            panic!("not expected")
-        };
-        Ok(Randoms::new(init.0))
+    fn new_pool_item(request: &Self::Init) -> Result<Self, ()> {
+        Ok(Randoms::new(request.0))
+    }
+
+    fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
+        // for test purposes simulate shutting down a thread with the id of the randoms
+        vec![ThreadShutdownResponse::new(self.id, vec![])]
     }
 }

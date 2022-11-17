@@ -7,7 +7,7 @@ pub struct ThreadAbortResponse(pub usize);
 
 impl IdTargeted for ThreadAbortResponse {
     fn id(&self) -> usize {
-        todo!()
+        self.0
     }
 }
 
@@ -20,10 +20,35 @@ where
     }
 }
 
+impl<P> From<ThreadRequestResponse<P>> for ThreadAbortResponse
+where
+    P: PoolItem,
+{
+    fn from(response: ThreadRequestResponse<P>) -> Self {
+        let ThreadRequestResponse::<P>::ThreadAbort(RequestResponse::Response(response)) = response else {
+            panic!("unexpected")
+        };
+        response
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::id_targeted::IdTargeted;
+
+    use super::ThreadAbortResponse;
+
     #[test]
-    fn todo() {
-        todo!();
+    fn id_2_id_returns_2() {
+        let target = ThreadAbortResponse(2);
+
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn id_1_id_returns_1() {
+        let target = ThreadAbortResponse(1);
+
+        assert_eq!(1, target.id());
     }
 }

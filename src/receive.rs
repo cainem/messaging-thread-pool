@@ -46,7 +46,12 @@ mod tests {
 
     use crossbeam_channel::unbounded;
 
-    use crate::{samples::*, ThreadPool};
+    use crate::{
+        id_targeted::IdTargeted,
+        samples::{randoms_add_request::RandomsAddRequest, *},
+        thread_request_response::{add_response::AddResponse, ThreadRequestResponse},
+        ThreadPool,
+    };
 
     #[test]
     fn todo() {
@@ -81,23 +86,20 @@ mod tests {
     //     assert!(messages.contains(&&"ping 2 [0]".to_string()));
     // }
 
-    // #[test]
-    // fn single_init_request_on_a_single_thread_received_single_response_received() {
-    //     let target = ThreadPool::<Randoms>::new(1);
+    #[test]
+    fn single_init_request_on_a_single_thread_received_single_response_received() {
+        let target = ThreadPool::<Randoms>::new(1);
 
-    //     let (send_to_pool, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+        let (send_to_pool, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-    //     let requests: Vec<_> = (0..1u64)
-    //         .map(|id| randoms_init_request::RandomsInitRequest { id })
-    //         .collect();
-    //     let requests = RefCell::new(requests);
+        let requests: Vec<_> = (0..1).map(|id| RandomsAddRequest(id)).collect();
+        let requests = RefCell::new(requests);
 
-    //     target.send(send_to_pool, &requests);
+        target.send(send_to_pool, &requests);
 
-    //     let result =
-    //         target.receive::<randoms_init_response::RandomsInitResponse>(1, receive_from_thread);
+        let result = target.receive::<AddResponse>(1, receive_from_thread);
 
-    //     assert_eq!(1, result.len());
-    //     assert_eq!(0, result[0].id);
-    // }
+        assert_eq!(1, result.len());
+        assert_eq!(0, result[0].id());
+    }
 }

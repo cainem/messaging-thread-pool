@@ -23,7 +23,7 @@ where
     /// received to shutdown.
     pub fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<E>>) -> Self {
         Self {
-            id,
+            thread_id: id,
             pool_thread_receiver,
             element_hash_map: HashMap::default(),
         }

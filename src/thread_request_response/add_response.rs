@@ -2,6 +2,8 @@ use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::Requ
 
 use super::ThreadRequestResponse;
 
+/// This struct is returned in response to a request to add a pool item to the thread pool
+/// The success field indicates that the pool item was successfully constructed
 #[derive(Debug, PartialEq, Eq)]
 pub struct AddResponse {
     id: usize,
@@ -16,7 +18,7 @@ impl AddResponse {
 
 impl IdTargeted for AddResponse {
     fn id(&self) -> usize {
-        todo!()
+        self.id
     }
 }
 
@@ -38,5 +40,26 @@ where
             panic!("unexpected")
         };
         response
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::id_targeted::IdTargeted;
+
+    use super::AddResponse;
+
+    #[test]
+    fn id_2_id_returns_2() {
+        let target = AddResponse::new(2, true);
+
+        assert_eq!(2, target.id());
+    }
+
+    #[test]
+    fn id_1_id_returns_1() {
+        let target = AddResponse::new(1, true);
+
+        assert_eq!(1, target.id());
     }
 }

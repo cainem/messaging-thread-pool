@@ -1,10 +1,9 @@
 use messaging_thread_pool::{
-    request_response::RequestResponse,
     samples::{mean_request::MeanRequest, *},
     thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request_response::{
         add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
-        remove_pool_item_response::RemovePoolItemResponse, ThreadRequestResponse,
+        remove_pool_item_response::RemovePoolItemResponse,
     },
 };
 

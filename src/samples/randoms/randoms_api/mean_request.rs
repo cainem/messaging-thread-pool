@@ -15,14 +15,14 @@ impl IdTargeted for MeanRequest {
 }
 
 impl From<MeanRequest> for ThreadRequestResponse<Randoms> {
-    fn from(response: MeanRequest) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(response)))
+    fn from(request: MeanRequest) -> Self {
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(request)))
     }
 }
 
 impl From<ThreadRequestResponse<Randoms>> for MeanRequest {
-    fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(result))) = response else {
+    fn from(request: ThreadRequestResponse<Randoms>) -> Self {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(result))) = request else {
             panic!("not expected")
         };
         result
