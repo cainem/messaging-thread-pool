@@ -1,5 +1,7 @@
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
+    id_targeted::IdTargeted, pool_item::PoolItem,
+    request_response::request_response_message::RequestResponseMessage,
+    thread_request_response::ThreadRequestResponse,
 };
 
 use super::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete;
@@ -10,13 +12,14 @@ where
 {
     /// This function adds a single request to a building batch of request that will be sent at
     /// some future time when send_batch is called
-    pub fn batch_for_send<U>(&self, request: U) -> &Self
+    pub fn batch_for_send<const N: usize, U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<P>> + IdTargeted,
+        U: Into<ThreadRequestResponse<P>> + IdTargeted + RequestResponseMessage<N, true>,
     {
-        self.to_send().borrow_mut().push(request.into());
+        todo!();
+        // self.to_send().borrow_mut().push(request.into());
 
-        self
+        // self
     }
 }
 

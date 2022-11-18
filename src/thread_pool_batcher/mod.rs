@@ -14,6 +14,7 @@ use std::{num::NonZeroUsize, sync::Weak};
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
+    request_response::request_response_message::RequestResponseMessage,
     thread_request_response::{
         thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
     },
@@ -29,17 +30,17 @@ where
     P: PoolItem,
 {
     /// This function queues a message for sending adding it to an internal buffer
-    fn batch_for_send<U>(&self, request: U) -> &Self
+    fn batch_for_send<const N: usize, U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<P>> + IdTargeted;
+        U: Into<ThreadRequestResponse<P>> + IdTargeted + RequestResponseMessage<N, true>;
 
     /// This function sends all messages stored in the internal buffer.\
     /// This call blocks until all messages have been acted upon and their responses returned.\
     /// The messages will be distributed, using the mod of the message id, across all
     /// of the ThreadPoolBatcher's pool threads.\
-    fn send_batch<V>(&self) -> Vec<V>
+    fn send_batch<const N: usize, V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<P>> + IdTargeted;
+        V: From<ThreadRequestResponse<P>> + IdTargeted + RequestResponseMessage<N, false>;
 
     /// Creates a new ThreadPoolBatcher that will use the passed in thread pool
     fn new(thread_pool: Weak<ThreadPool<P>>) -> Self;

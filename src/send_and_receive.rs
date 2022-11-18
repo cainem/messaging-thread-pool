@@ -3,7 +3,11 @@ use std::cell::RefCell;
 use crossbeam_channel::unbounded;
 use tracing::{event, instrument, Level};
 
-use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse, ThreadPool};
+use crate::{
+    id_targeted::IdTargeted, pool_item::PoolItem,
+    request_response::request_response_message::RequestResponseMessage,
+    thread_request_response::ThreadRequestResponse, ThreadPool,
+};
 
 impl<P> ThreadPool<P>
 where
@@ -13,19 +17,42 @@ where
     ///
     /// The request is received as a vec and the responses are received back in a vec
     #[instrument(skip(self, requests))]
-    pub fn send_and_receive<T, U>(&self, requests: &RefCell<Vec<T>>) -> Vec<U>
+    pub fn send_and_receive<const N: usize, T, U>(
+        &self,
+        requests: impl Iterator<Item = T>,
+    ) -> impl Iterator<Item = U>
     where
-        T: Into<ThreadRequestResponse<P>>,
-        U: From<ThreadRequestResponse<P>>,
+        T: Into<ThreadRequestResponse<P>> + RequestResponseMessage<N, true>,
+        U: From<ThreadRequestResponse<P>> + RequestResponseMessage<N, false>,
     {
-        let requests_len = requests.borrow().len();
+        //let requests_len = requests.count();
 
-        event!(Level::DEBUG, requests_len, message = "Sending requests");
+        //event!(Level::DEBUG, requests_len, message = "Sending requests");
 
         let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
 
+        // let thread_count = self
+        //     .thread_endpoints
+        //     .read()
+        //     .expect("no poisoned locks")
+        //     .len();
+        // for request in requests {
+        //     let request: ThreadRequestResponse<P> = request.into();
+        //     // route to correct thread; share the load based on id and the mod of the thread count
+        //     let targeted = request.id() as usize % thread_count;
+        //     event!(Level::DEBUG, "Sending to target {}", request.id());
+        //     event!(Level::TRACE, ?request);
+        //     self.thread_endpoints.read().expect("no poisoned locks")[targeted]
+        //         .send(&return_back_to.clone(), request);
+        // }
+
         self.send(return_back_to, requests);
-        self.receive(requests_len, receive_from_worker)
+        self.receive(receive_from_worker)
+
+        // receive_from_worker.into_iter().map(|r| {
+        //     event!(Level::DEBUG, ?r);
+        //     r.into()
+        // })
     }
 }
 

@@ -84,7 +84,7 @@ where
     P::Init: PartialEq,
     P::Api: PartialEq,
 {
-    fn batch_for_send<U>(&self, request: U) -> &Self
+    fn batch_for_send<const N: usize, U>(&self, request: U) -> &Self
     where
         U: Into<ThreadRequestResponse<P>> + IdTargeted,
     {
@@ -93,7 +93,7 @@ where
         self
     }
 
-    fn send_batch<V>(&self) -> Vec<V>
+    fn send_batch<const N: usize, V>(&self) -> Vec<V>
     where
         V: From<ThreadRequestResponse<P>> + IdTargeted,
     {

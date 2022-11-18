@@ -4,8 +4,9 @@ use crossbeam_channel::Sender;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
-    ThreadPool,
+    id_targeted::IdTargeted, pool_item::PoolItem,
+    request_response::request_response_message::RequestResponseMessage,
+    thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -20,26 +21,29 @@ where
     ///
     /// The work will be distributed based on the mod of the id of the requests target
     #[instrument(skip(self, send_back_to, requests))]
-    pub(super) fn send<T>(
+    pub(super) fn send<const N: usize, T>(
         &self,
         send_back_to: Sender<ThreadRequestResponse<P>>,
-        requests: &RefCell<Vec<T>>,
+        requests: impl Iterator<Item = T>,
     ) where
         T: Into<ThreadRequestResponse<P>>,
+        T: RequestResponseMessage<N, true>,
     {
         let thread_count = self
             .thread_endpoints
             .read()
             .expect("no poisoned locks")
             .len();
-        for request in requests.borrow_mut().drain(..) {
+
+        let guard =  self.thread_endpoints.read().expect("no poisoned locks");
+
+        for request in requests {
             let request: ThreadRequestResponse<P> = request.into();
             // route to correct thread; share the load based on id and the mod of the thread count
             let targeted = request.id() as usize % thread_count;
             event!(Level::DEBUG, "Sending to target {}", request.id());
             event!(Level::TRACE, ?request);
-            self.thread_endpoints.read().expect("no poisoned locks")[targeted]
-                .send(&send_back_to.clone(), request);
+            guard[targeted].send(&send_back_to.clone(), request);
         }
     }
 }
@@ -55,6 +59,12 @@ mod tests {
     #[test]
     fn todo() {
         todo!();
+
+        let vec = vec![1, 2, 3];
+
+        for v in vec.into_iter() {}
+
+        for v in vec {}
     }
 
     // #[test]

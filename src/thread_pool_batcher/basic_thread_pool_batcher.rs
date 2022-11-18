@@ -6,6 +6,7 @@ use std::{
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
+    request_response::request_response_message::RequestResponseMessage,
     thread_request_response::{
         thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
     },
@@ -48,17 +49,17 @@ impl<P> ThreadPoolBatcher<P> for BasicThreadPoolBatcher<P>
 where
     P: PoolItem,
 {
-    fn batch_for_send<U>(&self, request: U) -> &Self
+    fn batch_for_send<const N: usize, U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<P>> + IdTargeted,
+        U: Into<ThreadRequestResponse<P>> + IdTargeted + RequestResponseMessage<N, true>,
     {
         self.thread_pool_batcher.batch_for_send(request);
         self
     }
 
-    fn send_batch<V>(&self) -> Vec<V>
+    fn send_batch<const N: usize, V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<P>> + IdTargeted,
+        V: From<ThreadRequestResponse<P>> + IdTargeted + RequestResponseMessage<N, false>,
     {
         self.thread_pool_batcher.send_batch()
     }
