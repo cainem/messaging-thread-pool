@@ -56,10 +56,6 @@ where
         self
     }
 
-    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api> {
-        vec![]
-    }
-
     fn send_batch<V>(&self) -> Vec<V>
     where
         V: From<ThreadRequestResponse<P>> + IdTargeted,

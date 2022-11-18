@@ -47,6 +47,4 @@ where
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse>;
     /// Returns the thread pool size of the thread pool associated with this instance of [`ThreadPoolBatcher`]
     fn get_thread_pool_size(&self) -> NonZeroUsize;
-
-    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api>;
 }

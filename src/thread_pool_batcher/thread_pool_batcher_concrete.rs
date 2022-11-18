@@ -68,10 +68,6 @@ where
         ThreadPoolBatcherConcrete::<P>::send_batch(self)
     }
 
-    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api> {
-        vec![]
-    }
-
     fn new(thread_pool: Weak<ThreadPool<P>>) -> Self {
         ThreadPoolBatcherConcrete::<P>::new(thread_pool)
     }

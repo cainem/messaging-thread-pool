@@ -119,8 +119,4 @@ where
     fn get_thread_pool_size(&self) -> std::num::NonZeroUsize {
         todo!()
     }
-
-    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api> {
-        vec![]
-    }
 }
