@@ -1,16 +1,28 @@
+use self::request_response_message::RequestResponseMessage;
+
 pub mod id_targeted;
+pub mod request_response_2;
+pub mod request_response_message;
 
 /// This enum is used for defining request/response pairs
 ///
 /// The protocol insists that every request has a corresponding response
 /// This enum defines the 2 types that are used
 #[derive(Debug, PartialEq, Eq)]
-pub enum RequestResponse<Req, Res> {
+pub enum RequestResponse<const N: usize, Req, Res>
+where
+    Req: RequestResponseMessage<N, true>,
+    Res: RequestResponseMessage<N, false>,
+{
     Request(Req),
     Response(Res),
 }
 
-impl<Req, Res> RequestResponse<Req, Res> {
+impl<const N: usize, Req, Res> RequestResponse<N, Req, Res>
+where
+    Req: RequestResponseMessage<N, true>,
+    Res: RequestResponseMessage<N, false>,
+{
     pub fn request(&self) -> &Req {
         let RequestResponse::Request(result) = self else {
             panic!("not a request");
@@ -33,13 +45,15 @@ impl<Req, Res> RequestResponse<Req, Res> {
 
 #[cfg(test)]
 mod tests {
+    use crate::thread_request_response::ID_ONLY;
+
     use super::RequestResponse;
 
     #[test]
     #[should_panic(expected = "not a response")]
     fn request_response_contains_a_request_response_panics() {
         let request = 1;
-        let target = RequestResponse::<u64, u64>::Request(request);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(request);
 
         let _ = target.response();
     }
@@ -47,7 +61,7 @@ mod tests {
     #[test]
     fn request_response_contains_a_response_response_unwraps_response() {
         let response = 1;
-        let target = RequestResponse::<u64, u64>::Response(response);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(response);
 
         assert_eq!(&response, target.response());
     }
@@ -56,7 +70,7 @@ mod tests {
     #[should_panic(expected = "not a request")]
     fn request_response_contains_a_response_request_panics() {
         let response = 1;
-        let target = RequestResponse::<u64, u64>::Response(response);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(response);
 
         let _ = target.request();
     }
@@ -64,14 +78,14 @@ mod tests {
     #[test]
     fn request_response_contains_a_request_request_unwraps_request() {
         let request = 1;
-        let target = RequestResponse::<u64, u64>::Request(request);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(request);
 
         assert_eq!(&request, target.request());
     }
 
     #[test]
     fn request_response_contains_a_response_is_request_returns_false_response_true() {
-        let target = RequestResponse::<u64, u64>::Response(1);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(1);
 
         assert!(!target.is_request());
         assert!(target.is_response());
@@ -79,7 +93,7 @@ mod tests {
 
     #[test]
     fn request_response_contains_a_request_is_request_returns_true_response_false() {
-        let target = RequestResponse::<u64, u64>::Request(1);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(1);
 
         assert!(target.is_request());
         assert!(!target.is_response());

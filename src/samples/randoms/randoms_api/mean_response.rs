@@ -1,9 +1,11 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response::RequestResponse,
+    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
 };
+
+use super::MEAN;
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,6 +19,8 @@ impl IdTargeted for MeanResponse {
         self.id
     }
 }
+
+impl RequestResponseMessage<MEAN, false> for MeanResponse {}
 
 impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: MeanResponse) -> Self {

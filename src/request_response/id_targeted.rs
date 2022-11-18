@@ -1,11 +1,11 @@
 use crate::id_targeted::IdTargeted;
 
-use super::RequestResponse;
+use super::{request_response_message::RequestResponseMessage, RequestResponse};
 
-impl<Req, Res> IdTargeted for RequestResponse<Req, Res>
+impl<const N: usize, Req, Res> IdTargeted for RequestResponse<N, Req, Res>
 where
-    Req: IdTargeted,
-    Res: IdTargeted,
+    Req: RequestResponseMessage<N, true>,
+    Res: RequestResponseMessage<N, false>,
 {
     fn id(&self) -> usize {
         match self {
@@ -17,32 +17,35 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{id_targeted::IdTargeted, request_response::RequestResponse};
+    use crate::{
+        id_targeted::IdTargeted, request_response::RequestResponse,
+        thread_request_response::ID_ONLY,
+    };
 
     #[test]
     fn request_response_contains_response_of_id_1_returns_1() {
-        let target = RequestResponse::<usize, usize>::Response(1);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(1);
 
         assert_eq!(1, target.id());
     }
 
     #[test]
     fn request_response_contains_response_of_id_2_returns_2() {
-        let target = RequestResponse::<usize, usize>::Response(2);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(2);
 
         assert_eq!(2, target.id());
     }
 
     #[test]
     fn request_response_contains_request_of_id_2_returns_2() {
-        let target = RequestResponse::<usize, usize>::Request(2);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(2);
 
         assert_eq!(2, target.id());
     }
 
     #[test]
     fn request_response_contains_request_of_id_1_returns_1() {
-        let target = RequestResponse::<usize, usize>::Request(1);
+        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(1);
 
         assert_eq!(1, target.id());
     }

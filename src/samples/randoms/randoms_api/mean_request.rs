@@ -1,9 +1,11 @@
 use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponse, samples::Randoms,
+    id_targeted::IdTargeted,
+    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };
 
-use super::RandomsApi;
+use super::{RandomsApi, MEAN};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct MeanRequest(pub usize);
@@ -13,6 +15,8 @@ impl IdTargeted for MeanRequest {
         self.0
     }
 }
+
+impl RequestResponseMessage<MEAN, true> for MeanRequest {}
 
 impl From<MeanRequest> for ThreadRequestResponse<Randoms> {
     fn from(request: MeanRequest) -> Self {

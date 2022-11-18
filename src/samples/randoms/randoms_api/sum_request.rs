@@ -1,12 +1,16 @@
 use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponse, samples::Randoms,
+    id_targeted::IdTargeted,
+    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };
 
-use super::RandomsApi;
+use super::{RandomsApi, SUM};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SumRequest(pub usize);
+
+impl RequestResponseMessage<SUM, true> for SumRequest {}
 
 impl IdTargeted for SumRequest {
     fn id(&self) -> usize {

@@ -5,10 +5,9 @@ use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::{
     id_targeted::IdTargeted,
-    request_response::RequestResponse,
+    request_response::request_response_message::RequestResponseMessage,
     thread_request_response::{
-        add_response::AddResponse, thread_shutdown_response::ThreadShutdownResponse,
-        ThreadRequestResponse,
+        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse, ADD_POOL_ITEM,
     },
 };
 use std::fmt::Debug;
@@ -18,7 +17,7 @@ use self::pool_item_api::PoolItemApi;
 pub trait PoolItem: Debug
 where
     Self: Sized,
-    Self::Init: IdTargeted,
+    Self::Init: IdTargeted + RequestResponseMessage<ADD_POOL_ITEM, true>,
     Self::Api: PoolItemApi + Debug,
 {
     type Init;

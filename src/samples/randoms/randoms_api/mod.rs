@@ -16,10 +16,15 @@ use self::{
 
 use super::Randoms;
 
+/// define 2 constant to classify messages
+/// This allows us to leverage the type system avoid some runtime errors (and replace them with compile time errors)
+pub const MEAN: usize = 0;
+pub const SUM: usize = 1;
+
 #[derive(Debug)]
 pub enum RandomsApi {
-    Mean(RequestResponse<MeanRequest, MeanResponse>),
-    Sum(RequestResponse<SumRequest, SumResponse>),
+    Mean(RequestResponse<MEAN, MeanRequest, MeanResponse>),
+    Sum(RequestResponse<SUM, SumRequest, SumResponse>),
 }
 
 impl IdTargeted for RandomsApi {
