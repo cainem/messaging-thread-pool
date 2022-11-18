@@ -13,9 +13,9 @@ use crate::{
 
 use super::PoolThread;
 
-impl<E> PoolThread<E>
+impl<P> PoolThread<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function forms the "message loop" of the [`PoolThread`]
     ///
@@ -65,7 +65,7 @@ where
                     .into()
                 }
                 ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
-                    let new_pool_item = E::new_pool_item(request);
+                    let new_pool_item = P::new_pool_item(request);
                     let id = request.id();
 
                     // element did exist therefore it can only be a request to create a new element
@@ -90,7 +90,7 @@ where
                     let response = if let Some(targeted) = self.element_hash_map.get_mut(&id) {
                         targeted.process_message(request)
                     } else {
-                        E::id_not_found(request)
+                        P::id_not_found(request)
                     };
 
                     response

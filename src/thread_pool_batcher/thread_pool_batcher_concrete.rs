@@ -19,65 +19,69 @@ use super::ThreadPoolBatcher;
 ///
 /// This structure and its associated functions facilitate this behaviour.
 #[derive(Debug)]
-pub struct ThreadPoolBatcherConcrete<E>
+pub struct ThreadPoolBatcherConcrete<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
-    thread_pool: Weak<ThreadPool<E>>,
-    to_send: RefCell<Vec<ThreadRequestResponse<E>>>,
+    thread_pool: Weak<ThreadPool<P>>,
+    to_send: RefCell<Vec<ThreadRequestResponse<P>>>,
 }
 
-impl<E> ThreadPoolBatcherConcrete<E>
+impl<P> ThreadPoolBatcherConcrete<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function creates a new ThreadPoolBatcher
-    pub fn new(thread_pool: Weak<ThreadPool<E>>) -> Self {
+    pub fn new(thread_pool: Weak<ThreadPool<P>>) -> Self {
         Self {
             thread_pool,
             to_send: RefCell::new(vec![]),
         }
     }
 
-    pub fn thread_pool(&self) -> &Weak<ThreadPool<E>> {
+    pub fn thread_pool(&self) -> &Weak<ThreadPool<P>> {
         &self.thread_pool
     }
 
-    pub(super) fn to_send(&self) -> &RefCell<Vec<ThreadRequestResponse<E>>> {
+    pub(super) fn to_send(&self) -> &RefCell<Vec<ThreadRequestResponse<P>>> {
         &self.to_send
     }
 }
 
 /// This is implementation of the trait for the generic
 /// ThreadPoolBatcherConcrete which provides an implementation for the trait
-impl<E> ThreadPoolBatcher<E> for ThreadPoolBatcherConcrete<E>
+impl<P> ThreadPoolBatcher<P> for ThreadPoolBatcherConcrete<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<E>> + IdTargeted,
+        U: Into<ThreadRequestResponse<P>> + IdTargeted,
     {
-        ThreadPoolBatcherConcrete::<E>::batch_for_send(self, request)
+        ThreadPoolBatcherConcrete::<P>::batch_for_send(self, request)
     }
 
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<E>> + IdTargeted,
+        V: From<ThreadRequestResponse<P>> + IdTargeted,
     {
-        ThreadPoolBatcherConcrete::<E>::send_batch(self)
+        ThreadPoolBatcherConcrete::<P>::send_batch(self)
     }
 
-    fn new(thread_pool: Weak<ThreadPool<E>>) -> Self {
-        ThreadPoolBatcherConcrete::<E>::new(thread_pool)
+    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api> {
+        vec![]
+    }
+
+    fn new(thread_pool: Weak<ThreadPool<P>>) -> Self {
+        ThreadPoolBatcherConcrete::<P>::new(thread_pool)
     }
 
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
-        ThreadPoolBatcherConcrete::<E>::shutdown_pool(self)
+        ThreadPoolBatcherConcrete::<P>::shutdown_pool(self)
     }
 
     fn get_thread_pool_size(&self) -> NonZeroUsize {
-        ThreadPoolBatcherConcrete::<E>::thread_pool(self)
+        ThreadPoolBatcherConcrete::<P>::thread_pool(self)
             .upgrade()
             .expect("thread pool to be alive")
             .thread_count()

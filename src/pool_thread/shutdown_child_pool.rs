@@ -4,9 +4,9 @@ use crate::{
 
 use super::PoolThread;
 
-impl<E> PoolThread<E>
+impl<P> PoolThread<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function attempts to close down any (child) thread pool that is associated with the elements
     /// in this thread pool

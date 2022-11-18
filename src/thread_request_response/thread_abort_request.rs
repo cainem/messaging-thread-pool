@@ -2,7 +2,7 @@ use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::Requ
 
 use super::ThreadRequestResponse;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadAbortRequest(pub usize);
 
 impl IdTargeted for ThreadAbortRequest {

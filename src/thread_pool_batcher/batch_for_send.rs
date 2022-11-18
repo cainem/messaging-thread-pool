@@ -4,15 +4,15 @@ use crate::{
 
 use super::thread_pool_batcher_concrete::ThreadPoolBatcherConcrete;
 
-impl<E> ThreadPoolBatcherConcrete<E>
+impl<P> ThreadPoolBatcherConcrete<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function adds a single request to a building batch of request that will be sent at
     /// some future time when send_batch is called
     pub fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<E>> + IdTargeted,
+        U: Into<ThreadRequestResponse<P>> + IdTargeted,
     {
         self.to_send().borrow_mut().push(request.into());
 

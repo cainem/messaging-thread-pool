@@ -3,7 +3,7 @@ use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::Requ
 use super::ThreadRequestResponse;
 
 /// For debug purposes only; a message for responding to an echo request targeting a specific thread
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadEchoResponse {
     thread_id: usize,
     message: String,

@@ -11,15 +11,15 @@ use crate::{
     ThreadPool,
 };
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function requests that the thread pool shutdowns
     /// It sends the shutdown message to each of it's contained PoolThreads
     /// The sending of this message should cause the message loop to exit and the thread to end
     pub fn shutdown(&self) -> Vec<ThreadShutdownResponse> {
-        let (send_to_pool, receive_back_from) = bounded::<ThreadRequestResponse<E>>(0);
+        let (send_to_pool, receive_back_from) = bounded::<ThreadRequestResponse<P>>(0);
 
         let mut return_codes = Vec::with_capacity(
             self.thread_endpoints

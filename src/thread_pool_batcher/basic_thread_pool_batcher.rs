@@ -16,17 +16,17 @@ use super::{thread_pool_batcher_concrete::ThreadPoolBatcherConcrete, ThreadPoolB
 
 /// This is a ThreadPoolBatcher which encapsulates the thread pool that it is using.\
 /// This is suitable for simple scenarios.
-pub struct BasicThreadPoolBatcher<E>
+pub struct BasicThreadPoolBatcher<P>
 where
-    E: PoolItem + 'static,
+    P: PoolItem + 'static,
 {
-    thread_pool: Arc<ThreadPool<E>>,
-    thread_pool_batcher: ThreadPoolBatcherConcrete<E>,
+    thread_pool: Arc<ThreadPool<P>>,
+    thread_pool_batcher: ThreadPoolBatcherConcrete<P>,
 }
 
-impl<E> BasicThreadPoolBatcher<E>
+impl<P> BasicThreadPoolBatcher<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     pub fn new(threads_in_pool: usize) -> Self {
         assert!(
@@ -34,7 +34,7 @@ where
             "must be at least one thread in the pool"
         );
 
-        let thread_pool = Arc::new(ThreadPool::<E>::new(threads_in_pool));
+        let thread_pool = Arc::new(ThreadPool::<P>::new(threads_in_pool));
         let thread_pool_batcher = ThreadPoolBatcherConcrete::new(Arc::downgrade(&thread_pool));
 
         Self {
@@ -44,26 +44,30 @@ where
     }
 }
 
-impl<E> ThreadPoolBatcher<E> for BasicThreadPoolBatcher<E>
+impl<P> ThreadPoolBatcher<P> for BasicThreadPoolBatcher<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<E>> + IdTargeted,
+        U: Into<ThreadRequestResponse<P>> + IdTargeted,
     {
         self.thread_pool_batcher.batch_for_send(request);
         self
     }
 
+    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api> {
+        vec![]
+    }
+
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<E>> + IdTargeted,
+        V: From<ThreadRequestResponse<P>> + IdTargeted,
     {
         self.thread_pool_batcher.send_batch()
     }
 
-    fn new(_thread_pool: Weak<ThreadPool<E>>) -> Self {
+    fn new(_thread_pool: Weak<ThreadPool<P>>) -> Self {
         unimplemented!();
     }
 

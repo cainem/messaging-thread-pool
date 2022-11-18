@@ -5,9 +5,9 @@ use tracing::{event, instrument, Level};
 
 use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse, ThreadPool};
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function sends a request to a worker thread and receives a response back
     ///
@@ -15,14 +15,14 @@ where
     #[instrument(skip(self, requests))]
     pub fn send_and_receive<T, U>(&self, requests: &RefCell<Vec<T>>) -> Vec<U>
     where
-        T: Into<ThreadRequestResponse<E>>,
-        U: From<ThreadRequestResponse<E>>,
+        T: Into<ThreadRequestResponse<P>>,
+        U: From<ThreadRequestResponse<P>>,
     {
         let requests_len = requests.borrow().len();
 
         event!(Level::DEBUG, requests_len, message = "Sending requests");
 
-        let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<E>>();
+        let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
 
         self.send(return_back_to, requests);
         self.receive(requests_len, receive_from_worker)

@@ -6,9 +6,9 @@ use crate::{pool_item::PoolItem, sender_couplet::SenderCouplet};
 
 use super::PoolThread;
 
-impl<E> PoolThread<E>
+impl<P> PoolThread<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function creates a new PoolThread
     /// This represents a single thread in the thread pool
@@ -21,7 +21,7 @@ where
     ///
     /// The PoolThread spins around its message_loop function processing messages until a request is
     /// received to shutdown.
-    pub fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<E>>) -> Self {
+    pub fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<P>>) -> Self {
         Self {
             thread_id: id,
             pool_thread_receiver,

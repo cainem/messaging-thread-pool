@@ -4,9 +4,9 @@ use crate::{
 
 use super::ThreadPoolBatcherConcrete;
 
-impl<E> ThreadPoolBatcherConcrete<E>
+impl<P> ThreadPoolBatcherConcrete<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function tells the ThreadPoolBatcher to shutdown its associated thread pool
     pub fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {

@@ -1,5 +1,5 @@
 use messaging_thread_pool::{
-    samples::{mean_request::MeanRequest, *},
+    samples::{mean_request::MeanRequest, sum_request::SumRequest, *},
     thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request_response::{
         add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
@@ -25,7 +25,7 @@ pub fn example_simple_one_level_thread_pool() {
 
     // now create 1000 messages asking them for the sum of their contained random numbers
     for i in 0..1000 {
-        thread_pool_batcher.batch_for_send(MeanRequest(i));
+        thread_pool_batcher.batch_for_send(SumRequest(i));
     }
     // Send the messages
     // The message will be routed to the thread to where the targeted element resides

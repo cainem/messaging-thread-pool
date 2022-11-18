@@ -145,16 +145,16 @@ pub mod thread_request_response;
 ///
 /// It is necessary when request are made
 #[derive(Debug)]
-pub struct ThreadPool<E>
+pub struct ThreadPool<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
-    thread_endpoints: RwLock<Vec<ThreadEndpoint<E>>>,
+    thread_endpoints: RwLock<Vec<ThreadEndpoint<P>>>,
 }
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function returns the number of threads in the thread pool
     pub fn thread_count(&self) -> NonZeroUsize {

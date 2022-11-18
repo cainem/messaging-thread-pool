@@ -20,22 +20,22 @@ use super::ThreadPoolBatcher;
 ///
 /// It validates that the requests received are indeed the ones received.
 #[derive(Debug)]
-pub struct ThreadPoolBatcherMock<E>
+pub struct ThreadPoolBatcherMock<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
-    expected_requests: RefCell<Vec<ThreadRequestResponse<E>>>,
-    responses: RefCell<Vec<ThreadRequestResponse<E>>>,
+    expected_requests: RefCell<Vec<ThreadRequestResponse<P>>>,
+    responses: RefCell<Vec<ThreadRequestResponse<P>>>,
     shutdown_called: Cell<bool>,
 }
 
-impl<E> ThreadPoolBatcherMock<E>
+impl<P> ThreadPoolBatcherMock<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     pub fn new(
-        mut expected_requests: Vec<ThreadRequestResponse<E>>,
-        mut responses: Vec<ThreadRequestResponse<E>>,
+        mut expected_requests: Vec<ThreadRequestResponse<P>>,
+        mut responses: Vec<ThreadRequestResponse<P>>,
     ) -> Self {
         assert_eq!(
             expected_requests.len(),
@@ -78,15 +78,15 @@ where
     }
 }
 
-impl<E> ThreadPoolBatcher<E> for ThreadPoolBatcherMock<E>
+impl<P> ThreadPoolBatcher<P> for ThreadPoolBatcherMock<P>
 where
-    E: PoolItem + PartialEq,
-    E::Init: PartialEq,
-    E::Api: PartialEq,
+    P: PoolItem + PartialEq,
+    P::Init: PartialEq,
+    P::Api: PartialEq,
 {
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<E>> + IdTargeted,
+        U: Into<ThreadRequestResponse<P>> + IdTargeted,
     {
         assert_eq!(request.into(), self.expected_requests.borrow()[0]);
         self.expected_requests.borrow_mut().remove(0);
@@ -95,7 +95,7 @@ where
 
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<E>> + IdTargeted,
+        V: From<ThreadRequestResponse<P>> + IdTargeted,
     {
         let responses_len = self.responses.borrow().len();
         let expected_requests_len = self.expected_requests.borrow().len();
@@ -108,7 +108,7 @@ where
             .collect()
     }
 
-    fn new(_thread_pool: Weak<ThreadPool<E>>) -> Self {
+    fn new(_thread_pool: Weak<ThreadPool<P>>) -> Self {
         panic!("should not be used in a scenario with this function is called");
     }
 
@@ -118,5 +118,9 @@ where
 
     fn get_thread_pool_size(&self) -> std::num::NonZeroUsize {
         todo!()
+    }
+
+    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api> {
+        vec![]
     }
 }

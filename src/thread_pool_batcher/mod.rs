@@ -24,14 +24,14 @@ use crate::{
 ///
 /// Making it a trait allows for the interface to the thread pool to be easily mocked for testing purposes
 /// (see [`ThreadPoolBatcherMock`])
-pub trait ThreadPoolBatcher<E>
+pub trait ThreadPoolBatcher<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function queues a message for sending adding it to an internal buffer
     fn batch_for_send<U>(&self, request: U) -> &Self
     where
-        U: Into<ThreadRequestResponse<E>> + IdTargeted;
+        U: Into<ThreadRequestResponse<P>> + IdTargeted;
 
     /// This function sends all messages stored in the internal buffer.\
     /// This call blocks until all messages have been acted upon and their responses returned.\
@@ -39,12 +39,14 @@ where
     /// of the ThreadPoolBatcher's pool threads.\
     fn send_batch<V>(&self) -> Vec<V>
     where
-        V: From<ThreadRequestResponse<E>> + IdTargeted;
+        V: From<ThreadRequestResponse<P>> + IdTargeted;
 
     /// Creates a new ThreadPoolBatcher that will use the passed in thread pool
-    fn new(thread_pool: Weak<ThreadPool<E>>) -> Self;
+    fn new(thread_pool: Weak<ThreadPool<P>>) -> Self;
     /// Shuts down the thread pool associated with this instance of the [`ThreadPoolBatcher`]
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse>;
     /// Returns the thread pool size of the thread pool associated with this instance of [`ThreadPoolBatcher`]
     fn get_thread_pool_size(&self) -> NonZeroUsize;
+
+    fn send(&self, to_send: impl Iterator<Item = P::Api>) -> Vec<P::Api>;
 }

@@ -7,17 +7,17 @@ use crate::{
 
 use super::ThreadEndpoint;
 
-impl<E> ThreadEndpoint<E>
+impl<P> ThreadEndpoint<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function send an asynchronous request to a thread pool
-    pub fn send<T>(&self, sender: &Sender<ThreadRequestResponse<E>>, request: T)
+    pub fn send<T>(&self, sender: &Sender<ThreadRequestResponse<P>>, request: T)
     where
-        T: Into<ThreadRequestResponse<E>>,
+        T: Into<ThreadRequestResponse<P>>,
     {
         self.sender
-            .send(SenderCouplet::<E>::new(sender.clone(), request.into()))
+            .send(SenderCouplet::<P>::new(sender.clone(), request.into()))
             .expect("The receiver thread to always be available");
     }
 }

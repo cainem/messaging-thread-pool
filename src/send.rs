@@ -8,9 +8,9 @@ use crate::{
     ThreadPool,
 };
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function sends a request to a thread within the pool
     ///
@@ -22,10 +22,10 @@ where
     #[instrument(skip(self, send_back_to, requests))]
     pub(super) fn send<T>(
         &self,
-        send_back_to: Sender<ThreadRequestResponse<E>>,
+        send_back_to: Sender<ThreadRequestResponse<P>>,
         requests: &RefCell<Vec<T>>,
     ) where
-        T: Into<ThreadRequestResponse<E>>,
+        T: Into<ThreadRequestResponse<P>>,
     {
         let thread_count = self
             .thread_endpoints
@@ -33,7 +33,7 @@ where
             .expect("no poisoned locks")
             .len();
         for request in requests.borrow_mut().drain(..) {
-            let request: ThreadRequestResponse<E> = request.into();
+            let request: ThreadRequestResponse<P> = request.into();
             // route to correct thread; share the load based on id and the mod of the thread count
             let targeted = request.id() as usize % thread_count;
             event!(Level::DEBUG, "Sending to target {}", request.id());

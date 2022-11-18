@@ -4,7 +4,7 @@ use super::ThreadRequestResponse;
 
 /// This struct is returned in response to a request to add a pool item to the thread pool
 /// The success field indicates that the pool item was successfully constructed
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddResponse {
     id: usize,
     success: bool,

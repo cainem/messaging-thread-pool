@@ -3,9 +3,9 @@ use tracing::{event, instrument, Level};
 
 use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse, ThreadPool};
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    E: PoolItem,
+    P: PoolItem,
 {
     /// This function sends a request to a worker thread and receives a response back
     ///
@@ -16,10 +16,10 @@ where
     pub(super) fn receive<T>(
         &self,
         requests_len: usize,
-        receive_from_worker: Receiver<ThreadRequestResponse<E>>,
+        receive_from_worker: Receiver<ThreadRequestResponse<P>>,
     ) -> Vec<T>
     where
-        T: From<ThreadRequestResponse<E>>,
+        T: From<ThreadRequestResponse<P>>,
     {
         // for every request there will be a response
         let mut building_responses = Vec::with_capacity(requests_len);
