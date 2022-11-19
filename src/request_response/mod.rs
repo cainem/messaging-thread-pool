@@ -1,8 +1,9 @@
 use self::request_response_message::RequestResponseMessage;
 
 pub mod id_targeted;
-pub mod request_response_2;
+pub mod request_message;
 pub mod request_response_message;
+pub mod response_message;
 
 /// This enum is used for defining request/response pairs
 ///

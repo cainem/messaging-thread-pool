@@ -4,9 +4,11 @@ use crossbeam_channel::unbounded;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem,
-    request_response::request_response_message::RequestResponseMessage,
-    thread_request_response::ThreadRequestResponse, ThreadPool,
+    id_targeted::IdTargeted,
+    pool_item::PoolItem,
+    request_response::{request_message::RequestMessage, response_message::ResponseMessage},
+    thread_request_response::ThreadRequestResponse,
+    ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -22,37 +24,12 @@ where
         requests: impl Iterator<Item = T>,
     ) -> impl Iterator<Item = U>
     where
-        T: Into<ThreadRequestResponse<P>> + RequestResponseMessage<N, true>,
-        U: From<ThreadRequestResponse<P>> + RequestResponseMessage<N, false>,
+        T: RequestMessage<N, P>,
+        U: ResponseMessage<N, P>,
     {
-        //let requests_len = requests.count();
-
-        //event!(Level::DEBUG, requests_len, message = "Sending requests");
-
         let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
-
-        // let thread_count = self
-        //     .thread_endpoints
-        //     .read()
-        //     .expect("no poisoned locks")
-        //     .len();
-        // for request in requests {
-        //     let request: ThreadRequestResponse<P> = request.into();
-        //     // route to correct thread; share the load based on id and the mod of the thread count
-        //     let targeted = request.id() as usize % thread_count;
-        //     event!(Level::DEBUG, "Sending to target {}", request.id());
-        //     event!(Level::TRACE, ?request);
-        //     self.thread_endpoints.read().expect("no poisoned locks")[targeted]
-        //         .send(&return_back_to.clone(), request);
-        // }
-
         self.send(return_back_to, requests);
         self.receive(receive_from_worker)
-
-        // receive_from_worker.into_iter().map(|r| {
-        //     event!(Level::DEBUG, ?r);
-        //     r.into()
-        // })
     }
 }
 

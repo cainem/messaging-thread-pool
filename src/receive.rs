@@ -2,8 +2,12 @@ use crossbeam_channel::Receiver;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    pool_item::PoolItem, request_response::request_response_message::RequestResponseMessage,
-    thread_request_response::ThreadRequestResponse, ThreadPool,
+    pool_item::PoolItem,
+    request_response::{
+        request_response_message::RequestResponseMessage, response_message::ResponseMessage,
+    },
+    thread_request_response::ThreadRequestResponse,
+    ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -21,7 +25,7 @@ where
         receive_from_worker: Receiver<ThreadRequestResponse<P>>,
     ) -> impl Iterator<Item = T>
     where
-        T: From<ThreadRequestResponse<P>> + RequestResponseMessage<N, false>,
+        T: ResponseMessage<N, P>,
     {
         // for every request there will be a response
         //let mut building_responses = Vec::with_capacity(requests_len);

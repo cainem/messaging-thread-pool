@@ -1,8 +1,8 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    pool_item::PoolItem, sender_couplet::SenderCouplet,
-    thread_request_response::ThreadRequestResponse,
+    pool_item::PoolItem, request_response::request_message::RequestMessage,
+    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse,
 };
 
 use super::ThreadEndpoint;
@@ -12,9 +12,9 @@ where
     P: PoolItem,
 {
     /// This function send an asynchronous request to a thread pool
-    pub fn send<T>(&self, sender: &Sender<ThreadRequestResponse<P>>, request: T)
+    pub fn send<const N: usize, T>(&self, sender: &Sender<ThreadRequestResponse<P>>, request: T)
     where
-        T: Into<ThreadRequestResponse<P>>,
+        T: RequestMessage<N, P>,
     {
         self.sender
             .send(SenderCouplet::<P>::new(sender.clone(), request.into()))

@@ -120,7 +120,6 @@ use thread_endpoint::ThreadEndpoint;
 pub mod id_provider;
 pub mod id_targeted;
 pub mod samples;
-pub mod thread_pool_batcher;
 
 mod drop;
 mod new;

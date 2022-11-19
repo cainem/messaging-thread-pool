@@ -5,7 +5,6 @@ use messaging_thread_pool::{
         mean_request::MeanRequest, mean_response::MeanResponse,
         randoms_add_request::RandomsAddRequest, sum_request::SumRequest, *,
     },
-    thread_pool_batcher::{BasicThreadPoolBatcher, ThreadPoolBatcher},
     thread_request_response::{
         add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
         remove_pool_item_response::RemovePoolItemResponse,
@@ -69,13 +68,13 @@ use messaging_thread_pool::{
 pub fn example_simple_one_level_thread_pool() {
     // creates a thread pool with 4 threads and a mechanism by which to communicate with the threads in the pool.
     // The lifetime of the elements created (the Randoms) will be tied to the life of this struct
-    let thread_pool_batcher = BasicThreadPoolBatcher::<Randoms>::new(1);
-
     let thread_pool = ThreadPool::<Randoms>::new(1);
 
     let result: Vec<AddResponse> = thread_pool
         .send_and_receive((0..10000usize).map(|i| RandomsAddRequest(i)))
         .collect();
+
+    dbg!(result);
 
     //for
 
@@ -122,5 +121,5 @@ pub fn example_simple_one_level_thread_pool() {
 
     // all elements are dropped when the basic thread pool batcher is dropped
     // the threads are shutdown and joined back the the main thread
-    drop(thread_pool_batcher);
+    //drop(thread_pool_batcher);
 }

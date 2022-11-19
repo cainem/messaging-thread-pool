@@ -1,11 +1,8 @@
-use std::cell::RefCell;
-
 use crossbeam_channel::Sender;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem,
-    request_response::request_response_message::RequestResponseMessage,
+    pool_item::PoolItem, request_response::request_message::RequestMessage,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
@@ -26,8 +23,7 @@ where
         send_back_to: Sender<ThreadRequestResponse<P>>,
         requests: impl Iterator<Item = T>,
     ) where
-        T: Into<ThreadRequestResponse<P>>,
-        T: RequestResponseMessage<N, true>,
+        T: RequestMessage<N, P>,
     {
         let thread_count = self
             .thread_endpoints
@@ -35,10 +31,9 @@ where
             .expect("no poisoned locks")
             .len();
 
-        let guard =  self.thread_endpoints.read().expect("no poisoned locks");
+        let guard = self.thread_endpoints.read().expect("no poisoned locks");
 
         for request in requests {
-            let request: ThreadRequestResponse<P> = request.into();
             // route to correct thread; share the load based on id and the mod of the thread count
             let targeted = request.id() as usize % thread_count;
             event!(Level::DEBUG, "Sending to target {}", request.id());
