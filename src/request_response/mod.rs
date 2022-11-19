@@ -30,18 +30,6 @@ where
         };
         result
     }
-    pub fn response(&self) -> &Res {
-        let RequestResponse::Response(result) = self else {
-            panic!("not a response")
-        };
-        result
-    }
-    pub fn is_request(&self) -> bool {
-        matches!(self, RequestResponse::Request(_))
-    }
-    pub fn is_response(&self) -> bool {
-        !self.is_request()
-    }
 }
 
 #[cfg(test)]
@@ -49,23 +37,6 @@ mod tests {
     use crate::thread_request_response::ID_ONLY;
 
     use super::RequestResponse;
-
-    #[test]
-    #[should_panic(expected = "not a response")]
-    fn request_response_contains_a_request_response_panics() {
-        let request = 1;
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(request);
-
-        let _ = target.response();
-    }
-
-    #[test]
-    fn request_response_contains_a_response_response_unwraps_response() {
-        let response = 1;
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(response);
-
-        assert_eq!(&response, target.response());
-    }
 
     #[test]
     #[should_panic(expected = "not a request")]
@@ -82,21 +53,5 @@ mod tests {
         let target = RequestResponse::<ID_ONLY, usize, usize>::Request(request);
 
         assert_eq!(&request, target.request());
-    }
-
-    #[test]
-    fn request_response_contains_a_response_is_request_returns_false_response_true() {
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(1);
-
-        assert!(!target.is_request());
-        assert!(target.is_response());
-    }
-
-    #[test]
-    fn request_response_contains_a_request_is_request_returns_true_response_false() {
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(1);
-
-        assert!(target.is_request());
-        assert!(!target.is_response());
     }
 }

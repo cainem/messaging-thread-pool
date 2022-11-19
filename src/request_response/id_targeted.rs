@@ -4,13 +4,15 @@ use super::{request_response_message::RequestResponseMessage, RequestResponse};
 
 impl<const N: usize, Req, Res> IdTargeted for RequestResponse<N, Req, Res>
 where
-    Req: RequestResponseMessage<N, true>,
+    Req: RequestResponseMessage<N, true> + IdTargeted,
     Res: RequestResponseMessage<N, false>,
 {
     fn id(&self) -> usize {
         match self {
             RequestResponse::Request(request) => request.id(),
-            RequestResponse::Response(response) => response.id(),
+            RequestResponse::Response(_response) => {
+                panic!("id targeting is not required for responses")
+            }
         }
     }
 }

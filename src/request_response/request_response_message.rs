@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
-use crate::{id_targeted::IdTargeted, thread_request_response::ID_ONLY};
+use crate::thread_request_response::ID_ONLY;
 
-pub trait RequestResponseMessage<const N: usize, const R: bool>: IdTargeted + Debug {
+pub trait RequestResponseMessage<const N: usize, const R: bool>: Debug + Send {
     const MESSAGE_TYPE: usize = N;
     const IS_REQUEST: bool = R;
     const IS_RESPONSE: bool = !R;

@@ -510,7 +510,7 @@ mod tests {
         // there should be one thread shutdown response on the response channel
         let thread_abort_response: ThreadAbortResponse = response_receive.recv().unwrap().into();
 
-        assert_eq!(2, thread_abort_response.id());
+        assert_eq!(2, thread_abort_response.thread_id());
     }
 
     #[test]
@@ -534,7 +534,7 @@ mod tests {
         // there should be one thread abort response on the response channel
         let thread_abort_response: ThreadAbortResponse = response_receive.recv().unwrap().into();
 
-        assert_eq!(1, thread_abort_response.id());
+        assert_eq!(1, thread_abort_response.thread_id());
     }
 
     #[test]
@@ -559,7 +559,7 @@ mod tests {
         let thread_shutdown_payload: ThreadShutdownResponse =
             response_receive.recv().unwrap().into();
 
-        assert_eq!(2, thread_shutdown_payload.id());
+        assert_eq!(2, thread_shutdown_payload.thread_id());
         assert_eq!(
             &Vec::<ThreadShutdownResponse>::default(),
             thread_shutdown_payload.children()
@@ -588,7 +588,7 @@ mod tests {
         let thread_shutdown_payload: ThreadShutdownResponse =
             response_receive.recv().unwrap().into();
 
-        assert_eq!(1, thread_shutdown_payload.id());
+        assert_eq!(1, thread_shutdown_payload.thread_id());
         assert_eq!(
             &Vec::<ThreadShutdownResponse>::default(),
             thread_shutdown_payload.children()

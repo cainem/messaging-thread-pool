@@ -1,7 +1,6 @@
 use crossbeam_channel::bounded;
 
 use crate::{
-    id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_response::RequestResponse,
     thread_request_response::{
@@ -48,11 +47,6 @@ where
                 ThreadRequestResponse::ThreadShutdown(RequestResponse::Response(
                     thread_shutdown_payload,
                 )) => {
-                    assert_eq!(
-                        thread_shutdown_payload.id(),
-                        id,
-                        "the passed and returned ids should be the same"
-                    );
                     child_threads.append(&mut thread_shutdown_payload.take_children());
                 }
                 _ => panic!("only a shutdown response expected"),

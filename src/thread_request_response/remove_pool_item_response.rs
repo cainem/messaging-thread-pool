@@ -1,5 +1,4 @@
 use crate::{
-    id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_response::{request_response_message::RequestResponseMessage, RequestResponse},
 };
@@ -27,12 +26,6 @@ impl RemovePoolItemResponse {
 }
 
 impl RequestResponseMessage<REMOVE_POOL_ITEM, false> for RemovePoolItemResponse {}
-
-impl IdTargeted for RemovePoolItemResponse {
-    fn id(&self) -> usize {
-        todo!()
-    }
-}
 
 impl<T> From<RemovePoolItemResponse> for ThreadRequestResponse<T>
 where

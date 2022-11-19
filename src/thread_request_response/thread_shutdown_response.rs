@@ -1,5 +1,4 @@
 use crate::{
-    id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_response::{request_response_message::RequestResponseMessage, RequestResponse},
 };
@@ -29,10 +28,8 @@ impl ThreadShutdownResponse {
     pub fn children(&self) -> &[ThreadShutdownResponse] {
         self.children.as_ref()
     }
-}
 
-impl IdTargeted for ThreadShutdownResponse {
-    fn id(&self) -> usize {
+    pub fn thread_id(&self) -> usize {
         self.thread_id
     }
 }
@@ -55,26 +52,5 @@ where
             panic!("unexpected")
         };
         response
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::id_targeted::IdTargeted;
-
-    use super::ThreadShutdownResponse;
-
-    #[test]
-    fn id_2_id_returns_2() {
-        let target = ThreadShutdownResponse::new(2, vec![]);
-
-        assert_eq!(2, target.id());
-    }
-
-    #[test]
-    fn id_1_id_returns_1() {
-        let target = ThreadShutdownResponse::new(1, vec![]);
-
-        assert_eq!(1, target.id());
     }
 }

@@ -1,11 +1,9 @@
-use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
-};
+use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse};
 
 use super::request_response_message::RequestResponseMessage;
 
 pub trait ResponseMessage<const N: usize, P>:
-    RequestResponseMessage<N, false> + From<ThreadRequestResponse<P>> + IdTargeted
+    RequestResponseMessage<N, false> + From<ThreadRequestResponse<P>>
 where
     P: PoolItem,
 {

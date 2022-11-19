@@ -17,7 +17,7 @@ use self::new_pool_item_error::NewPoolItemError;
 pub trait PoolItem: Debug
 where
     Self: Sized,
-    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true>,
+    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true> + IdTargeted,
     Self::Api: Debug + Send + IdTargeted,
 {
     type Init;

@@ -1,5 +1,4 @@
 use crate::{
-    id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_response::{request_response_message::RequestResponseMessage, RequestResponse},
 };
@@ -15,12 +14,6 @@ pub struct ThreadEchoResponse {
 }
 
 impl RequestResponseMessage<THREAD_ECHO, false> for ThreadEchoResponse {}
-
-impl IdTargeted for ThreadEchoResponse {
-    fn id(&self) -> usize {
-        todo!()
-    }
-}
 
 impl ThreadEchoResponse {
     pub fn new(thread_id: usize, message: String, responding_thread_id: usize) -> Self {
