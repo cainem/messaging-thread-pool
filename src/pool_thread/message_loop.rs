@@ -69,7 +69,7 @@ where
                     let id = request.id();
 
                     // element did exist therefore it can only be a request to create a new element
-                    let success = match new_pool_item {
+                    match new_pool_item {
                         Ok(new_pool_item) => {
                             event!(
                                 Level::DEBUG,
@@ -77,11 +77,15 @@ where
                                 new_pool_item.name()
                             );
                             self.element_hash_map.insert(id, new_pool_item);
-                            true
+                            AddResponse::new(id, true, None)
                         }
-                        Err(()) => false,
-                    };
-                    AddResponse::new(id, success).into()
+                        Err(new_pool_item_error) => AddResponse::new(
+                            id,
+                            false,
+                            Some(new_pool_item_error.take_error_message()),
+                        ),
+                    }
+                    .into()
                 }
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();

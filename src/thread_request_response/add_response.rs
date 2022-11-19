@@ -12,11 +12,24 @@ use super::{ThreadRequestResponse, ADD_POOL_ITEM};
 pub struct AddResponse {
     id: usize,
     success: bool,
+    error_message: Option<String>,
 }
 
 impl AddResponse {
-    pub fn new(id: usize, success: bool) -> Self {
-        Self { id, success }
+    pub fn new(id: usize, success: bool, error_message: Option<String>) -> Self {
+        Self {
+            id,
+            success,
+            error_message,
+        }
+    }
+
+    pub fn success(&self) -> bool {
+        self.success
+    }
+
+    pub fn error_message(&self) -> Option<&String> {
+        self.error_message.as_ref()
     }
 }
 
@@ -57,14 +70,14 @@ mod tests {
 
     #[test]
     fn id_2_id_returns_2() {
-        let target = AddResponse::new(2, true);
+        let target = AddResponse::new(2, true, None);
 
         assert_eq!(2, target.id());
     }
 
     #[test]
     fn id_1_id_returns_1() {
-        let target = AddResponse::new(1, true);
+        let target = AddResponse::new(1, true, None);
 
         assert_eq!(1, target.id());
     }

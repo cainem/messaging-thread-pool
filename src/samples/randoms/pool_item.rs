@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    pool_item::PoolItem,
+    pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
     thread_request_response::{
         thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
     },
@@ -33,7 +33,7 @@ impl PoolItem for Randoms {
         }
     }
 
-    fn new_pool_item(request: &Self::Init) -> Result<Self, ()> {
+    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(Randoms::new(request.0))
     }
 

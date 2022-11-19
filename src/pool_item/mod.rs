@@ -1,3 +1,5 @@
+pub mod new_pool_item_error;
+
 use tracing::subscriber::DefaultGuard;
 use tracing_appender::non_blocking::WorkerGuard;
 
@@ -9,6 +11,8 @@ use crate::{
     },
 };
 use std::fmt::Debug;
+
+use self::new_pool_item_error::NewPoolItemError;
 
 pub trait PoolItem: Debug
 where
@@ -31,7 +35,7 @@ where
         std::any::type_name::<Self>()
     }
 
-    fn new_pool_item(request: &Self::Init) -> Result<Self, ()>;
+    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError>;
 
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
         Vec::<ThreadShutdownResponse>::default()

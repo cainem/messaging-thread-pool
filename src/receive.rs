@@ -2,12 +2,8 @@ use crossbeam_channel::Receiver;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    pool_item::PoolItem,
-    request_response::{
-        request_response_message::RequestResponseMessage, response_message::ResponseMessage,
-    },
-    thread_request_response::ThreadRequestResponse,
-    ThreadPool,
+    pool_item::PoolItem, request_response::response_message::ResponseMessage,
+    thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
 impl<P> ThreadPool<P>

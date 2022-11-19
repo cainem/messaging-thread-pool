@@ -1,10 +1,7 @@
-use std::cell::RefCell;
-
 use crossbeam_channel::unbounded;
-use tracing::{event, instrument, Level};
+use tracing::instrument;
 
 use crate::{
-    id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_response::{request_message::RequestMessage, response_message::ResponseMessage},
     thread_request_response::ThreadRequestResponse,
