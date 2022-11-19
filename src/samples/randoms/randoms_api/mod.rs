@@ -5,8 +5,8 @@ pub mod sum_request;
 pub mod sum_response;
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::pool_item_api::PoolItemApi,
-    request_response::RequestResponse, thread_request_response::ThreadRequestResponse,
+    id_targeted::IdTargeted, request_response::RequestResponse,
+    thread_request_response::ThreadRequestResponse,
 };
 
 use self::{
@@ -36,14 +36,14 @@ impl IdTargeted for RandomsApi {
     }
 }
 
-impl PoolItemApi for RandomsApi {
-    fn is_request(&self) -> bool {
-        match self {
-            RandomsApi::Mean(payload) => payload.is_request(),
-            RandomsApi::Sum(payload) => payload.is_request(),
-        }
-    }
-}
+// impl PoolItemApi for RandomsApi {
+//     fn is_request(&self) -> bool {
+//         match self {
+//             RandomsApi::Mean(payload) => payload.is_request(),
+//             RandomsApi::Sum(payload) => payload.is_request(),
+//         }
+//     }
+// }
 
 impl From<ThreadRequestResponse<Randoms>> for RandomsApi {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {

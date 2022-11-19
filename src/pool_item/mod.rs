@@ -1,5 +1,3 @@
-pub mod pool_item_api;
-
 use tracing::subscriber::DefaultGuard;
 use tracing_appender::non_blocking::WorkerGuard;
 
@@ -12,13 +10,11 @@ use crate::{
 };
 use std::fmt::Debug;
 
-use self::pool_item_api::PoolItemApi;
-
 pub trait PoolItem: Debug
 where
     Self: Sized,
-    Self::Init: IdTargeted + RequestResponseMessage<ADD_POOL_ITEM, true>,
-    Self::Api: PoolItemApi + Debug,
+    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true>,
+    Self::Api: Debug + Send + IdTargeted,
 {
     type Init;
     type Api;

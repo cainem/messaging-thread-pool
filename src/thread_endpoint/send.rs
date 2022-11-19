@@ -17,7 +17,7 @@ where
         T: RequestMessage<N, P>,
     {
         self.sender
-            .send(SenderCouplet::<P>::new(sender.clone(), request.into()))
+            .send(SenderCouplet::<P>::new(sender.clone(), request))
             .expect("The receiver thread to always be available");
     }
 }

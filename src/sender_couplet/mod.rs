@@ -1,6 +1,9 @@
 use crossbeam_channel::Sender;
 
-use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse};
+use crate::{
+    pool_item::PoolItem, request_response::request_message::RequestMessage,
+    thread_request_response::ThreadRequestResponse,
+};
 
 #[derive(Debug)]
 pub struct SenderCouplet<P>
@@ -16,9 +19,9 @@ where
     P: PoolItem,
 {
     /// Creates a new SenderCouplet
-    pub fn new<T>(return_to: Sender<ThreadRequestResponse<P>>, request: T) -> Self
+    pub fn new<const N: usize, T>(return_to: Sender<ThreadRequestResponse<P>>, request: T) -> Self
     where
-        T: Into<ThreadRequestResponse<P>>,
+        T: RequestMessage<N, P>,
     {
         Self {
             return_to,
@@ -27,7 +30,6 @@ where
     }
 
     pub fn request(&self) -> &ThreadRequestResponse<P> {
-        debug_assert!(self.request.is_request());
         &self.request
     }
 
