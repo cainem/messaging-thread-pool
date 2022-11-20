@@ -112,29 +112,28 @@
 //!
 //! It was not intended for anything other than long-lived CPU bound elements.
 //!
-use std::{num::NonZeroUsize, sync::RwLock};
+use std::sync::RwLock;
 
 use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
 pub mod id_provider;
 pub mod id_targeted;
+pub mod pool_item;
+pub mod request_response;
 pub mod samples;
+pub mod sender_couplet;
+pub mod thread_request_response;
 
 mod drop;
 mod new;
-pub mod new2;
-pub mod pool_item;
 mod pool_thread;
 mod pool_thread_old;
 mod receive;
-pub mod request_response;
 mod send;
 mod send_and_receive;
-pub mod sender_couplet;
 mod shutdown;
 mod thread_endpoint;
-pub mod thread_request_response;
 
 /// This struct represents a pool of threads that can target a particular type of
 /// resource (a resource being a struct that implements Element)
@@ -156,14 +155,11 @@ where
     P: PoolItem,
 {
     /// This function returns the number of threads in the thread pool
-    pub fn thread_count(&self) -> NonZeroUsize {
-        NonZeroUsize::new(
-            self.thread_endpoints
-                .read()
-                .expect("read should never be poisoned")
-                .len(),
-        )
-        .expect("number of threads to be greater than zero")
+    pub fn thread_count(&self) -> usize {
+        self.thread_endpoints
+            .read()
+            .expect("read should never be poisoned")
+            .len()
     }
 }
 
