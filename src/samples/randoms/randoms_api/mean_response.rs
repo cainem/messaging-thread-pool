@@ -1,5 +1,4 @@
 use crate::{
-    id_targeted::IdTargeted,
     request_response::{request_response_message::RequestResponseMessage, RequestResponse},
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
@@ -14,9 +13,9 @@ pub struct MeanResponse {
     pub mean: u128,
 }
 
-impl IdTargeted for MeanResponse {
-    fn id(&self) -> usize {
-        self.id
+impl MeanResponse {
+    pub fn mean(&self) -> u128 {
+        self.mean
     }
 }
 

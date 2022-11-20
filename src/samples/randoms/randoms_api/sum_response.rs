@@ -1,5 +1,4 @@
 use crate::{
-    id_targeted::IdTargeted,
     request_response::{request_response_message::RequestResponseMessage, RequestResponse},
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
@@ -14,13 +13,13 @@ pub struct SumResponse {
     pub sum: u128,
 }
 
-impl RequestResponseMessage<SUM, false> for SumResponse {}
-
-impl IdTargeted for SumResponse {
-    fn id(&self) -> usize {
-        self.id
+impl SumResponse {
+    pub fn sum(&self) -> u128 {
+        self.sum
     }
 }
+
+impl RequestResponseMessage<SUM, false> for SumResponse {}
 
 impl From<SumResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: SumResponse) -> Self {

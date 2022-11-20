@@ -140,8 +140,6 @@ mod thread_endpoint;
 ///
 /// In order to allow for distribution over multiple threads each resource must have an id
 /// that allows for routing to a particular thread.
-///
-/// It is necessary when request are made
 #[derive(Debug)]
 pub struct ThreadPool<P>
 where
