@@ -25,20 +25,6 @@ mod tests {
     };
 
     #[test]
-    fn request_response_contains_response_of_id_1_returns_1() {
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(1);
-
-        assert_eq!(1, target.id());
-    }
-
-    #[test]
-    fn request_response_contains_response_of_id_2_returns_2() {
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(2);
-
-        assert_eq!(2, target.id());
-    }
-
-    #[test]
     fn request_response_contains_request_of_id_2_returns_2() {
         let target = RequestResponse::<ID_ONLY, usize, usize>::Request(2);
 

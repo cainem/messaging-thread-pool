@@ -31,6 +31,10 @@ impl AddResponse {
     pub fn error_message(&self) -> Option<&String> {
         self.error_message.as_ref()
     }
+
+    pub fn id(&self) -> usize {
+        self.id
+    }
 }
 
 impl RequestResponseMessage<ADD_POOL_ITEM, false> for AddResponse {}
@@ -64,8 +68,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::id_targeted::IdTargeted;
-
     use super::AddResponse;
 
     #[test]

@@ -32,52 +32,39 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-
-    use crate::{samples::*, ThreadPool};
+    use crate::{
+        samples::{randoms_add_request::RandomsAddRequest, *},
+        thread_request_response::{
+            add_response::AddResponse, thread_echo_request::ThreadEchoRequest,
+            thread_echo_response::ThreadEchoResponse,
+        },
+        ThreadPool,
+    };
 
     #[test]
-    fn todo() {
-        todo!();
+    fn two_threads_three_echoes_receives_expected_response() {
+        let target = ThreadPool::<Randoms>::new(2);
+
+        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {}", i)));
+
+        let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).collect();
+
+        assert_eq!(results.len(), 3);
+
+        assert!(results.contains(&ThreadEchoResponse::new(0, "ping 0".to_string(), 0)));
+        assert!(results.contains(&ThreadEchoResponse::new(1, "ping 1".to_string(), 1)));
+        assert!(results.contains(&ThreadEchoResponse::new(2, "ping 2".to_string(), 0)));
     }
 
-    // #[test]
-    // fn two_threads_three_echoes_receives_expected_response() {
-    //     let target = ThreadPool::<Randoms>::new(2);
+    #[test]
+    fn single_thread_single_init_receives_expected_response() {
+        let target = ThreadPool::<Randoms>::new(1);
 
-    //     let requests: Vec<_> = (0..3)
-    //         .map(|i| ThreadRequest::ThreadEcho(i, format!("ping {}", i)))
-    //         .collect();
-    //     let requests = RefCell::new(requests);
+        let requests = (0..1).map(|id| RandomsAddRequest(id));
 
-    //     let result: Vec<ThreadResponse<RandomsResponse>> = target.send_and_receive(&requests);
+        let result: Vec<AddResponse> = target.send_and_receive(requests).collect();
 
-    //     assert_eq!(result.len(), 3);
-    //     let messages: Vec<_> = result
-    //         .iter()
-    //         .map(|e| match e {
-    //             ThreadResponse::ThreadEcho(_targeted, _actual, s) => s,
-    //             _ => panic!("not expected"),
-    //         })
-    //         .collect();
-    //     assert!(messages.contains(&&"ping 0 [0]".to_string()));
-    //     assert!(messages.contains(&&"ping 1 [1]".to_string()));
-    //     assert!(messages.contains(&&"ping 2 [0]".to_string()));
-    // }
-
-    // #[test]
-    // fn single_thread_single_init_receives_expected_response() {
-    //     let target = ThreadPool::<Randoms>::new(1);
-
-    //     let requests: Vec<_> = (0..1)
-    //         .map(|id| randoms_init_request::RandomsInitRequest { id })
-    //         .collect();
-    //     let requests = RefCell::new(requests);
-
-    //     let result: Vec<randoms_init_response::RandomsInitResponse> =
-    //         target.send_and_receive(&requests);
-
-    //     assert_eq!(result.len(), 1);
-    //     assert_eq!(0, result[0].id);
-    // }
+        assert_eq!(result.len(), 1);
+        assert_eq!(0, result[0].id());
+    }
 }

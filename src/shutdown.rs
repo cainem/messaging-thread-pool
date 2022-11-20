@@ -65,67 +65,65 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::iter;
 
-    use crate::{samples::*, ThreadPool};
+    use crate::{
+        samples::{randoms_add_request::RandomsAddRequest, *},
+        thread_request_response::{
+            add_response::AddResponse, thread_shutdown_response::ThreadShutdownResponse,
+        },
+        ThreadPool,
+    };
 
-    #[cfg(test)]
-    mod tests {
-        #[test]
-        fn todo() {
-            todo!();
-        }
+    #[test]
+    fn two_threads_each_containing_a_sample_element_shutdown_simulates_child_thread_shutdown() {
+        let target = ThreadPool::<Randoms>::new(2);
+
+        // two thread created
+        assert_eq!(2, target.thread_endpoints.read().unwrap().len());
+
+        // adds two Randoms to the thread pool
+        let _: Vec<AddResponse> = target
+            .send_and_receive(
+                iter::once(RandomsAddRequest(0)).chain(iter::once(RandomsAddRequest(1))),
+            )
+            .collect();
+
+        // thread had id 0, 1
+        assert_eq!(
+            target.shutdown(),
+            &[
+                ThreadShutdownResponse::new(0, vec![ThreadShutdownResponse::new(0, vec![])]),
+                ThreadShutdownResponse::new(1, vec![ThreadShutdownResponse::new(1, vec![])]),
+            ]
+        );
     }
 
-    // #[test]
-    // fn two_threads_each_containing_a_sample_element_shutdown_simulates_child_thread_shutdown() {
-    //     let target = Arc::new(ThreadPool::<Randoms>::new(2));
+    #[test]
+    fn two_threads_clean_shutdown_as_expected() {
+        let result = ThreadPool::<Randoms>::new(2);
 
-    //     // two thread created
-    //     assert_eq!(2, target.thread_endpoints.read().unwrap().len());
+        // two threads created
+        assert_eq!(2, result.thread_endpoints.read().unwrap().len());
 
-    //     let thread_pool_batcher =
-    //         ThreadPoolBatcherConcrete::<Randoms>::new(Arc::downgrade(&target));
+        // thread had id 0, 1
+        assert_eq!(
+            result.shutdown(),
+            &[
+                ThreadShutdownResponse::new(0, vec![]),
+                ThreadShutdownResponse::new(1, vec![])
+            ]
+        );
+    }
 
-    //     thread_pool_batcher.batch_for_send(randoms_init_request::RandomsInitRequest { id: 0 });
-    //     thread_pool_batcher.batch_for_send(randoms_init_request::RandomsInitRequest { id: 1 });
-    //     let _: Vec<randoms_init_response::RandomsInitResponse> = thread_pool_batcher.send_batch();
+    #[test]
+    fn single_thread_clean_shutdown_as_expected() {
+        let result = ThreadPool::<Randoms>::new(1);
 
-    //     // thread had id 0, 1
-    //     assert_eq!(
-    //         target.shutdown(),
-    //         &[
-    //             ThreadShutdownResponse::new(0, vec![ThreadShutdownResponse::new(0, vec![])]),
-    //             ThreadShutdownResponse::new(1, vec![ThreadShutdownResponse::new(1, vec![])]),
-    //         ]
-    //     );
-    // }
+        // one thread created
+        assert_eq!(1, result.thread_endpoints.read().unwrap().len());
 
-    // #[test]
-    // fn two_threads_clean_shutdown_as_expected() {
-    //     let result = ThreadPool::<Randoms>::new(2);
-
-    //     // two threads created
-    //     assert_eq!(2, result.thread_endpoints.read().unwrap().len());
-
-    //     // thread had id 0, 1
-    //     assert_eq!(
-    //         result.shutdown(),
-    //         &[
-    //             ThreadShutdownResponse::new(0, vec![]),
-    //             ThreadShutdownResponse::new(1, vec![])
-    //         ]
-    //     );
-    // }
-
-    // #[test]
-    // fn single_thread_clean_shutdown_as_expected() {
-    //     let result = ThreadPool::<Randoms>::new(1);
-
-    //     // one thread created
-    //     assert_eq!(1, result.thread_endpoints.read().unwrap().len());
-
-    //     // thread had id 0
-    //     assert_eq!(result.shutdown(), &[ThreadShutdownResponse::new(0, vec![])]);
-    // }
+        // thread had id 0
+        assert_eq!(result.shutdown(), &[ThreadShutdownResponse::new(0, vec![])]);
+    }
 }

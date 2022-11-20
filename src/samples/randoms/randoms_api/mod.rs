@@ -21,7 +21,7 @@ use super::Randoms;
 pub const MEAN: usize = 0;
 pub const SUM: usize = 1;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum RandomsApi {
     Mean(RequestResponse<MEAN, MeanRequest, MeanResponse>),
     Sum(RequestResponse<SUM, SumRequest, SumResponse>),
@@ -35,15 +35,6 @@ impl IdTargeted for RandomsApi {
         }
     }
 }
-
-// impl PoolItemApi for RandomsApi {
-//     fn is_request(&self) -> bool {
-//         match self {
-//             RandomsApi::Mean(payload) => payload.is_request(),
-//             RandomsApi::Sum(payload) => payload.is_request(),
-//         }
-//     }
-// }
 
 impl From<ThreadRequestResponse<Randoms>> for RandomsApi {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {

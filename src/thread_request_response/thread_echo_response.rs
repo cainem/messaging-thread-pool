@@ -57,11 +57,3 @@ where
         response
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn todo() {
-        todo!();
-    }
-}
