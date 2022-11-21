@@ -24,7 +24,7 @@ where
         T: ResponseMessage<N, P>,
     {
         receive_from_worker.into_iter().map(|r| {
-            event!(Level::DEBUG, ?r);
+            event!(Level::TRACE, "receiving message {:?}", r);
             r.into()
         })
     }
@@ -34,14 +34,7 @@ where
 mod tests {
     use crossbeam_channel::unbounded;
 
-    use crate::{
-        samples::{randoms_add_request::RandomsAddRequest, *},
-        thread_request_response::{
-            add_response::AddResponse, thread_echo_request::ThreadEchoRequest,
-            thread_echo_response::ThreadEchoResponse, ThreadRequestResponse,
-        },
-        ThreadPool,
-    };
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn three_init_requests_two_thread_received_three_responses_received() {

@@ -1,16 +1,16 @@
-pub mod add_response;
-pub mod remove_pool_item_request;
-pub mod remove_pool_item_response;
-pub mod thread_abort_request;
-pub mod thread_abort_response;
-pub mod thread_echo_request;
-pub mod thread_echo_response;
-pub mod thread_shutdown_request;
-pub mod thread_shutdown_response;
+mod add_response;
+mod remove_pool_item_request;
+mod remove_pool_item_response;
+mod thread_abort_request;
+mod thread_abort_response;
+mod thread_echo_request;
+mod thread_echo_response;
+mod thread_shutdown_request;
+mod thread_shutdown_response;
 
 use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
-use self::{
+pub use self::{
     add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
     remove_pool_item_response::RemovePoolItemResponse, thread_abort_request::ThreadAbortRequest,
     thread_abort_response::ThreadAbortResponse, thread_echo_request::ThreadEchoRequest,

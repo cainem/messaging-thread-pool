@@ -1,9 +1,15 @@
 pub mod pool_item;
 pub mod randoms_batch_api;
 
-use crate::{id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms};
+use std::sync::Arc;
 
-use self::randoms_batch_api::randoms_batch_add_request::RandomsBatchAddRequest;
+use once_cell::sync::OnceCell;
+
+use crate::{
+    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms, ThreadPool,
+};
+
+use super::RandomsBatchAddRequest;
 
 /// An example of an element that contains a child thread pool
 ///
@@ -19,51 +25,43 @@ use self::randoms_batch_api::randoms_batch_add_request::RandomsBatchAddRequest;
 #[derive(Debug)]
 pub struct RandomsBatch {
     pub id: usize,
-    pub contained_random_ids: Vec<u64>,
+    pub contained_random_ids: Vec<usize>,
     //pub randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
     pub id_provider: SizedIdProvider,
+    pub randoms_thread_pool: OnceCell<Arc<ThreadPool<Randoms>>>,
 }
 
 impl RandomsBatch {
-    pub fn new(
-        add_request: &RandomsBatchAddRequest,
-        //randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
-    ) -> Self {
-        // let RandomsBatchInitRequest {
-        //     id,
-        //     number_of_contained_randoms: _,
-        //     thread_pool_size: _,
-        //     id_provider,
-        // } = add_request;
-        // Self {
-        //     id,
-        //     contained_random_ids: vec![],
-        //     randoms_thread_pool_batcher,
-        //     id_provider,
-        // }
-        todo!();
+    pub fn new(add_request: &RandomsBatchAddRequest) -> Self {
+        Self {
+            id: add_request.id,
+            contained_random_ids: vec![],
+            id_provider: add_request.id_provider.clone(),
+            randoms_thread_pool: OnceCell::new(),
+        }
     }
 
-    //     pub fn sum_of_sums(&self) -> u128 {
-    //         // to get the sum of sums need to message the controls Randoms to get their sums
-    //         // and then add them all up
-    //         // for contained_id in self.contained_random_ids.iter() {
-    //         //     self.randoms_thread_pool_batcher
-    //         //         .batch_for_send(SumRequest { id: *contained_id });
-    //         // }
-    //         // let sum_of_sums_responses: Vec<SumResponse> = self.randoms_thread_pool_batcher.send_batch();
+    pub fn randoms_thread_pool(&self) -> &ThreadPool<Randoms> {
+        self.randoms_thread_pool
+            .get_or_init(|| Arc::new(ThreadPool::<Randoms>::new(1)))
+    }
 
-    //         // sum_of_sums_responses.iter().map(|e| e.sum).sum()
-    //         todo!()
-    //     }
+    pub fn sum_of_sums(&self) -> u128 {
+        // to get the sum of sums need to message the controls Randoms to get their sums
+        // and then add them all up
+        // for contained_id in self.contained_random_ids.iter() {
+        //     self.randoms_thread_pool_batcher
+        //         .batch_for_send(SumRequest { id: *contained_id });
+        // }
+        // let sum_of_sums_responses: Vec<SumResponse> = self.randoms_thread_pool_batcher.send_batch();
 
-    //     pub fn contained_random_ids_mut(&mut self) -> &mut Vec<u64> {
-    //         &mut self.contained_random_ids
-    //     }
+        // sum_of_sums_responses.iter().map(|e| e.sum).sum()
+        todo!()
+    }
 
-    //     pub fn randoms_thread_pool_batcher(&self) -> &ThreadPoolBatcherConcrete<Randoms> {
-    //         &self.randoms_thread_pool_batcher
-    //     }
+    pub fn contained_random_ids_mut(&mut self) -> &mut Vec<usize> {
+        &mut self.contained_random_ids
+    }
 }
 
 #[cfg(test)]

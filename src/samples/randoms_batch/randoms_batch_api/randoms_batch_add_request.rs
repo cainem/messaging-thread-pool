@@ -19,6 +19,16 @@ pub struct RandomsBatchAddRequest {
     pub id_provider: SizedIdProvider,
 }
 
+impl RandomsBatchAddRequest {
+    pub fn id_provider(&self) -> &SizedIdProvider {
+        &self.id_provider
+    }
+
+    pub fn id(&self) -> usize {
+        self.id
+    }
+}
+
 impl RequestResponseMessage<ADD_POOL_ITEM, true> for RandomsBatchAddRequest {}
 
 impl IdTargeted for RandomsBatchAddRequest {

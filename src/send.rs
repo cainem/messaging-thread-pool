@@ -47,14 +47,7 @@ where
 mod tests {
     use crossbeam_channel::unbounded;
 
-    use crate::{
-        samples::*,
-        thread_request_response::{
-            thread_echo_request::ThreadEchoRequest, thread_echo_response::ThreadEchoResponse,
-            ThreadRequestResponse,
-        },
-        ThreadPool,
-    };
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn pool_with_one_threads_send_two_echo_requests_both_processed_by_thread_0() {

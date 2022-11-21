@@ -1,17 +1,6 @@
 use std::iter;
 
-use messaging_thread_pool::{
-    samples::{
-        mean_request::MeanRequest, mean_response::MeanResponse,
-        randoms_add_request::RandomsAddRequest, sum_request::SumRequest, sum_response::SumResponse,
-        *,
-    },
-    thread_request_response::{
-        add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
-        remove_pool_item_response::RemovePoolItemResponse,
-    },
-    ThreadPool,
-};
+use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
 
 #[test]
 pub fn example_simple_one_level_thread_pool() {

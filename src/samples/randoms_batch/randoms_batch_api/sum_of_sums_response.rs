@@ -9,8 +9,14 @@ use super::{RandomsBatchApi, SUM_OF_SUMS};
 /// This response is returned from a request to calculate the sum of sums of all contained Randoms
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SumOfSumsResponse {
-    pub id: u64,
-    pub sum: u128,
+    pub id: usize,
+    pub sum_of_sums: u128,
+}
+
+impl SumOfSumsResponse {
+    pub fn sum_of_sums(&self) -> u128 {
+        self.sum_of_sums
+    }
 }
 
 impl RequestResponseMessage<SUM_OF_SUMS, false> for SumOfSumsResponse {}

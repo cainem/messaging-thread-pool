@@ -1,17 +1,11 @@
 use crate::{
+    id_targeted::IdTargeted,
     pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
-    thread_request_response::{
-        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
-    },
+    samples::*,
+    thread_request_response::*,
 };
 
-use super::{
-    randoms_batch_api::{
-        randoms_batch_add_request::RandomsBatchAddRequest, sum_of_sums_response::SumOfSumsResponse,
-        RandomsBatchApi,
-    },
-    RandomsBatch,
-};
+use super::{randoms_batch_api::*, RandomsBatch};
 
 impl PoolItem for RandomsBatch {
     type Init = RandomsBatchAddRequest;
@@ -19,11 +13,16 @@ impl PoolItem for RandomsBatch {
 
     fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
         match request {
-            RandomsBatchApi::SumOfSums(request) => SumOfSumsResponse {
-                id: todo!(),
-                sum: todo!(),
+            RandomsBatchApi::SumOfSums(request) => {
+                let id = request.id();
+                let sum_of_sums = self
+                    .randoms_thread_pool()
+                    .send_and_receive(self.contained_random_ids.iter().map(|id| SumRequest(*id)))
+                    .map(|response: SumResponse| response.sum())
+                    .sum();
+
+                SumOfSumsResponse { id, sum_of_sums }.into()
             }
-            .into(),
         }
     }
 

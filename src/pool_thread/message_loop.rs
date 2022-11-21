@@ -1,14 +1,8 @@
 use tracing::{event, Level};
 
 use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::RequestResponse,
-    thread_request_response::{
-        add_response::AddResponse, remove_pool_item_response::RemovePoolItemResponse,
-        thread_abort_response::ThreadAbortResponse, thread_echo_response::ThreadEchoResponse,
-        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
-    },
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
+    thread_request_response::*,
 };
 
 use super::PoolThread;
@@ -129,10 +123,13 @@ where
             };
             event!(Level::TRACE, ?response, message = "sending response");
 
-            sender_couplet
-                .return_to()
-                .send(response)
-                .expect("the send should always succeed");
+            match sender_couplet.return_to().send(response) {
+                Ok(_) => {}
+                Err(err) => {
+                    event!(Level::ERROR, "send failed with error {}", &err);
+                    panic!("send to thread failed {}", &err)
+                }
+            }
 
             // loop will only exit here if the "main" thread has exited; this is not expected
         }
@@ -148,20 +145,8 @@ mod tests {
     use crossbeam_channel::unbounded;
 
     use crate::{
-        pool_thread::PoolThread,
-        samples::{
-            randoms_add_request::RandomsAddRequest, sum_request::SumRequest,
-            sum_response::SumResponse, *,
-        },
-        sender_couplet::SenderCouplet,
-        thread_request_response::{
-            add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
-            remove_pool_item_response::RemovePoolItemResponse,
-            thread_abort_request::ThreadAbortRequest, thread_abort_response::ThreadAbortResponse,
-            thread_echo_request::ThreadEchoRequest, thread_echo_response::ThreadEchoResponse,
-            thread_shutdown_request::ThreadShutdownRequest,
-            thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
-        },
+        pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
+        thread_request_response::*,
     };
 
     #[test]

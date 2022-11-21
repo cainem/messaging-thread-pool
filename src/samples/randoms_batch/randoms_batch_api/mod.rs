@@ -1,13 +1,15 @@
-pub mod randoms_batch_add_request;
-pub mod sum_of_sums_request;
-pub mod sum_of_sums_response;
+mod randoms_batch_add_request;
+mod sum_of_sums_request;
+mod sum_of_sums_response;
 
 use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponse,
-    thread_request_response::ThreadRequestResponse,
+    id_targeted::IdTargeted, request_response::RequestResponse, thread_request_response::*,
 };
 
-use self::{sum_of_sums_request::SumOfSumsRequest, sum_of_sums_response::SumOfSumsResponse};
+pub use self::{
+    randoms_batch_add_request::RandomsBatchAddRequest, sum_of_sums_request::SumOfSumsRequest,
+    sum_of_sums_response::SumOfSumsResponse,
+};
 
 use super::RandomsBatch;
 
@@ -22,7 +24,10 @@ pub enum RandomsBatchApi {
 
 impl IdTargeted for RandomsBatchApi {
     fn id(&self) -> usize {
-        todo!()
+        let RandomsBatchApi::SumOfSums(RequestResponse::Request(sum_of_sum_request)) = self else {
+            panic!("id not required to be implemented for responses")
+        };
+        sum_of_sum_request.id()
     }
 }
 

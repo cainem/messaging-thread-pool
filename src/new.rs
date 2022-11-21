@@ -65,10 +65,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        samples::*, thread_request_response::thread_shutdown_response::ThreadShutdownResponse,
-        ThreadPool,
-    };
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn new_called_with_thread_pool_size_2_two_threads_created() {

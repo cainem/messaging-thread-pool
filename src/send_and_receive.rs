@@ -32,14 +32,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        samples::{randoms_add_request::RandomsAddRequest, *},
-        thread_request_response::{
-            add_response::AddResponse, thread_echo_request::ThreadEchoRequest,
-            thread_echo_response::ThreadEchoResponse,
-        },
-        ThreadPool,
-    };
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn two_threads_three_echoes_receives_expected_response() {

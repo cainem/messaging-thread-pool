@@ -126,6 +126,7 @@ pub mod sender_couplet;
 pub mod thread_request_response;
 
 mod drop;
+mod global_test_scope;
 mod new;
 mod pool_thread;
 mod pool_thread_old;

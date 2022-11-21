@@ -1,13 +1,7 @@
 use crossbeam_channel::bounded;
 
 use crate::{
-    pool_item::PoolItem,
-    request_response::RequestResponse,
-    thread_request_response::{
-        thread_shutdown_request::ThreadShutdownRequest,
-        thread_shutdown_response::ThreadShutdownResponse, ThreadRequestResponse,
-    },
-    ThreadPool,
+    pool_item::PoolItem, request_response::RequestResponse, thread_request_response::*, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -67,13 +61,7 @@ where
 mod tests {
     use std::iter;
 
-    use crate::{
-        samples::{randoms_add_request::RandomsAddRequest, *},
-        thread_request_response::{
-            add_response::AddResponse, thread_shutdown_response::ThreadShutdownResponse,
-        },
-        ThreadPool,
-    };
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn two_threads_each_containing_a_sample_element_shutdown_simulates_child_thread_shutdown() {
