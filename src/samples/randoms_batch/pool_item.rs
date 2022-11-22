@@ -1,7 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
-    samples::*,
     thread_request_response::*,
 };
 
@@ -15,12 +14,7 @@ impl PoolItem for RandomsBatch {
         match request {
             RandomsBatchApi::SumOfSums(request) => {
                 let id = request.id();
-                let sum_of_sums = self
-                    .randoms_thread_pool()
-                    .send_and_receive(self.contained_random_ids.iter().map(|id| SumRequest(*id)))
-                    .map(|response: SumResponse| response.sum())
-                    .sum();
-
+                let sum_of_sums = self.sum_of_sums();
                 SumOfSumsResponse { id, sum_of_sums }.into()
             }
         }

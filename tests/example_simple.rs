@@ -1,15 +1,20 @@
 use std::iter;
 
-use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
+use messaging_thread_pool::{
+    global_test_scope::global_test_scope, samples::*, thread_request_response::*, ThreadPool,
+};
+use tracing::metadata::LevelFilter;
 
 #[test]
 pub fn example_simple_one_level_thread_pool() {
+    //global_test_scope(LevelFilter::TRACE);
+
     // creates a thread pool with 4 threads and a mechanism by which to communicate with the threads in the pool.
     // The lifetime of the elements created (the Randoms) will be tied to the life of this struct
-    let thread_pool = ThreadPool::<Randoms>::new(1);
+    let thread_pool = ThreadPool::<Randoms>::new(10);
 
     thread_pool
-        .send_and_receive((0..10000usize).map(|i| RandomsAddRequest(i)))
+        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
         .for_each(|response: AddResponse| assert!(response.success()));
 
     // now create 1000 messages asking them for the sum of their contained random numbers
@@ -17,7 +22,7 @@ pub fn example_simple_one_level_thread_pool() {
     // The message will be routed to the thread to where the targeted element resides
     // Again this call blocks until all of the work is done
     let sums: Vec<SumResponse> = thread_pool
-        .send_and_receive((0..10000usize).map(|i| SumRequest(i)))
+        .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
         .collect();
     assert_eq!(1000, sums.len());
 

@@ -1,9 +1,12 @@
+use std::sync::Arc;
+
 use crate::{
     id_provider::sized_id_provider::SizedIdProvider,
     id_targeted::IdTargeted,
     request_response::{request_response_message::RequestResponseMessage, RequestResponse},
-    samples::randoms_batch::RandomsBatch,
+    samples::{randoms_batch::RandomsBatch, Randoms},
     thread_request_response::{ThreadRequestResponse, ADD_POOL_ITEM},
+    ThreadPool,
 };
 
 /// This is the request that is sent to create a new RandomsBatch
@@ -11,12 +14,13 @@ use crate::{
 /// As the this thread pool is shared it will only ever be used by the first request to create a RandomsBatch
 ///
 /// RandomsBatches will also need to share a common "source of ids" for the Randoms that it will create
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 pub struct RandomsBatchAddRequest {
     pub id: usize,
-    pub number_of_contained_randoms: u64,
-    pub thread_pool_size: usize,
+    pub number_of_contained_randoms: usize,
     pub id_provider: SizedIdProvider,
+    // this thread pool will be shared by all of the Randoms
+    pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
 }
 
 impl RandomsBatchAddRequest {

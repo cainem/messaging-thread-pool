@@ -117,6 +117,7 @@ use std::sync::RwLock;
 use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
+pub mod global_test_scope;
 pub mod id_provider;
 pub mod id_targeted;
 pub mod pool_item;
@@ -126,7 +127,6 @@ pub mod sender_couplet;
 pub mod thread_request_response;
 
 mod drop;
-mod global_test_scope;
 mod new;
 mod pool_thread;
 mod pool_thread_old;

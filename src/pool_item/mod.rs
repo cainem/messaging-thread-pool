@@ -1,6 +1,6 @@
 pub mod new_pool_item_error;
 
-use tracing::subscriber::DefaultGuard;
+use tracing::{event, subscriber::DefaultGuard, Level};
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::{
@@ -24,6 +24,7 @@ where
 
     fn id_not_found(request: &Self::Api) -> ThreadRequestResponse<Self> {
         // default behaviour is to panic
+        event!(Level::ERROR, "pool item with id {} not found", request.id());
         panic!("pool item with id {} not found", request.id());
     }
 

@@ -22,7 +22,8 @@ where
         &self,
         send_back_to: Sender<ThreadRequestResponse<P>>,
         requests: impl Iterator<Item = T>,
-    ) where
+    ) -> usize
+    where
         T: RequestMessage<N, P>,
     {
         let thread_count = self
@@ -33,13 +34,17 @@ where
 
         let guard = self.thread_endpoints.read().expect("no poisoned locks");
 
+        let mut request_count = 0;
         for request in requests {
             // route to correct thread; share the load based on id and the mod of the thread count
             let targeted = request.id() as usize % thread_count;
             event!(Level::DEBUG, "Sending to target {}", request.id());
             event!(Level::TRACE, ?request);
             guard[targeted].send(&send_back_to.clone(), request);
+            request_count += 1;
         }
+
+        request_count
     }
 }
 

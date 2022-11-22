@@ -3,13 +3,12 @@ pub mod randoms_batch_api;
 
 use std::sync::Arc;
 
-use once_cell::sync::OnceCell;
-
 use crate::{
-    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms, ThreadPool,
+    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms,
+    thread_request_response::AddResponse, ThreadPool,
 };
 
-use super::RandomsBatchAddRequest;
+use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
 
 /// An example of an element that contains a child thread pool
 ///
@@ -26,48 +25,43 @@ use super::RandomsBatchAddRequest;
 pub struct RandomsBatch {
     pub id: usize,
     pub contained_random_ids: Vec<usize>,
-    //pub randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
     pub id_provider: SizedIdProvider,
-    pub randoms_thread_pool: OnceCell<Arc<ThreadPool<Randoms>>>,
+    pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
 }
 
 impl RandomsBatch {
     pub fn new(add_request: &RandomsBatchAddRequest) -> Self {
-        Self {
+        let mut new = Self {
             id: add_request.id,
             contained_random_ids: vec![],
             id_provider: add_request.id_provider.clone(),
-            randoms_thread_pool: OnceCell::new(),
-        }
+            randoms_thread_pool: Arc::clone(&add_request.randoms_thread_pool),
+        };
+
+        new.randoms_thread_pool()
+            .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
+            .for_each(|r: AddResponse| {
+                assert!(r.success(), "Request to add Randoms failed");
+                new.contained_random_ids_mut().push(r.id());
+            });
+
+        new
     }
 
     pub fn randoms_thread_pool(&self) -> &ThreadPool<Randoms> {
-        self.randoms_thread_pool
-            .get_or_init(|| Arc::new(ThreadPool::<Randoms>::new(1)))
+        self.randoms_thread_pool.as_ref()
     }
 
     pub fn sum_of_sums(&self) -> u128 {
         // to get the sum of sums need to message the controls Randoms to get their sums
         // and then add them all up
-        // for contained_id in self.contained_random_ids.iter() {
-        //     self.randoms_thread_pool_batcher
-        //         .batch_for_send(SumRequest { id: *contained_id });
-        // }
-        // let sum_of_sums_responses: Vec<SumResponse> = self.randoms_thread_pool_batcher.send_batch();
-
-        // sum_of_sums_responses.iter().map(|e| e.sum).sum()
-        todo!()
+        self.randoms_thread_pool()
+            .send_and_receive(self.contained_random_ids.iter().map(|id| SumRequest(*id)))
+            .map(|response: SumResponse| response.sum())
+            .sum()
     }
 
     pub fn contained_random_ids_mut(&mut self) -> &mut Vec<usize> {
         &mut self.contained_random_ids
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn todo() {
-        todo!();
     }
 }

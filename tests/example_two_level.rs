@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use messaging_thread_pool::{
     global_test_scope::global_test_scope,
     id_provider::{id_provider_mutex::IdProviderMutex, sized_id_provider::SizedIdProvider},
@@ -20,7 +22,12 @@ pub fn example_random_batches_() {
 
     // Create a thread pool for RandomsBatch
     // It is the lifetime of this object that controls the lifetime of all of the elements that are added
-    let thread_pool = ThreadPool::<RandomsBatch>::new(1);
+    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch>::new(2);
+
+    // Create another thread pool to be used by the children of the RandomsBatches (which are Randoms)
+    // The arrangement here is to have this thread shared by all of the Randoms regardless of which RandomsBatch
+    // is their parent. For this reason this thread pool is wrapped in an Arc.
+    let randoms_thread_pool = Arc::new(ThreadPool::<Randoms>::new(4));
 
     // as a shared thread pool will be used for all Randoms it is important that the RandomsBatches share an id provider
     // (the Randoms ids need to be unique across all RandomBatches )
@@ -31,36 +38,28 @@ pub fn example_random_batches_() {
     // Each RandomsBatch will in turn create 100 Randoms.
     // The thread pool for the Randoms will contain 4 dedicated threads
     // each one will in turn contain 10 randoms that will be distributed across a thread pool with 4 threads
-    // for i in 0..10 {
-    //     thread_pool_batcher.batch_for_send(randoms_batch_init_request::RandomsBatchInitRequest {
-    //         id: i,
-    //         number_of_contained_randoms: 100,
-    //         thread_pool_size: 4,
-    //         id_provider: id_provider.clone(),
-    //     });
-    // }
 
     // this call distributes the work across the thread pool and blocks until all of the work is done
-    thread_pool
-        .send_and_receive((0..1).map(|id| RandomsBatchAddRequest {
+    randoms_batch_thread_pool
+        .send_and_receive((0..10).map(|id| RandomsBatchAddRequest {
             id,
-            number_of_contained_randoms: 1, //100
-            thread_pool_size: 1,            //4
+            number_of_contained_randoms: 100,
             id_provider: id_provider.clone(),
+            randoms_thread_pool: Arc::clone(&randoms_thread_pool),
         }))
         .for_each(|response: AddResponse| assert!(response.success()));
 
-    // send 10 requests for the sum of sums
-    // for i in 0..10 {
-    //     thread_pool_batcher.batch_for_send(SumOfSumsRequest { id: i % 10 });
-    // }
+    // now request the "sum of sums" from each RandomBatch by sending a request to each of the RandomsBatches
+    // This generates a large amount of work across the 2 thread pools.
+    // One thread pool is dedicated to the work of running the RandomsBatches, the other is dedicated to the
+    // work of running the Randoms
 
     // this call distributes the work across the thread pool and blocks until all of the work is done
-    let sum_of_sums = thread_pool
-        .send_and_receive((0..1).map(|id| SumOfSumsRequest(id)))
+    let sum_of_sums: Vec<u128> = randoms_batch_thread_pool
+        .send_and_receive((0..10).map(|id| SumOfSumsRequest(id)))
         .map(|response: SumOfSumsResponse| response.sum_of_sums())
-        .nth(0)
-        .unwrap();
+        //.take(0)
+        .collect();
 
     dbg!(sum_of_sums);
 }
