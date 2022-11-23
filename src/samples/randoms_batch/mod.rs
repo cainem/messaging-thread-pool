@@ -1,24 +1,14 @@
-mod element_factory;
-pub mod message_processor;
-pub mod randoms_batch_request;
-pub mod randoms_batch_response;
+mod pool_item;
+pub mod randoms_batch_api;
 
-use self::{
-    randoms_batch_request::{
-        randoms_batch_init_request::RandomsBatchInitRequest, RandomsBatchRequest,
-    },
-    randoms_batch_response::RandomsBatchResponse,
-};
+use std::sync::Arc;
+
 use crate::{
-    element::{element_tracing::ElementTracing, Element},
-    id_provider::sized_id_provider::SizedIdProvider,
-    samples::randoms::{
-        randoms_request::sum_request::SumRequest, randoms_response::sum_response::SumResponse,
-        Randoms,
-    },
-    thread_pool_batcher::ThreadPoolBatcherConcrete,
-    thread_response::ThreadShutdownResponse,
+    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms,
+    thread_request_response::AddResponse, ThreadPool,
 };
+
+use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
 
 /// An example of an element that contains a child thread pool
 ///
@@ -33,59 +23,45 @@ use crate::{
 /// (ids, must be unique across the thread pool for obvious reasons)
 #[derive(Debug)]
 pub struct RandomsBatch {
-    pub id: u64,
-    pub contained_random_ids: Vec<u64>,
-    pub randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
+    pub id: usize,
+    pub contained_random_ids: Vec<usize>,
     pub id_provider: SizedIdProvider,
+    pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
 }
 
 impl RandomsBatch {
-    pub fn new_from_init_request(
-        init_request: RandomsBatchInitRequest,
-        randoms_thread_pool_batcher: ThreadPoolBatcherConcrete<Randoms>,
-    ) -> Self {
-        let RandomsBatchInitRequest {
-            id,
-            number_of_contained_randoms: _,
-            thread_pool_size: _,
-            id_provider,
-        } = init_request;
-        Self {
-            id,
+    pub fn new(add_request: &RandomsBatchAddRequest) -> Self {
+        let mut new = Self {
+            id: add_request.id,
             contained_random_ids: vec![],
-            randoms_thread_pool_batcher,
-            id_provider,
-        }
+            id_provider: add_request.id_provider.clone(),
+            randoms_thread_pool: Arc::clone(&add_request.randoms_thread_pool),
+        };
+
+        new.randoms_thread_pool()
+            .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
+            .for_each(|r: AddResponse| {
+                assert!(r.success(), "Request to add Randoms failed");
+                new.contained_random_ids_mut().push(r.id());
+            });
+
+        new
+    }
+
+    pub fn randoms_thread_pool(&self) -> &ThreadPool<Randoms> {
+        self.randoms_thread_pool.as_ref()
     }
 
     pub fn sum_of_sums(&self) -> u128 {
         // to get the sum of sums need to message the controls Randoms to get their sums
         // and then add them all up
-        for contained_id in self.contained_random_ids.iter() {
-            self.randoms_thread_pool_batcher
-                .batch_for_send(SumRequest { id: *contained_id });
-        }
-        let sum_of_sums_responses: Vec<SumResponse> = self.randoms_thread_pool_batcher.send_batch();
-
-        sum_of_sums_responses.iter().map(|e| e.sum).sum()
+        self.randoms_thread_pool()
+            .send_and_receive(self.contained_random_ids.iter().map(|id| SumRequest(*id)))
+            .map(|response: SumResponse| response.sum())
+            .sum()
     }
 
-    pub fn contained_random_ids_mut(&mut self) -> &mut Vec<u64> {
+    pub fn contained_random_ids_mut(&mut self) -> &mut Vec<usize> {
         &mut self.contained_random_ids
-    }
-
-    pub fn randoms_thread_pool_batcher(&self) -> &ThreadPoolBatcherConcrete<Randoms> {
-        &self.randoms_thread_pool_batcher
-    }
-}
-
-impl ElementTracing for RandomsBatch {}
-
-impl Element for RandomsBatch {
-    type Request = RandomsBatchRequest;
-    type Response = RandomsBatchResponse;
-
-    fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
-        self.randoms_thread_pool_batcher().shutdown_pool()
     }
 }

@@ -1,41 +1,32 @@
-pub mod message_processor;
-pub mod randoms_request;
-pub mod randoms_response;
+pub mod randoms_api;
+
+mod pool_item;
 
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
 
-use crate::{
-    element::{element_factory::ElementFactory, element_tracing::ElementTracing, Element},
-    id_targeted::IdTargeted,
-    thread_response::ThreadShutdownResponse,
-};
-
-use {
-    randoms_request::RandomsRequest,
-    randoms_response::{randoms_init_response::RandomsInitResponse, RandomsResponse},
-};
+use crate::id_targeted::IdTargeted;
 
 /// This represents a simple collection of random numbers which is hosted inside the thread pool
 ///
 /// It is tied to a particular thread by the modulus of its id.
 ///
-/// The interface that it supports is governed by its implementation of the ElementProcess trait.
+/// The interface that it supports is governed by its implementation of the PoolItem trait.
 /// This in turn needs to be supported by the use of two enums of supported requests and responses
 ///
 /// It supports the following operations
-/// Init       creates a new Random with an stack based store of random numbers
+/// Init    creates a new Random with an stack based store of random numbers
 /// Mean    calculates the mean of the contained numbers
 /// Sum     calculates the sum of the contained numbers
 #[derive(Debug, PartialEq, Eq)]
 pub struct Randoms {
-    pub id: u64,
+    pub id: usize,
     pub numbers: Vec<u64>,
 }
 
 impl Randoms {
-    pub fn new(id: u64) -> Self {
-        let mut rng = Xoshiro256Plus::seed_from_u64(id);
+    pub fn new(id: usize) -> Self {
+        let mut rng = Xoshiro256Plus::seed_from_u64(id as u64);
         let numbers = (0..10000).map(|_| rng.next_u64()).collect();
         Self { id, numbers }
     }
@@ -57,39 +48,8 @@ impl Randoms {
     }
 }
 
-impl ElementFactory<RandomsRequest, RandomsResponse> for Randoms {
-    #[inline(always)]
-    fn new_element(request: &RandomsRequest) -> (Option<Self>, RandomsResponse) {
-        match request {
-            RandomsRequest::Init(init) => (
-                Some(Randoms::new(init.id)),
-                RandomsResponse::Init(RandomsInitResponse { id: init.id }),
-            ),
-            _ => panic!("expected init only"),
-        }
-    }
-}
-
-impl Element for Randoms {
-    type Request = RandomsRequest;
-    type Response = RandomsResponse;
-
-    fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
-        // to mock shutdown (for test purposes) return id
-        // as Randoms contains no child threads it really should not be
-        // overridden (or it should return an empty vec)
-        vec![ThreadShutdownResponse::new(self.id, vec![])]
-    }
-
-    fn name(&self) -> &str {
-        std::any::type_name::<Self>()
-    }
-}
-
 impl IdTargeted for Randoms {
-    fn get_id(&self) -> u64 {
+    fn id(&self) -> usize {
         self.id
     }
 }
-
-impl ElementTracing for Randoms {}

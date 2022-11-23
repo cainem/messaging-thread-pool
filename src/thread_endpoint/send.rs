@@ -1,23 +1,23 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    element::Element, sender_couplet::SenderCouplet, thread_request::ThreadRequest,
-    thread_response::ThreadResponse,
+    pool_item::PoolItem, request_response::request_message::RequestMessage,
+    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse,
 };
 
 use super::ThreadEndpoint;
 
-impl<E> ThreadEndpoint<E>
+impl<P> ThreadEndpoint<P>
 where
-    E: Element,
+    P: PoolItem,
 {
     /// This function send an asynchronous request to a thread pool
-    pub fn send<T>(&self, sender: &Sender<ThreadResponse<E::Response>>, request: T)
+    pub fn send<const N: usize, T>(&self, sender: &Sender<ThreadRequestResponse<P>>, request: T)
     where
-        T: Into<ThreadRequest<E::Request>>,
+        T: RequestMessage<N, P>,
     {
         self.sender
-            .send(SenderCouplet::<E>::new(sender.clone(), request.into()))
+            .send(SenderCouplet::<P>::new(sender.clone(), request))
             .expect("The receiver thread to always be available");
     }
 }
@@ -30,19 +30,19 @@ mod tests {
 
     use crate::{
         samples::*, sender_couplet::SenderCouplet, thread_endpoint::ThreadEndpoint,
-        thread_request::ThreadRequest, thread_response::ThreadResponse,
+        thread_request_response::*,
     };
 
     #[test]
     fn pass_echo_message_through_echo_message_received_at_other_end_of_channel() {
-        let echo_request = ThreadRequest::<RandomsRequest>::ThreadEcho(0, "hello".to_string());
+        let echo_request = ThreadEchoRequest::new(0, "hello".to_string());
 
         // create a thread (which instantly terminates) purely for its join_handle
         let join_handle = spawn(|| 1);
 
         // create channels to send and receive responses
         let (to_thread_sender, receiver_from_endpoint) = unbounded::<SenderCouplet<Randoms>>();
-        let (to_endpoint, from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+        let (to_endpoint, from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
         let target = ThreadEndpoint {
             sender: to_thread_sender,
@@ -56,15 +56,15 @@ mod tests {
         let sender_couplet = receiver_from_endpoint.recv().unwrap();
 
         // confirm that it is in the expected form; it is difficult to confirm the correct sender was sent
-        assert_eq!(sender_couplet.get_thread_request(), &echo_request);
+        assert_eq!(sender_couplet.request(), &(echo_request.into()));
 
         // create and send a response message
-        let response = ThreadResponse::<RandomsResponse>::ThreadEcho(0, 0, "hello".to_string());
+        let response = ThreadEchoResponse::new(0, "hello".to_string(), 0);
         sender_couplet
-            .get_return_to()
-            .send(response.clone())
+            .return_to()
+            .send(response.clone().into())
             .unwrap();
-        let response_result = from_thread.recv().unwrap();
+        let response_result: ThreadEchoResponse = from_thread.recv().unwrap().into();
 
         // confirm that the message received is as expected
         assert_eq!(response_result, response);

@@ -1,16 +1,14 @@
-use std::cell::RefCell;
-
 use crossbeam_channel::Sender;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    element::Element, id_targeted::IdTargeted, thread_request::ThreadRequest,
-    thread_response::ThreadResponse, ThreadPool,
+    pool_item::PoolItem, request_response::request_message::RequestMessage,
+    thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    E: Element,
+    P: PoolItem,
 {
     /// This function sends a request to a thread within the pool
     ///
@@ -20,68 +18,60 @@ where
     ///
     /// The work will be distributed based on the mod of the id of the requests target
     #[instrument(skip(self, send_back_to, requests))]
-    pub(super) fn send<T>(
+    pub(super) fn send<const N: usize, T>(
         &self,
-        send_back_to: Sender<ThreadResponse<E::Response>>,
-        requests: &RefCell<Vec<T>>,
-    ) where
-        T: Into<ThreadRequest<E::Request>> + IdTargeted,
+        send_back_to: Sender<ThreadRequestResponse<P>>,
+        requests: impl Iterator<Item = T>,
+    ) -> usize
+    where
+        T: RequestMessage<N, P>,
     {
         let thread_count = self
             .thread_endpoints
             .read()
             .expect("no poisoned locks")
             .len();
-        for request in requests.borrow_mut().drain(..) {
+
+        let guard = self.thread_endpoints.read().expect("no poisoned locks");
+
+        let mut request_count = 0;
+        for request in requests {
             // route to correct thread; share the load based on id and the mod of the thread count
-            let targeted = request.get_id() as usize % thread_count;
-            event!(Level::DEBUG, "Sending to target {}", request.get_id());
+            let targeted = request.id() as usize % thread_count;
+            event!(Level::DEBUG, "Sending to target {}", request.id());
             event!(Level::TRACE, ?request);
-            self.thread_endpoints.read().expect("no poisoned locks")[targeted]
-                .send(&send_back_to.clone(), request);
+            guard[targeted].send(&send_back_to.clone(), request);
+            request_count += 1;
         }
+
+        request_count
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-
     use crossbeam_channel::unbounded;
 
-    use crate::{
-        samples::*, thread_request::ThreadRequest, thread_response::ThreadResponse, ThreadPool,
-    };
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn pool_with_one_threads_send_two_echo_requests_both_processed_by_thread_0() {
         let target = ThreadPool::<Randoms>::new(1);
 
-        let (send_back_to, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+        let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests: Vec<_> = (0..2u64)
-            .map(|i| ThreadRequest::ThreadEcho(i, "ping".to_string()))
-            .collect();
-        let requests = RefCell::new(requests);
+        let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-        target.send(send_back_to, &requests);
+        target.send(send_back_to, requests);
 
-        let mut responses = Vec::new();
+        let mut responses = Vec::<ThreadEchoResponse>::new();
 
         for r in receive_from_thread {
-            if let ThreadResponse::ThreadEcho(targeted, actual, s) = r {
-                responses.push((targeted, actual, s));
-            } else {
-                panic!("not expected");
-            }
-
-            if responses.len() == 2 {
-                break;
-            }
+            responses.push(r.into());
         }
 
-        assert!(responses.contains(&(0, 0, "ping [0]".to_string())));
-        assert!(responses.contains(&(1, 0, "ping [0]".to_string())));
+        assert!(responses.contains(&ThreadEchoResponse::new(0, "ping".to_string(), 0)));
+        assert!(responses.contains(&ThreadEchoResponse::new(1, "ping".to_string(), 0)));
     }
 
     #[test]
@@ -89,54 +79,37 @@ mod tests {
     {
         let target = ThreadPool::<Randoms>::new(2);
 
-        let (send_back_to, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+        let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests: Vec<_> = (0..2u64)
-            .map(|i| ThreadRequest::ThreadEcho(i, "ping2".to_string()))
-            .collect();
-        let requests = RefCell::new(requests);
+        let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
 
-        target.send(send_back_to, &requests);
+        target.send(send_back_to, requests);
 
-        let mut responses = Vec::new();
+        let mut responses = Vec::<ThreadEchoResponse>::new();
 
         for r in receive_from_thread {
-            if let ThreadResponse::ThreadEcho(targeted, actual, s) = r {
-                responses.push((targeted, actual, s));
-            } else {
-                panic!("not expected");
-            }
-
-            if responses.len() == 2 {
-                break;
-            }
+            responses.push(r.into());
         }
 
-        assert!(responses.contains(&(0, 0, "ping2 [0]".to_string())));
-        assert!(responses.contains(&(1, 1, "ping2 [1]".to_string())));
+        assert!(responses.contains(&ThreadEchoResponse::new(0, "ping2".to_string(), 0)));
+        assert!(responses.contains(&ThreadEchoResponse::new(1, "ping2".to_string(), 1)));
     }
 
     #[test]
     fn pool_with_single_thread_sends_echo_request_echo_request_processed_by_thread_0() {
         let target = ThreadPool::<Randoms>::new(1);
 
-        let (send_back_to, receive_from_thread) = unbounded::<ThreadResponse<RandomsResponse>>();
+        let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests: Vec<_> = (0..1u64)
-            .map(|i| ThreadRequest::ThreadEcho(i, "ping".to_string()))
-            .collect();
-        let requests = RefCell::new(requests);
+        let requests = (0..1usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-        target.send(send_back_to, &requests);
+        target.send(send_back_to, requests);
 
-        if let ThreadResponse::ThreadEcho(targeted, actual, s) = receive_from_thread.recv().unwrap()
-        {
-            // request sent to thread 0
-            assert_eq!("ping [0]", s);
-            assert_eq!(0, actual);
-            assert_eq!(0, targeted);
-        } else {
-            panic!("not expected");
-        }
+        let thread_echo_response: ThreadEchoResponse = receive_from_thread.recv().unwrap().into();
+
+        assert_eq!(
+            ThreadEchoResponse::new(0, "ping".to_string(), 0),
+            thread_echo_response
+        )
     }
 }

@@ -4,15 +4,15 @@ use crossbeam_channel::unbounded;
 use tracing::{event, Level};
 
 use crate::{
-    element::Element, pool_thread::PoolThread, sender_couplet::SenderCouplet,
+    pool_item::PoolItem, pool_thread::PoolThread, sender_couplet::SenderCouplet,
     thread_endpoint::ThreadEndpoint, ThreadPool,
 };
 
-impl<E> ThreadPool<E>
+impl<P> ThreadPool<P>
 where
-    // 'static - the Element cannot contain any references as it isn't guaranteed to live long enough
+    // 'static - the PoolItem cannot contain any references as it isn't guaranteed to live long enough
     // due to it being passed to another thread
-    E: Element + 'static,
+    P: PoolItem + 'static,
 {
     /// This function creates a new [`ThreadPool`]
     ///
@@ -27,17 +27,17 @@ where
             "thread pool must have at least one thread"
         );
 
-        let mut building = Vec::<ThreadEndpoint<E>>::new();
+        let mut building = Vec::<ThreadEndpoint<P>>::new();
 
-        for i in 0..thread_pool_size as u64 {
-            let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet<E>>();
+        for i in 0..thread_pool_size {
+            let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet<P>>();
 
             let join_handle = spawn(move || {
                 // set default tracing subscribers for thread
-                let tracing_guards = E::add_pool_thread_tracing(i);
+                let tracing_guards = P::add_pool_thread_tracing(i);
 
                 // start a new thread with id i
-                let mut pool_thread = PoolThread::<E>::new(i, receive_from_pool);
+                let mut pool_thread = PoolThread::<P>::new(i, receive_from_pool);
 
                 event!(Level::INFO, "starting message loop");
 
@@ -65,7 +65,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{samples::*, thread_response::ThreadShutdownResponse, ThreadPool};
+    use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
     fn new_called_with_thread_pool_size_2_two_threads_created() {

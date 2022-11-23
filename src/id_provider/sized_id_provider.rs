@@ -6,7 +6,7 @@ use super::IdProvider;
 /// clone and partial eq.
 ///
 /// This is to allow for an IdProvider to be passed in a request which is required
-/// if it is to be shared amongst all elements.
+/// if it is to be shared amongst all pool items.
 ///
 /// Requests are required to implement clone and partial eq, although I suspect
 /// that this was only for convenience reasons and there may be scope
