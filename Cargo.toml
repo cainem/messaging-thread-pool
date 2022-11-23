@@ -9,7 +9,7 @@ homepage = "https://github.com/cainem/messaging-thread-pool"
 repository = "https://github.com/cainem/messaging-thread-pool"
 documentation = "https://docs.rs/messaging_thread_pool/latest/messaging_thread_pool/"
 readme = "README.md"
-keywords = ["threadpool", "thread", "pool", "parallelism", "safe", "long-lived", "messaging"]
+keywords = ["threadpool", "thread", "pool", "parallelism", "messaging"]
 categories = ["concurrency"]
 
 [dependencies]
