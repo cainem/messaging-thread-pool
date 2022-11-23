@@ -10,7 +10,7 @@ use crate::{
 
 impl<P> ThreadPool<P>
 where
-    // 'static - the Element cannot contain any references as it isn't guaranteed to live long enough
+    // 'static - the PoolItem cannot contain any references as it isn't guaranteed to live long enough
     // due to it being passed to another thread
     P: PoolItem + 'static,
 {

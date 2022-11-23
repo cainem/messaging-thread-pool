@@ -62,7 +62,7 @@ where
                     let new_pool_item = P::new_pool_item(request);
                     let id = request.id();
 
-                    // element did exist therefore it can only be a request to create a new element
+                    // element did exist therefore it can only be a request to create a new pool item
                     match new_pool_item {
                         Ok(new_pool_item) => {
                             event!(
@@ -70,7 +70,7 @@ where
                                 "Inserting a new {:?} into the threads hash map",
                                 new_pool_item.name()
                             );
-                            self.element_hash_map.insert(id, new_pool_item);
+                            self.pool_item_hash_map.insert(id, new_pool_item);
                             AddResponse::new(id, true, None)
                         }
                         Err(new_pool_item_error) => AddResponse::new(
@@ -85,7 +85,7 @@ where
                     let id = request.id();
 
                     // find the pool item that needs to process the request
-                    let response = if let Some(targeted) = self.element_hash_map.get_mut(&id) {
+                    let response = if let Some(targeted) = self.pool_item_hash_map.get_mut(&id) {
                         targeted.process_message(request)
                     } else {
                         P::id_not_found(request)
@@ -95,7 +95,7 @@ where
                 }
                 ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
-                    let success = self.element_hash_map.remove(&id).is_some();
+                    let success = self.pool_item_hash_map.remove(&id).is_some();
                     RemovePoolItemResponse::new(id, success).into()
                 }
                 ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
@@ -113,7 +113,7 @@ where
                         .send(ThreadShutdownResponse::new(id, children).into())
                         .expect("the send should always succeed");
                     debug_assert!(
-                        self.element_hash_map.is_empty(),
+                        self.pool_item_hash_map.is_empty(),
                         "ThreadShutdown should drain all elements"
                     );
                     // return breaking out of the message loop and thus ending the thread.
@@ -124,10 +124,12 @@ where
             event!(Level::TRACE, ?response, message = "sending response");
 
             match sender_couplet.return_to().send(response) {
-                Ok(_) => {}
+                Ok(_) => (),
                 Err(err) => {
-                    event!(Level::ERROR, "send failed with error {}", &err);
-                    panic!("send to thread failed {}", &err)
+                    // The channel that is supposed to be receiving the response cannot receive it
+                    // It has probably been dropped
+                    // discard the response message and continue
+                    event!(Level::WARN, "Cannot return results, other end of channel has most likely been dropped. Err = {}", &err);
                 }
             }
 
@@ -154,7 +156,7 @@ mod tests {
         let id = 12;
         let init_request = RandomsAddRequest(id);
 
-        let remove_element_request = RemovePoolItemRequest(id);
+        let remove_pool_item_request = RemovePoolItemRequest(id);
 
         let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
@@ -170,7 +172,7 @@ mod tests {
         request_send
             .send(SenderCouplet::new(
                 response_send.clone(),
-                remove_element_request,
+                remove_pool_item_request,
             ))
             .unwrap();
 
@@ -192,7 +194,7 @@ mod tests {
             response_receive.recv().unwrap().into();
 
         assert_eq!(id, remove_pool_item_response.id());
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
     }
 
     #[test]
@@ -200,7 +202,7 @@ mod tests {
         let id = 2;
         let init_request = RandomsAddRequest(id);
 
-        let remove_element_request = RemovePoolItemRequest(id);
+        let remove_pool_item_request = RemovePoolItemRequest(id);
 
         let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
@@ -216,7 +218,7 @@ mod tests {
         request_send
             .send(SenderCouplet::new(
                 response_send.clone(),
-                remove_element_request,
+                remove_pool_item_request,
             ))
             .unwrap();
 
@@ -239,7 +241,7 @@ mod tests {
 
         assert_eq!(id, remove_pool_item_response.id());
 
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
     }
 
     #[test]
@@ -278,7 +280,7 @@ mod tests {
             response_receive.recv().unwrap().into();
 
         // there should be one thread shutdown
-        // Randoms element "pretends" that it has shutdown a thread pool and returns its id
+        // Randoms pool item "pretends" that it has shutdown a thread pool and returns its id
         // as there are 2 element is is non-deterministic which one will get called
         assert!(
             thread_shutdown_payload
@@ -289,7 +291,7 @@ mod tests {
                         vec![ThreadShutdownResponse::new(2, vec![])]
                     )
         );
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
     }
 
     #[test]
@@ -328,7 +330,7 @@ mod tests {
         let thread_shutdown_response: ThreadShutdownResponse =
             response_receive.recv().unwrap().into();
         // Randoms element "pretends" that it has shutdown a thread pool with an id equal to its id
-        // as there are 2 elements it is not deterministic which one will have shutdown called
+        // as there are 2 pool items it is not deterministic which one will have shutdown called
         assert!(
             thread_shutdown_response
                 == ThreadShutdownResponse::new(5, vec![ThreadShutdownResponse::new(101, vec![])])
@@ -338,7 +340,7 @@ mod tests {
                         vec![ThreadShutdownResponse::new(102, vec![])]
                     )
         );
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
     }
 
     #[test]
@@ -408,8 +410,8 @@ mod tests {
         let response: AddResponse = response_receive.recv().unwrap().into();
 
         assert_eq!(2, response.id());
-        assert_eq!(1, target.element_hash_map.len());
-        assert_eq!(2, target.element_hash_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_hash_map.len());
+        assert_eq!(2, target.pool_item_hash_map.get(&id).unwrap().id);
     }
 
     #[test]
@@ -439,8 +441,8 @@ mod tests {
         let response: AddResponse = response_receive.recv().unwrap().into();
 
         assert_eq!(1, response.id());
-        assert_eq!(1, target.element_hash_map.len());
-        assert_eq!(1, target.element_hash_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_hash_map.len());
+        assert_eq!(1, target.pool_item_hash_map.get(&id).unwrap().id);
     }
 
     #[test]

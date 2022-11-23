@@ -3,7 +3,6 @@ use std::sync::Mutex;
 use super::IdProvider;
 
 /// Provides an implementation of IdProvider that is Send.
-///
 /// This is probably too slow to be of any practical use; for test only
 #[derive(Debug, Default)]
 pub struct IdProviderMutex {

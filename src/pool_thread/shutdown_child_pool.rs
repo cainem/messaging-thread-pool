@@ -6,12 +6,12 @@ impl<P> PoolThread<P>
 where
     P: PoolItem,
 {
-    /// This function attempts to close down any (child) thread pool that is associated with the elements
+    /// This function attempts to close down any (child) thread pool that is associated with the pool items
     /// in this thread pool
     pub fn shutdown_child_pool(&mut self) -> Vec<ThreadShutdownResponse> {
-        // all elements should, if they contain a reference to a thread pool, have the ability to shut
-        // it down, so just take the last one (so as to drop all of the contained elements) and call shutdown_child_threads
-        if let Some((_, pool_item)) = self.element_hash_map.drain().last() {
+        // all pool items should, if they contain a reference to a thread pool, have the ability to shut
+        // it down, so just take the last one (so as to drop all of the contained pool items) and call shutdown_child_threads
+        if let Some((_, pool_item)) = self.pool_item_hash_map.drain().last() {
             pool_item.shutdown_pool()
         } else {
             vec![]
@@ -37,16 +37,16 @@ mod tests {
 
         let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
 
-        let sample_element = Randoms {
+        let sample_pool_item = Randoms {
             id: 2,
             numbers: vec![1, 2],
         };
 
-        target.element_hash_map.insert(2, sample_element);
+        target.pool_item_hash_map.insert(2, sample_pool_item);
 
         let result = target.shutdown_child_pool();
 
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
         assert_eq!(1, result.len());
         assert_eq!(ThreadShutdownResponse::new(2, vec![]), result[0]);
     }
@@ -60,16 +60,16 @@ mod tests {
 
         let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
 
-        let sample_element = Randoms {
+        let sample_pool_item = Randoms {
             id: 1,
             numbers: vec![100, 200],
         };
 
-        target.element_hash_map.insert(1, sample_element);
+        target.pool_item_hash_map.insert(1, sample_pool_item);
 
         let result = target.shutdown_child_pool();
 
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
         assert_eq!(1, result.len());
         assert_eq!(ThreadShutdownResponse::new(1, vec![]), result[0]);
     }
@@ -85,7 +85,7 @@ mod tests {
 
         let result = target.shutdown_child_pool();
 
-        assert!(target.element_hash_map.is_empty());
+        assert!(target.pool_item_hash_map.is_empty());
         assert!(result.is_empty());
     }
 }

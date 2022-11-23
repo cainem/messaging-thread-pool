@@ -1,5 +1,6 @@
-pub mod pool_item;
 pub mod randoms_api;
+
+mod pool_item;
 
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
@@ -10,11 +11,11 @@ use crate::id_targeted::IdTargeted;
 ///
 /// It is tied to a particular thread by the modulus of its id.
 ///
-/// The interface that it supports is governed by its implementation of the ElementProcess trait.
+/// The interface that it supports is governed by its implementation of the PoolItem trait.
 /// This in turn needs to be supported by the use of two enums of supported requests and responses
 ///
 /// It supports the following operations
-/// Init       creates a new Random with an stack based store of random numbers
+/// Init    creates a new Random with an stack based store of random numbers
 /// Mean    calculates the mean of the contained numbers
 /// Sum     calculates the sum of the contained numbers
 #[derive(Debug, PartialEq, Eq)]

@@ -18,10 +18,10 @@ use tracing::metadata::LevelFilter;
 ///
 #[test]
 pub fn example_random_batches_() {
-    global_test_scope(LevelFilter::TRACE);
+    global_test_scope(LevelFilter::OFF);
 
     // Create a thread pool for RandomsBatch
-    // It is the lifetime of this object that controls the lifetime of all of the elements that are added
+    // It is the lifetime of this struct that controls the lifetime of all of the pool items that are added
     let randoms_batch_thread_pool = ThreadPool::<RandomsBatch>::new(2);
 
     // Create another thread pool to be used by the children of the RandomsBatches (which are Randoms)
@@ -58,7 +58,6 @@ pub fn example_random_batches_() {
     let sum_of_sums: Vec<u128> = randoms_batch_thread_pool
         .send_and_receive((0..10).map(|id| SumOfSumsRequest(id)))
         .map(|response: SumOfSumsResponse| response.sum_of_sums())
-        //.take(0)
         .collect();
 
     dbg!(sum_of_sums);

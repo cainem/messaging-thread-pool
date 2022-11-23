@@ -5,6 +5,7 @@ use std::fmt::Debug;
 
 use super::request_response_message::RequestResponseMessage;
 
+/// This trait is auto-implemented for request
 pub trait RequestMessage<const N: usize, P>: Into<ThreadRequestResponse<P>> + IdTargeted
 where
     P: PoolItem,

@@ -17,14 +17,21 @@ use crate::{
 
 use super::Randoms;
 
-/// define 2 constant to classify messages
-/// This allows us to leverage the type system avoid some runtime errors (and replace them with compile time errors)
+// define 2 constant to classify messages
+// This allows us to leverage the type system avoid some runtime errors (and replace them with compile time errors)
+/// A constant that allows the binding of the mean request and response messages at compile time
 pub const MEAN: usize = 0;
+/// A constant that allows the binding of the sum request and response messages at compile time
 pub const SUM: usize = 1;
 
+/// This enum defines the api used to communicate with the Randoms struct
+/// It defines two pairs of messages \
+/// One request the calculation of the mean and the other the calculation of the sum
 #[derive(Debug, PartialEq, Eq)]
 pub enum RandomsApi {
+    /// a request response pair to handle the calculation of the mean of the contained randoms
     Mean(RequestResponse<MEAN, MeanRequest, MeanResponse>),
+    /// a request response pair to handle the calculation of the sum of the contained randoms
     Sum(RequestResponse<SUM, SumRequest, SumResponse>),
 }
 
@@ -40,7 +47,7 @@ impl IdTargeted for RandomsApi {
 impl From<ThreadRequestResponse<Randoms>> for RandomsApi {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
         let ThreadRequestResponse::MessagePoolItem(result) = response else {
-                panic!("must be a response to a call to the element")
+                panic!("must be a response to a call to the pool item")
             };
         result
     }

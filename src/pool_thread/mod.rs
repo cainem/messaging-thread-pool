@@ -8,11 +8,16 @@ use crossbeam_channel::Receiver;
 
 use crate::{pool_item::PoolItem, sender_couplet::SenderCouplet};
 
+/// This structure represents a thread within the thread pool
 pub struct PoolThread<P>
 where
     P: PoolItem,
 {
-    thread_id: usize, // this will correspond to the vec index in the containing ThreadPool
-    pool_thread_receiver: Receiver<SenderCouplet<P>>, // the channel on which requests will be received
-    element_hash_map: HashMap<usize, P>,
+    /// A unique id assigned to the pool thread
+    thread_id: usize,
+    /// Stores the channel on which requests will be received
+    pool_thread_receiver: Receiver<SenderCouplet<P>>,
+    /// This is a hash map that will hold the ownership of all pool items created in this
+    /// pool thread keyed by their ids
+    pool_item_hash_map: HashMap<usize, P>,
 }

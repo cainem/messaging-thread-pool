@@ -13,9 +13,9 @@ where
     /// This function creates a new PoolThread
     /// This represents a single thread in the thread pool
     ///
-    /// The element_hash_map is in essence all of the state of the thread.
-    /// It contains an entry for each "element" that is being managed within the thread-pool
-    /// The routing logic is such that the same element will always be handled by the same PoolThread.
+    /// The pool_item_hash_map is in essence all of the state of the thread.
+    /// It contains an entry for each pool item that is being managed within the thread-pool
+    /// The routing logic is such that the same pool item will always be handled by the same PoolThread.
     ///
     /// Messages are passed to the the PoolThread on the pool_thread_receiver channel.
     ///
@@ -25,7 +25,7 @@ where
         Self {
             thread_id: id,
             pool_thread_receiver,
-            element_hash_map: HashMap::default(),
+            pool_item_hash_map: HashMap::default(),
         }
     }
 }

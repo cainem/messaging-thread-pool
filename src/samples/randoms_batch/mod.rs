@@ -1,4 +1,4 @@
-pub mod pool_item;
+mod pool_item;
 pub mod randoms_batch_api;
 
 use std::sync::Arc;

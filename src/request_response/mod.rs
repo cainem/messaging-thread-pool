@@ -1,13 +1,12 @@
 use self::request_response_message::RequestResponseMessage;
 
-pub mod id_targeted;
+mod id_targeted;
 pub mod request_message;
 pub mod request_response_message;
 pub mod response_message;
 
-/// This enum is used for defining request/response pairs
-///
-/// The protocol insists that every request has a corresponding response
+/// This enum is used for defining request/response pairs \
+/// The protocol insists that every request has a corresponding response \
 /// This enum defines the 2 types that are used
 #[derive(Debug, PartialEq, Eq)]
 pub enum RequestResponse<const N: usize, Req, Res>

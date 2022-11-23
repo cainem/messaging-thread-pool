@@ -5,6 +5,7 @@ use crate::{
     thread_request_response::ThreadRequestResponse,
 };
 
+/// A struct that defines the contents of a message sent to the thread pool
 #[derive(Debug)]
 pub struct SenderCouplet<P>
 where

@@ -28,7 +28,7 @@ pub const REMOVE_POOL_ITEM: usize = 0xff_04;
 pub const ID_ONLY: usize = 0xff_05;
 
 /// This enum defines all of the messages that can be used to communicate with the thread pool.
-/// Each element of the enum takes a RequestResponse struct which can contain either a request
+/// Each element of the enum takes a [`RequestResponse`] struct which can contain either a request
 /// or a response
 #[derive(Debug, PartialEq)]
 pub enum ThreadRequestResponse<P>

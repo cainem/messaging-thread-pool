@@ -7,19 +7,21 @@ use crate::{
 
 use super::{randoms_api::RandomsApi, Randoms};
 
+/// The implementation of this trait allows the Randoms struct to be used in the thread pool infrastructure
 impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
 
+    /// here
     fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsApi::Mean(request) => MeanResponse {
-                id: request.request().id(),
+                id: request.id(),
                 mean: self.mean(),
             }
             .into(),
             RandomsApi::Sum(request) => SumResponse {
-                id: request.request().id(),
+                id: request.id(),
                 sum: self.sum(),
             }
             .into(),

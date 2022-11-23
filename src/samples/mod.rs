@@ -5,4 +5,4 @@ mod randoms_batch;
 pub use randoms::randoms_api::*;
 pub use randoms::Randoms;
 pub use randoms_batch::randoms_batch_api::*;
-pub use randoms_batch::*;
+pub use randoms_batch::RandomsBatch;

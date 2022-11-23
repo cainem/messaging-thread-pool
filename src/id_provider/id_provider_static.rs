@@ -5,7 +5,6 @@ use super::IdProvider;
 static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 /// This is an example implementation of how to implement a static id provider
-///
 /// It is tied to the name of the static variable
 /// so it is not of much use if multiple Id providers are required.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
