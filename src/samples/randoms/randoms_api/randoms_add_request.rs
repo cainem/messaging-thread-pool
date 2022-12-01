@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    request_response::{RequestResponse, RequestResponseMessage},
     samples::Randoms,
     thread_request_response::{ThreadRequestResponse, ADD_POOL_ITEM},
 };
@@ -18,8 +18,8 @@ impl IdTargeted for RandomsAddRequest {
 }
 
 impl From<RandomsAddRequest> for ThreadRequestResponse<Randoms> {
-    fn from(init_request: RandomsAddRequest) -> Self {
-        ThreadRequestResponse::<Randoms>::AddPoolItem(RequestResponse::Request(init_request))
+    fn from(add_request: RandomsAddRequest) -> Self {
+        ThreadRequestResponse::<Randoms>::AddPoolItem(RequestResponse::Request(add_request))
     }
 }
 

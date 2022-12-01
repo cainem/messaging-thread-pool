@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    request_response::{RequestResponse, RequestResponseMessage},
     samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };
@@ -8,7 +8,7 @@ use crate::{
 use super::{RandomsApi, MEAN};
 
 /// This defines a request to calculate the mean of the contained randoms
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MeanRequest(pub usize);
 
 /// all requests must be able to provide the id of the pool item that they are targeting

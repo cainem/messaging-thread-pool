@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{
     id_provider::sized_id_provider::SizedIdProvider,
     id_targeted::IdTargeted,
-    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    request_response::{RequestResponse, RequestResponseMessage},
     samples::{randoms_batch::RandomsBatch, Randoms},
     thread_request_response::{ThreadRequestResponse, ADD_POOL_ITEM},
     ThreadPool,
