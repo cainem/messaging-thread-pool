@@ -19,14 +19,14 @@ impl IdTargeted for SumRequest {
 }
 
 impl From<SumRequest> for ThreadRequestResponse<Randoms> {
-    fn from(response: SumRequest) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(response)))
+    fn from(request: SumRequest) -> Self {
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(request)))
     }
 }
 
 impl From<ThreadRequestResponse<Randoms>> for SumRequest {
-    fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(result))) = response else {
+    fn from(request: ThreadRequestResponse<Randoms>) -> Self {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(result))) = request else {
             panic!("not expected")
         };
         result

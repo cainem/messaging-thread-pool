@@ -102,6 +102,7 @@ use std::sync::RwLock;
 use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
+pub mod global_test_scope;
 pub mod id_provider;
 pub mod id_targeted;
 pub mod pool_item;
@@ -110,7 +111,6 @@ pub mod samples;
 pub mod thread_request_response;
 
 mod drop;
-pub mod global_test_scope;
 mod new;
 mod pool_thread;
 mod pool_thread_old;
@@ -120,6 +120,7 @@ mod send_and_receive;
 mod sender_couplet;
 mod shutdown;
 mod thread_endpoint;
+pub mod thread_pool_sender_and_receiver;
 
 /// This struct represents a pool of threads that can target a particular type of
 /// resource (a resource being a struct that implements [`PoolItem`])
