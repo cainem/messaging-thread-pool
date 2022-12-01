@@ -4,12 +4,11 @@ use tracing::{event, subscriber::DefaultGuard, Level};
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::{
-    id_targeted::IdTargeted, request_response::request_response_message::RequestResponseMessage,
-    thread_request_response::*,
+    id_targeted::IdTargeted, request_response::RequestResponseMessage, thread_request_response::*,
 };
 use std::fmt::Debug;
 
-use self::new_pool_item_error::NewPoolItemError;
+pub use self::new_pool_item_error::NewPoolItemError;
 
 /// This is the trait that needs to be implemented by a struct in order that it can be
 /// managed by the thread pool infrastructure

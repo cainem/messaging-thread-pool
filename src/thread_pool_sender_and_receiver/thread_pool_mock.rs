@@ -3,13 +3,13 @@ use std::{cell::RefCell, marker::PhantomData};
 
 use crate::{
     pool_item::PoolItem,
-    request_response::{request_message::RequestMessage, response_message::ResponseMessage},
+    request_response::{RequestMessage, ResponseMessage},
     thread_request_response::ThreadRequestResponse,
 };
 
 use super::ThreadPoolSenderAndReceiver;
 
-/// This structure enables the mocking of a [`super::super::ThreadPool`]
+/// This structure enables the mocking of a [`crate::ThreadPool`]
 ///
 /// It has two constructors.
 /// One takes a vec of responses that are to be returned when send_and_receive is called, the

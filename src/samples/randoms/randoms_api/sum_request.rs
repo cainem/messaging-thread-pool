@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    request_response::{RequestResponse, RequestResponseMessage},
     samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };

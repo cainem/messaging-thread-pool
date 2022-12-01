@@ -44,7 +44,7 @@ where
 mod tests {
     use messaging_thread_pool::{
         samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-        thread_pool_sender_and_receiver::thread_pool_mock::ThreadPoolMock,
+        thread_pool_sender_and_receiver::ThreadPoolMock,
         thread_request_response::{AddResponse, ThreadRequestResponse},
         ThreadPool,
     };

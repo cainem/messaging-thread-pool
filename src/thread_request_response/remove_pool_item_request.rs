@@ -1,7 +1,7 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    request_response::{RequestResponse, RequestResponseMessage},
 };
 
 use super::{ThreadRequestResponse, REMOVE_POOL_ITEM};

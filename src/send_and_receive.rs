@@ -3,7 +3,7 @@ use tracing::instrument;
 
 use crate::{
     pool_item::PoolItem,
-    request_response::{request_message::RequestMessage, response_message::ResponseMessage},
+    request_response::{RequestMessage, ResponseMessage},
     thread_request_response::ThreadRequestResponse,
     ThreadPool,
 };

@@ -1,6 +1,6 @@
 use crate::{
     pool_item::PoolItem,
-    request_response::{request_message::RequestMessage, response_message::ResponseMessage},
+    request_response::{RequestMessage, ResponseMessage},
     ThreadPool,
 };
 

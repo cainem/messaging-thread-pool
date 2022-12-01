@@ -1,8 +1,8 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    pool_item::PoolItem, request_response::request_message::RequestMessage,
-    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse,
+    pool_item::PoolItem, request_response::RequestMessage, sender_couplet::SenderCouplet,
+    thread_request_response::ThreadRequestResponse,
 };
 
 use super::ThreadEndpoint;

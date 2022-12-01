@@ -1,5 +1,5 @@
 use crate::{
-    request_response::{request_response_message::RequestResponseMessage, RequestResponse},
+    request_response::{RequestResponse, RequestResponseMessage},
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
 };

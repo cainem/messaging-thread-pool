@@ -1,13 +1,15 @@
-pub mod thread_pool;
-pub mod thread_pool_mock;
+mod thread_pool;
+mod thread_pool_mock;
 
 use crate::{
     pool_item::PoolItem,
-    request_response::{request_message::RequestMessage, response_message::ResponseMessage},
+    request_response::{RequestMessage, ResponseMessage},
 };
 
+pub use thread_pool_mock::ThreadPoolMock;
+
 /// This trait allows a consumer to use a trait instead of the concrete implementation of thread pool.\\
-/// Unfortunately the send_and_receive are not a precise match for corresponding function in [`super::ThreadPool`] itself.
+/// Unfortunately the send_and_receive are not a precise match for corresponding function in [`crate::ThreadPool`] itself.
 /// This is because of the limitation of the trait return types (it has to return a boxed iterator)
 pub trait ThreadPoolSenderAndReceiver<P>
 where

@@ -1,9 +1,11 @@
-use self::request_response_message::RequestResponseMessage;
-
 mod id_targeted;
-pub mod request_message;
-pub mod request_response_message;
-pub mod response_message;
+mod request_message;
+mod request_response_message;
+mod response_message;
+
+pub use request_message::RequestMessage;
+pub use request_response_message::RequestResponseMessage;
+pub use response_message::ResponseMessage;
 
 /// This enum is used for defining request/response pairs \
 /// The protocol insists that every request has a corresponding response \
