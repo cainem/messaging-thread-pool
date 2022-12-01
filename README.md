@@ -16,7 +16,9 @@ So, for example, a simple type such holding a collection of random numbers such 
 ```rust
 // define what a pool item looks like
 pub struct Randoms {
-    pub id: u64,  // pool items require an id so they can be identified within the thread pool
+    // pool items require an id so they can be identified within
+    // the thread pool
+    pub id: u64,  
     pub numbers: Vec<u64>,
 }
 ```
@@ -41,13 +43,17 @@ pub struct MeanResponse {
     pub mean: u128,
 }
 
-// requests and responses are associated at compile time by a common constant
+// requests and responses are associated at compile time by a 
+// common constant
 pub const SUM: usize = 1;
 
-// this function (from the PoolItem trait) defines what to do on receipt of a request and how to respond to it
-fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
+// this function (from the PoolItem trait) defines what to do 
+// on receipt of a request and how to respond to it
+fn process_message(&mut self, request: &Self::Api) 
+        -> ThreadRequestResponse<Self> {
     match request {
-        // calculate the mean of the contained randoms and return the result
+        // calculate the mean of the contained randoms and 
+        // return the result
         RandomsApi::Mean(request) => MeanResponse {
             id: request.id(),
             mean: self.mean(),
@@ -65,9 +71,11 @@ fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self
 // a request is defined defined to construct a pool item
 pub struct RandomsAddRequest(pub usize);
 
-// ... and the implementation of this function (in the PoolItem trait) defines
-// how to use that message to construct a new pool item
-fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError> {
+// ... and the implementation of this function (in the
+// PoolItem trait) defines how to use that message to
+// construct a new pool item
+fn new_pool_item(request: &Self::Init) 
+        -> Result<Self, NewPoolItemError> {
     Ok(Randoms::new(request.0))
 }
 
@@ -80,31 +88,44 @@ This provides simple call schematics, easy to reason about lifetimes and predict
 
 ```rust
 use std::iter;
-use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
+use messaging_thread_pool::{samples::*,
+     thread_request_response::*,
+     ThreadPool};
 
-    // creates a thread pool with 4 threads and a mechanism by which to communicate with the threads in the pool.
-    // The lifetime of the structs created (the Randoms) will be tied to the life of this struct
+    // creates a thread pool with 4 threads and a mechanism 
+    // by which to communicate with the threads in the pool.
+    // The lifetime of the structs created (the Randoms) 
+    // will be tied to the life of this struct
     let thread_pool = ThreadPool::<Randoms>::new(10);
 
-    // create a 1000 Randoms across the thread pool by sending a thousand add requests.
-    // The creation of these objects (with the keys 0..1000) will be distributed across the 10 threads
-    // in the pool.
+    // create a 1000 Randoms across the thread pool by 
+    // sending a thousand add requests.
+    // The creation of these objects (with the keys 0..1000)
+    // will be distributed across the 10 threads in the pool.
     // Their owning thread will create and store them.
-    // They will not be dropped until they are either requested to be dropped or until the thread pool itself
-    // is dropped.
+    // They will not be dropped until they are either 
+    // requested to be dropped or until the thread pool
+    // itself is dropped.
     thread_pool
-        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
-        .for_each(|response: AddResponse| assert!(response.success()));
+        .send_and_receive((0..1000usize)
+        .map(|i| RandomsAddRequest(i)))
+        .for_each(|response: AddResponse| 
+            assert!(response.success()));
 
-    // now create 1000 messages asking them for the sum of the Randoms objects contained random numbers
-    // The message will be routed to the thread to where the targeted object resides
-    // This call will block until all of the work is done and the responses returned
+    // now create 1000 messages asking them for the sum of
+    // the Randoms objects contained random numbers
+    // The message will be routed to the thread to where
+    // the targeted object resides
+    // This call will block until all of the work is done and
+    // the responses returned
     let sums: Vec<SumResponse> = thread_pool
-        .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
+        .send_and_receive((0..1000usize)
+        .map(|i| SumRequest(i)))
         .collect();
     assert_eq!(1000, sums.len());
 
-    // get the mean of the randoms for object with id 0, this will execute on thread 0
+    // get the mean of the randoms for object with id 0, this 
+    // will execute on thread 0.
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
         .send_and_receive(iter::once(MeanRequest(0)))
@@ -116,15 +137,18 @@ use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
     // it will be dropped from the thread where it was residing
     thread_pool
         .send_and_receive(iter::once(RemovePoolItemRequest(1)))
-        .for_each(|response: RemovePoolItemResponse| assert!(response.success()));
+        .for_each(|response: RemovePoolItemResponse| 
+            assert!(response.success()));
 
     // add a new object with id 1000
     thread_pool
         .send_and_receive(iter::once(RandomsAddRequest(1000)))
-        .for_each(|response: AddResponse| assert!(response.success()));
+        .for_each(|response: AddResponse| 
+            assert!(response.success()));
 
-    // all objects are dropped when the basic thread pool batcher is dropped
-    // the threads are shutdown and joined back the the main thread
+    // all objects are dropped when the basic thread pool 
+    // batcher is dropped, the threads are shutdown and
+    // joined back the the main thread
     drop(thread_pool);
 
 ```
