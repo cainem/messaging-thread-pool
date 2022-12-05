@@ -12,3 +12,8 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 
 ## [2.0.1]
 - Add Default to ThreadPoolMock
+
+## [2.0.2]
+- Add Default to AddResponse
+
+
