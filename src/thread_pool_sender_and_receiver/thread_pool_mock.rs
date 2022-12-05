@@ -20,7 +20,7 @@ use super::ThreadPoolSenderAndReceiver;
 /// are provided.
 /// If no requests are provided any requests passed in are ignored and the defined set of responses
 /// are returned
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ThreadPoolMock<P, T, U>
 where
     P: PoolItem + PartialEq,

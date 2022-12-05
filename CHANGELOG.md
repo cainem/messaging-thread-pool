@@ -10,3 +10,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add ThreadPoolSenderAndReceiver trait to allow for mocking of the thread pool
 - Flatten some namespaces
 
+## [2.0.1]
+- Add Default to ThreadPoolMock
