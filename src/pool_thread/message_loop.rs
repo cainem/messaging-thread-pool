@@ -2,7 +2,7 @@ use tracing::{event, Level};
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
-    thread_request_response::*,
+    sender_couplet::SenderCouplet, thread_request_response::*,
 };
 
 use super::PoolThread;
@@ -34,7 +34,9 @@ where
                 sender_couplet.request(),
             );
 
-            let response = match sender_couplet.request() {
+            let SenderCouplet { return_to, request } = sender_couplet;
+
+            let response = match request {
                 ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
                     let id = request.id();
                     debug_assert_eq!(
@@ -42,8 +44,7 @@ where
                         "this messages should have targeted this thread"
                     );
 
-                    sender_couplet
-                        .return_to()
+                    return_to
                         .send(ThreadAbortResponse(id).into())
                         .expect("the send should always succeed");
 
@@ -59,8 +60,8 @@ where
                     .into()
                 }
                 ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
-                    let new_pool_item = P::new_pool_item(request);
                     let id = request.id();
+                    let new_pool_item = P::new_pool_item(request);
 
                     // element did exist therefore it can only be a request to create a new pool item
                     match new_pool_item {
@@ -88,7 +89,7 @@ where
                     let response = if let Some(targeted) = self.pool_item_hash_map.get_mut(&id) {
                         targeted.process_message(request)
                     } else {
-                        P::id_not_found(request)
+                        P::id_not_found(&request)
                     };
 
                     response
@@ -108,8 +109,7 @@ where
                     // is how thread shutdown differs from thread abort. Abort just exist the loop and leaves the
                     // state in place
                     let children = self.shutdown_child_pool();
-                    sender_couplet
-                        .return_to()
+                    return_to
                         .send(ThreadShutdownResponse::new(id, children).into())
                         .expect("the send should always succeed");
                     debug_assert!(
@@ -123,7 +123,7 @@ where
             };
             event!(Level::TRACE, ?response, message = "sending response");
 
-            match sender_couplet.return_to().send(response) {
+            match return_to.send(response) {
                 Ok(_) => (),
                 Err(err) => {
                     // The channel that is supposed to be receiving the response cannot receive it

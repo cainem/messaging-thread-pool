@@ -16,4 +16,7 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 ## [2.0.2]
 - Add Default to AddResponse
 
+## [3.0.0-alpha]
+- Change PoolItem trait to take ownership of requests rather than references to the request.
+
 

@@ -10,7 +10,7 @@ use crate::{pool_item::PoolItem, sender_couplet::SenderCouplet};
 ///
 /// It consists of a channel to make requests on and a join handle
 #[derive(Debug)]
-pub struct ThreadEndpoint<P>
+pub(crate) struct ThreadEndpoint<P>
 where
     P: PoolItem,
 {

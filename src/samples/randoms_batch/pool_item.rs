@@ -10,7 +10,7 @@ impl PoolItem for RandomsBatch {
     type Init = RandomsBatchAddRequest;
     type Api = RandomsBatchApi;
 
-    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
+    fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsBatchApi::SumOfSums(request) => {
                 let id = request.id();
@@ -20,7 +20,7 @@ impl PoolItem for RandomsBatch {
         }
     }
 
-    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError> {
+    fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(RandomsBatch::new(request))
     }
 

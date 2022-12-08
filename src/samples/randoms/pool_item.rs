@@ -13,7 +13,7 @@ impl PoolItem for Randoms {
     type Api = RandomsApi;
 
     /// here
-    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
+    fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsApi::Mean(request) => MeanResponse {
                 id: request.id(),
@@ -28,7 +28,7 @@ impl PoolItem for Randoms {
         }
     }
 
-    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError> {
+    fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(Randoms::new(request.0))
     }
 

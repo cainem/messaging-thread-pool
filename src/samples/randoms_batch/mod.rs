@@ -30,7 +30,7 @@ pub struct RandomsBatch {
 }
 
 impl RandomsBatch {
-    pub fn new(add_request: &RandomsBatchAddRequest) -> Self {
+    pub fn new(add_request: RandomsBatchAddRequest) -> Self {
         let mut new = Self {
             id: add_request.id,
             contained_random_ids: vec![],

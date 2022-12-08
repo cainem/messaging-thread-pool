@@ -31,7 +31,7 @@ where
     /// it receives.
     /// It will typically consist of a match statement that will discriminate amongst
     /// the various messages type defined in the Api
-    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self>;
+    fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self>;
 
     /// The function called if an item with the specified is not found
     /// The default behaviour is to panic
@@ -49,7 +49,7 @@ where
     /// This function defines how a new struct will be created when it receives
     /// The Init message.
     /// It returns the created new instance of the struct
-    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError>;
+    fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError>;
 
     /// This function is a hook that is called when the pool is shutting down.
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {

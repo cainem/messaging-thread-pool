@@ -7,12 +7,12 @@ use crate::{
 
 /// A struct that defines the contents of a message sent to the thread pool
 #[derive(Debug)]
-pub struct SenderCouplet<P>
+pub(crate) struct SenderCouplet<P>
 where
     P: PoolItem,
 {
-    return_to: Sender<ThreadRequestResponse<P>>,
-    request: ThreadRequestResponse<P>,
+    pub return_to: Sender<ThreadRequestResponse<P>>,
+    pub request: ThreadRequestResponse<P>,
 }
 
 impl<P> SenderCouplet<P>
@@ -34,6 +34,7 @@ where
         &self.request
     }
 
+    #[allow(dead_code)]
     pub fn return_to(&self) -> &Sender<ThreadRequestResponse<P>> {
         &self.return_to
     }

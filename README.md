@@ -8,10 +8,18 @@
 
 `messaging_thread_pool` provides a set traits and structs that allows the construction of a simple typed thread pool.
 
+Instances of the type are distributed across the threads of the thread pool and are tied to their allocated thread for their entire lifetime.\
+The library infrastructure then allows the routing of messages to specific instances based on a key.\
+Any work required to respond to a message is executed on that instances assigned thread pool thread.\
+Response messages are then routed back to the caller via the infrastructure.
+
+It provides simple call schematics, easy to reason about lifetimes and predictable pool behaviour.
+
+
 The type needs to define an enum of message types and provide implementations of a few simple traits to enable it to be
 hosted within the thread pool.
 
-So, for example, a simple type such holding a collection of random numbers such as this
+So, for example, a simple type holding a collection of random numbers such as this
 
 ```rust
 // define what a pool item looks like
@@ -24,7 +32,7 @@ pub struct Randoms {
 ```
 
 Can be hosted in a thread pool and communicated with via a defined set of messages by providing implementations 
-for the `PoolItem` trait. 
+for the `PoolItem` trait.\
 This approximately equates to providing a constructor for the pool items, a set of messages and a message processor 
 
 ```rust
@@ -84,7 +92,6 @@ fn new_pool_item(request: &Self::Init)
 With this infrastructure in place a pool item can then use the library provided structs 
 to host instances of the pool items in a fixed sized thread pool. 
 
-This provides simple call schematics, easy to reason about lifetimes and predictable pool behaviour.
 
 ```rust
 use std::iter;
@@ -112,7 +119,7 @@ use messaging_thread_pool::{samples::*,
         .for_each(|response: AddResponse| 
             assert!(response.success()));
 
-    // now create 1000 messages asking them for the sum of
+    // now create 1000 messages asking each of them for the sum of
     // the Randoms objects contained random numbers
     // The message will be routed to the thread to where
     // the targeted object resides
@@ -124,7 +131,7 @@ use messaging_thread_pool::{samples::*,
         .collect();
     assert_eq!(1000, sums.len());
 
-    // get the mean of the randoms for object with id 0, this 
+    // now get the mean of the randoms for object with id 0, this 
     // will execute on thread 0.
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
@@ -135,6 +142,7 @@ use messaging_thread_pool::{samples::*,
 
     // remove object with id 1
     // it will be dropped from the thread where it was residing
+    // freeing up any memory it was using
     thread_pool
         .send_and_receive(iter::once(RemovePoolItemRequest(1)))
         .for_each(|response: RemovePoolItemResponse| 
@@ -146,8 +154,8 @@ use messaging_thread_pool::{samples::*,
         .for_each(|response: AddResponse| 
             assert!(response.success()));
 
-    // all objects are dropped when the basic thread pool 
-    // batcher is dropped, the threads are shutdown and
+    // all objects are dropped when the thread pool is
+    // dropped, the worker threads are shutdown and
     // joined back the the main thread
     drop(thread_pool);
 

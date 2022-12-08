@@ -21,7 +21,7 @@ where
     ///
     /// The PoolThread spins around its message_loop function processing messages until a request is
     /// received to shutdown.
-    pub fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<P>>) -> Self {
+    pub(crate) fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<P>>) -> Self {
         Self {
             thread_id: id,
             pool_thread_receiver,
