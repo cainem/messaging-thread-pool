@@ -1,12 +1,13 @@
+mod sender_and_receiver_mock;
+pub mod sender_and_receiver_unimplemented;
 mod thread_pool;
-mod thread_pool_mock;
 
 use crate::{
     pool_item::PoolItem,
     request_response::{RequestMessage, ResponseMessage},
 };
 
-pub use thread_pool_mock::ThreadPoolMock;
+pub use sender_and_receiver_mock::SenderAndReceiverMock;
 
 /// This trait allows a consumer to use a trait instead of the concrete implementation of thread pool.\\
 /// Unfortunately the send_and_receive are not a precise match for corresponding function in [`crate::ThreadPool`] itself.

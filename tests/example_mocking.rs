@@ -44,7 +44,7 @@ where
 mod tests {
     use messaging_thread_pool::{
         samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-        thread_pool_sender_and_receiver::ThreadPoolMock,
+        thread_pool_sender_and_receiver::SenderAndReceiverMock,
         thread_request_response::{AddResponse, ThreadRequestResponse},
         ThreadPool,
     };
@@ -68,7 +68,7 @@ mod tests {
 
         // create a mock thread pool
         // this defines the expected requests and a vec of responses to return
-        let mock = ThreadPoolMock::new_with_expected_requests(expected_requests, responses);
+        let mock = SenderAndReceiverMock::new_with_expected_requests(expected_requests, responses);
 
         // create the complex type with the mock thread pool
         let target = Complex::new(mock, [1, 2].into_iter());

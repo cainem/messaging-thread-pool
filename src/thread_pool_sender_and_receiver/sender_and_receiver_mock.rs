@@ -21,7 +21,7 @@ use super::ThreadPoolSenderAndReceiver;
 /// If no requests are provided any requests passed in are ignored and the defined set of responses
 /// are returned
 #[derive(Debug, Default)]
-pub struct ThreadPoolMock<P, T, U>
+pub struct SenderAndReceiverMock<P, T, U>
 where
     P: PoolItem + PartialEq,
     T: Into<ThreadRequestResponse<P>>,
@@ -33,7 +33,7 @@ where
     returned_responses: RefCell<Vec<U>>,
 }
 
-impl<P, T, U> ThreadPoolMock<P, T, U>
+impl<P, T, U> SenderAndReceiverMock<P, T, U>
 where
     P: PoolItem + PartialEq,
     T: Into<ThreadRequestResponse<P>>,
@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<P, T1, U1> ThreadPoolSenderAndReceiver<P> for ThreadPoolMock<P, T1, U1>
+impl<P, T1, U1> ThreadPoolSenderAndReceiver<P> for SenderAndReceiverMock<P, T1, U1>
 where
     P: PoolItem + PartialEq,
     P::Api: PartialEq,
@@ -130,14 +130,14 @@ mod tests {
         thread_pool_sender_and_receiver::ThreadPoolSenderAndReceiver,
     };
 
-    use super::ThreadPoolMock;
+    use super::SenderAndReceiverMock;
 
     #[test]
     fn two_responses_returned_over_multiple_requests() {
         let response_0 = MeanResponse { id: 1, mean: 22 };
         let response_1 = MeanResponse { id: 2, mean: 44 };
 
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new(vec![
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![
             response_0.clone(),
             response_1.clone(),
         ]);
@@ -161,10 +161,11 @@ mod tests {
         let request_0 = MeanRequest(1);
         let response_0 = MeanResponse { id: 1, mean: 22 };
 
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-            vec![MeanRequest(2)],
-            vec![response_0.clone()],
-        );
+        let mock =
+            SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
+                vec![MeanRequest(2)],
+                vec![response_0.clone()],
+            );
 
         let _results: Vec<MeanResponse> =
             mock.send_and_receive(vec![request_0].into_iter()).collect();
@@ -176,10 +177,11 @@ mod tests {
         let request_0 = MeanRequest(1);
         let response_0 = MeanResponse { id: 1, mean: 22 };
 
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-            vec![request_0.clone()],
-            vec![response_0.clone()],
-        );
+        let mock =
+            SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
+                vec![request_0.clone()],
+                vec![response_0.clone()],
+            );
 
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1), MeanRequest(2)].into_iter())
@@ -188,10 +190,11 @@ mod tests {
 
     #[test]
     fn empty_requests_and_responses_does_not_panic() {
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-            vec![],
-            vec![],
-        );
+        let mock =
+            SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
+                vec![],
+                vec![],
+            );
 
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
@@ -203,10 +206,11 @@ mod tests {
     fn unmatched_requests_and_responses() {
         let response_0 = MeanResponse { id: 1, mean: 22 };
 
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-            vec![],
-            vec![response_0.clone()],
-        );
+        let mock =
+            SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
+                vec![],
+                vec![response_0.clone()],
+            );
 
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1)].into_iter())
@@ -217,8 +221,9 @@ mod tests {
     fn one_response_only_returns_expected_response() {
         let response_0 = MeanResponse { id: 1, mean: 22 };
 
-        let mock =
-            ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new(vec![response_0.clone()]);
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![
+            response_0.clone(),
+        ]);
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1)].into_iter())
@@ -230,10 +235,11 @@ mod tests {
 
     #[test]
     fn one_response_empty_requests_returns_empty_iterator() {
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new(vec![MeanResponse {
-            id: 1,
-            mean: 0,
-        }]);
+        let mock =
+            SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![MeanResponse {
+                id: 1,
+                mean: 0,
+            }]);
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
@@ -244,7 +250,7 @@ mod tests {
 
     #[test]
     fn zero_responses_returns_empty_iterator() {
-        let mock = ThreadPoolMock::<Randoms, MeanRequest, MeanResponse>::new(vec![]);
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![]);
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
