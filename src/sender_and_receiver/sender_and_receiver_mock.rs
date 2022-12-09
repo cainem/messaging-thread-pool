@@ -7,7 +7,7 @@ use crate::{
     thread_request_response::ThreadRequestResponse,
 };
 
-use super::ThreadPoolSenderAndReceiver;
+use super::SenderAndReceiver;
 
 /// This structure enables the mocking of a [`crate::ThreadPool`]
 ///
@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<P, T1, U1> ThreadPoolSenderAndReceiver<P> for SenderAndReceiverMock<P, T1, U1>
+impl<P, T1, U1> SenderAndReceiver<P> for SenderAndReceiverMock<P, T1, U1>
 where
     P: PoolItem + PartialEq,
     P::Api: PartialEq,
@@ -127,7 +127,7 @@ where
 mod tests {
     use crate::{
         samples::{MeanRequest, MeanResponse, Randoms},
-        thread_pool_sender_and_receiver::ThreadPoolSenderAndReceiver,
+        sender_and_receiver::SenderAndReceiver,
     };
 
     use super::SenderAndReceiverMock;

@@ -108,7 +108,7 @@ pub mod id_targeted;
 pub mod pool_item;
 pub mod request_response;
 pub mod samples;
-pub mod thread_pool_sender_and_receiver;
+pub mod sender_and_receiver;
 pub mod thread_request_response;
 
 mod drop;

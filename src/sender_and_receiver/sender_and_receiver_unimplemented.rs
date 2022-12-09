@@ -5,7 +5,7 @@ use crate::{
     request_response::{RequestMessage, ResponseMessage},
 };
 
-use super::ThreadPoolSenderAndReceiver;
+use super::SenderAndReceiver;
 
 /// A simple lightweight type that implements ThreadPoolSenderAndReceiver but throws if called
 /// It is intended for use a dummy lightweight thread pool in test scenarios that don't actually use it!
@@ -17,7 +17,7 @@ where
     phantom_data: PhantomData<P>,
 }
 
-impl<P> ThreadPoolSenderAndReceiver<P> for SenderAndReceiverUnimplemented<P>
+impl<P> SenderAndReceiver<P> for SenderAndReceiverUnimplemented<P>
 where
     P: PoolItem,
 {

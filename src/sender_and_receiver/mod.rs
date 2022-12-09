@@ -1,5 +1,5 @@
 mod sender_and_receiver_mock;
-pub mod sender_and_receiver_unimplemented;
+mod sender_and_receiver_unimplemented;
 mod thread_pool;
 
 use crate::{
@@ -12,7 +12,7 @@ pub use sender_and_receiver_mock::SenderAndReceiverMock;
 /// This trait allows a consumer to use a trait instead of the concrete implementation of thread pool.\\
 /// Unfortunately the send_and_receive are not a precise match for corresponding function in [`crate::ThreadPool`] itself.
 /// This is because of the limitation of the trait return types (it has to return a boxed iterator)
-pub trait ThreadPoolSenderAndReceiver<P>
+pub trait SenderAndReceiver<P>
 where
     P: PoolItem,
 {
@@ -26,4 +26,12 @@ where
     where
         T: RequestMessage<N, P> + 'a,
         U: ResponseMessage<N, P> + 'a;
+}
+
+/// This trait is useful when multiple levels are thread pools are used and each thread pool
+/// needs to be send and sync in order to be sent through the levels
+pub trait ThreadSafeSenderAndReceiver<P>: SenderAndReceiver<P> + Send + Sync
+where
+    P: PoolItem,
+{
 }

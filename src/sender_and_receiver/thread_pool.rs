@@ -4,10 +4,10 @@ use crate::{
     ThreadPool,
 };
 
-use super::ThreadPoolSenderAndReceiver;
+use super::SenderAndReceiver;
 
 /// An implementation of the [`ThreadPoolSenderAndReceiver`] trait for [`ThreadPool`]
-impl<P> ThreadPoolSenderAndReceiver<P> for ThreadPool<P>
+impl<P> SenderAndReceiver<P> for ThreadPool<P>
 where
     P: PoolItem,
 {

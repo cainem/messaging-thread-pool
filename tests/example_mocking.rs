@@ -1,12 +1,12 @@
 use messaging_thread_pool::{
     samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-    thread_pool_sender_and_receiver::ThreadPoolSenderAndReceiver,
+    sender_and_receiver::SenderAndReceiver,
     thread_request_response::AddResponse,
 };
 
 struct Complex<T>
 where
-    T: ThreadPoolSenderAndReceiver<Randoms>,
+    T: SenderAndReceiver<Randoms>,
 {
     contained_ids: Vec<usize>,
     contained_thread_pool: T,
@@ -14,7 +14,7 @@ where
 
 impl<T> Complex<T>
 where
-    T: ThreadPoolSenderAndReceiver<Randoms>,
+    T: SenderAndReceiver<Randoms>,
 {
     fn new(contained_thread_pool: T, ids: impl Iterator<Item = usize>) -> Self {
         let ids: Vec<_> = ids.collect();
@@ -44,7 +44,7 @@ where
 mod tests {
     use messaging_thread_pool::{
         samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-        thread_pool_sender_and_receiver::SenderAndReceiverMock,
+        sender_and_receiver::SenderAndReceiverMock,
         thread_request_response::{AddResponse, ThreadRequestResponse},
         ThreadPool,
     };
