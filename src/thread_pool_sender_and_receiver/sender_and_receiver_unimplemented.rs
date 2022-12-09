@@ -6,7 +6,7 @@ use super::ThreadPoolSenderAndReceiver;
 
 /// A simple lightweight type that implements ThreadPoolSenderAndReceiver but throws if called
 /// It is intended for use a dummy lightweight thread pool in test scenarios that don't actually use it!
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct SenderAndReceiverUnimplemented<P>
 where
     P: PoolItem,
@@ -29,5 +29,17 @@ where
         unimplemented!(
             "this struct is intended for test scenarios that do not actually try to use the pool"
         )
+    }
+}
+
+// cannot use #[derive] for this as it adds the constraint that P must also implement Default
+impl<P> Default for SenderAndReceiverUnimplemented<P>
+where
+    P: PoolItem,
+{
+    fn default() -> Self {
+        Self {
+            phantom_data: Default::default(),
+        }
     }
 }
