@@ -8,6 +8,7 @@ use crate::{
 };
 
 pub use sender_and_receiver_mock::SenderAndReceiverMock;
+pub use sender_and_receiver_unimplemented::SenderAndReceiverUnimplemented;
 
 /// This trait allows a consumer to use a trait instead of the concrete implementation of thread pool.\\
 /// Unfortunately the send_and_receive are not a precise match for corresponding function in [`crate::ThreadPool`] itself.
