@@ -6,7 +6,7 @@ use super::ThreadPoolSenderAndReceiver;
 
 /// A simple lightweight type that implements ThreadPoolSenderAndReceiver but throws if called
 /// It is intended for use a dummy lightweight thread pool in test scenarios that don't actually use it!
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SenderAndReceiverUnimplemented<P>
 where
     P: PoolItem,
