@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::pool_item::PoolItem;
+use crate::{
+    pool_item::PoolItem,
+    request_response::{RequestMessage, ResponseMessage},
+};
 
 use super::ThreadPoolSenderAndReceiver;
 
@@ -23,8 +26,8 @@ where
         _requests: impl Iterator<Item = T> + 'a,
     ) -> Box<dyn Iterator<Item = U> + 'a>
     where
-        T: crate::request_response::RequestMessage<N, P> + 'a,
-        U: crate::request_response::ResponseMessage<N, P> + 'a,
+        T: RequestMessage<N, P> + 'a,
+        U: ResponseMessage<N, P> + 'a,
     {
         unimplemented!(
             "this struct is intended for test scenarios that do not actually try to use the pool"
@@ -32,7 +35,7 @@ where
     }
 }
 
-// cannot use #[derive] for this as it adds the constraint that P must also implement Default
+// cannot use #[derive] for this as it adds the constraint that P must also implement Default which is not necessary
 impl<P> Default for SenderAndReceiverUnimplemented<P>
 where
     P: PoolItem,
@@ -41,5 +44,29 @@ where
         Self {
             phantom_data: Default::default(),
         }
+    }
+}
+
+// allow nested unimplemented SenderAndReceiverUnimplemented for when testing multiple levels of thread pools
+impl<P> PoolItem for SenderAndReceiverUnimplemented<P>
+where
+    P: PoolItem,
+{
+    type Init = P::Init;
+    type Api = P::Api;
+
+    fn process_message(
+        &mut self,
+        _request: Self::Api,
+    ) -> crate::thread_request_response::ThreadRequestResponse<Self> {
+        unimplemented!(
+            "this struct is intended for test scenarios that do not actually try to use the pool"
+        )
+    }
+
+    fn new_pool_item(_request: Self::Init) -> Result<Self, crate::pool_item::NewPoolItemError> {
+        unimplemented!(
+            "this struct is intended for test scenarios that do not actually try to use the pool"
+        )
     }
 }
