@@ -23,7 +23,7 @@ use super::SenderAndReceiver;
 #[derive(Debug, Default)]
 pub struct SenderAndReceiverMock<P, T, U>
 where
-    P: PoolItem + PartialEq,
+    P: PoolItem,
     T: Into<ThreadRequestResponse<P>>,
     U: Into<ThreadRequestResponse<P>>,
 {
@@ -35,7 +35,7 @@ where
 
 impl<P, T, U> SenderAndReceiverMock<P, T, U>
 where
-    P: PoolItem + PartialEq,
+    P: PoolItem,
     T: Into<ThreadRequestResponse<P>>,
     U: Into<ThreadRequestResponse<P>>,
 {
