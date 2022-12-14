@@ -1,5 +1,6 @@
 use std::fmt::Debug;
-use std::{cell::RefCell, marker::PhantomData};
+use std::marker::PhantomData;
+use std::sync::Mutex;
 
 use crate::{
     pool_item::PoolItem,
@@ -29,8 +30,8 @@ where
 {
     phantom_data: PhantomData<P>,
     assert_requests_equal: bool,
-    expected_requests: RefCell<Vec<T>>,
-    returned_responses: RefCell<Vec<U>>,
+    expected_requests: Mutex<Vec<T>>,
+    returned_responses: Mutex<Vec<U>>,
 }
 
 impl<P, T, U> SenderAndReceiverMock<P, T, U>
@@ -51,8 +52,8 @@ where
         Self {
             phantom_data: PhantomData,
             assert_requests_equal: true,
-            expected_requests: RefCell::new(expected_requests),
-            returned_responses: RefCell::new(returned_responses),
+            expected_requests: Mutex::new(expected_requests),
+            returned_responses: Mutex::new(returned_responses),
         }
     }
 
@@ -60,8 +61,8 @@ where
         Self {
             phantom_data: PhantomData,
             assert_requests_equal: false,
-            expected_requests: RefCell::new(vec![]),
-            returned_responses: RefCell::new(returned_responses),
+            expected_requests: Mutex::new(vec![]),
+            returned_responses: Mutex::new(returned_responses),
         }
     }
 }
@@ -88,7 +89,7 @@ where
         let actual_count = requests.len();
 
         if self.assert_requests_equal {
-            let expected_count = self.expected_requests.borrow().iter().count();
+            let expected_count = self.expected_requests.lock().unwrap().iter().count();
             assert!(
                 expected_count >= actual_count,
                 "count of expected [{}] less than actual requests [{}]",
@@ -96,7 +97,8 @@ where
                 actual_count
             );
             self.expected_requests
-                .borrow_mut()
+                .lock()
+                .unwrap()
                 .drain(..actual_count)
                 .map(|r| <T1 as Into<ThreadRequestResponse<P>>>::into(r))
                 .zip(
@@ -113,7 +115,8 @@ where
         // convert type U1 to U via the intermediary ThreadRequestResponse
         let results: Vec<_> = self
             .returned_responses
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .drain(..actual_count)
             .map(|r| <U1 as Into<ThreadRequestResponse<P>>>::into(r))
             .map(|r| <U as From<ThreadRequestResponse<P>>>::from(r))

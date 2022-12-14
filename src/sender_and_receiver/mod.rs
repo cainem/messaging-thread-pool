@@ -1,5 +1,4 @@
 mod sender_and_receiver_mock;
-mod sender_and_receiver_unimplemented;
 mod thread_pool;
 
 use crate::{
