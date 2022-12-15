@@ -21,4 +21,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Rename ThreadPoolMock to SenderAndReceiverMock
 - Rename ThreadPoolSenderAndReceiver to SenderAndReceiver
 - Make SenderAndReceiverMock Send & Sync for use in more scenarios
+- Change IdProvider to return usize instead u64
 

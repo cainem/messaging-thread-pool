@@ -43,12 +43,15 @@ impl Clone for SizedIdProvider {
 impl PartialEq for SizedIdProvider {
     fn eq(&self, other: &Self) -> bool {
         // this is not ideal (it is slow) but partial eq is only used for assertions
-        self.id_provider.clone().get_next_id() == other.id_provider.clone().get_next_id()
+        self.id_provider.clone().peek_next_id() == other.id_provider.clone().peek_next_id()
     }
 }
 
 impl IdProvider for SizedIdProvider {
-    fn get_next_id(&self) -> u64 {
+    fn get_next_id(&self) -> usize {
         self.id_provider.get_next_id()
+    }
+    fn peek_next_id(&self) -> usize {
+        self.id_provider.peek_next_id()
     }
 }

@@ -11,8 +11,11 @@ static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub struct IdProviderStatic;
 
 impl IdProvider for IdProviderStatic {
-    fn get_next_id(&self) -> u64 {
-        ID_COUNTER.fetch_add(1, Ordering::SeqCst) as u64
+    fn get_next_id(&self) -> usize {
+        ID_COUNTER.fetch_add(1, Ordering::SeqCst)
+    }
+    fn peek_next_id(&self) -> usize {
+        ID_COUNTER.load(Ordering::SeqCst)
     }
 }
 
@@ -26,7 +29,14 @@ mod tests {
 
     #[test]
     #[ignore = "cannot test in test runner as it contains static variable"]
-    fn getting_successive_genome_id_providers_provides_successive_ids() {
+    fn peek_successive_id_providers_provides_successive_ids() {
+        assert_eq!(0, IdProviderStatic.peek_next_id());
+        assert_eq!(0, IdProviderStatic.peek_next_id());
+    }
+
+    #[test]
+    #[ignore = "cannot test in test runner as it contains static variable"]
+    fn getting_successive_id_providers_provides_successive_ids() {
         assert_eq!(0, IdProviderStatic.get_next_id());
         assert_eq!(1, IdProviderStatic.get_next_id());
         assert_eq!(2, IdProviderStatic.get_next_id());
