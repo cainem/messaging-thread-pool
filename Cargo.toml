@@ -1,6 +1,6 @@
 [package]
 name = "messaging_thread_pool"
-version = "3.0.8-alpha"
+version = "3.0.9-alpha"
 authors = ["cainem"]
 edition = '2021'
 description = "A library for aiding the creation of typed thread pool of objects that is communicated with via channels"
