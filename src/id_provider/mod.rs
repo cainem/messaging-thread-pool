@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 pub mod id_provider_mutex;
 pub mod id_provider_static;
-pub mod sized_id_provider;
 
 /// This trait defines a function for getting the next "id" \
 /// It is a trait because if the id generator is static different behaviour will be required for test. \
