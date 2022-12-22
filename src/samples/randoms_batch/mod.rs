@@ -4,8 +4,8 @@ pub mod randoms_batch_api;
 use std::sync::Arc;
 
 use crate::{
-    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms,
-    thread_request_response::AddResponse, ThreadPool,
+    id_provider::IdProvider, samples::randoms::Randoms, thread_request_response::AddResponse,
+    ThreadPool,
 };
 
 use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
@@ -25,7 +25,7 @@ use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
 pub struct RandomsBatch {
     pub id: usize,
     pub contained_random_ids: Vec<usize>,
-    pub id_provider: SizedIdProvider,
+    pub id_provider: Arc<dyn IdProvider>,
     pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
 }
 

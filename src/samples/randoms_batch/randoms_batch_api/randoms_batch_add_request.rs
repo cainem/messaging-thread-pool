@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    id_provider::sized_id_provider::SizedIdProvider,
+    id_provider::IdProvider,
     id_targeted::IdTargeted,
     request_response::{RequestResponse, RequestResponseMessage},
     samples::{randoms_batch::RandomsBatch, Randoms},
@@ -18,14 +18,14 @@ use crate::{
 pub struct RandomsBatchAddRequest {
     pub id: usize,
     pub number_of_contained_randoms: usize,
-    pub id_provider: SizedIdProvider,
+    pub id_provider: Arc<dyn IdProvider>,
     // this thread pool will be shared by all of the Randoms
     pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
 }
 
 impl RandomsBatchAddRequest {
-    pub fn id_provider(&self) -> &SizedIdProvider {
-        &self.id_provider
+    pub fn id_provider(&self) -> &dyn IdProvider {
+        self.id_provider.as_ref()
     }
 
     pub fn id(&self) -> usize {

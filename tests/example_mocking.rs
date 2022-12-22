@@ -4,6 +4,9 @@ use messaging_thread_pool::{
     thread_request_response::AddResponse,
 };
 
+/// A struct that contains a thread pool that needs to be mocked should hold a trait of
+/// SenderAndReceiver as show
+/// This allows for the mocking of the interactions at the thread boundary as shown below
 struct Complex<T>
 where
     T: SenderAndReceiver<Randoms>,

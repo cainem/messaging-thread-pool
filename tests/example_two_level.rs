@@ -1,11 +1,8 @@
 use std::sync::Arc;
 
 use messaging_thread_pool::{
-    global_test_scope::global_test_scope,
-    id_provider::{id_provider_mutex::IdProviderMutex, sized_id_provider::SizedIdProvider},
-    samples::*,
-    thread_request_response::*,
-    ThreadPool,
+    global_test_scope::global_test_scope, id_provider::id_provider_mutex::IdProviderMutex,
+    samples::*, thread_request_response::*, ThreadPool,
 };
 use tracing::metadata::LevelFilter;
 
@@ -32,7 +29,7 @@ pub fn example_random_batches_() {
     // as a shared thread pool will be used for all Randoms it is important that the RandomsBatches share an id provider
     // (the Randoms ids need to be unique across all RandomBatches )
     // this id provider uses a mutex to ensure it provides unique ids
-    let id_provider = SizedIdProvider::new(IdProviderMutex::new(0));
+    let id_provider = Arc::new(IdProviderMutex::new(0));
 
     // Create 10 requests to create randoms batches
     // Each RandomsBatch will in turn create 100 Randoms.

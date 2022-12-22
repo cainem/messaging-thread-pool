@@ -9,7 +9,7 @@
 `messaging_thread_pool` provides a set traits and structs that allows the construction of a simple typed thread pool.
 
 Instances of the type are distributed across the threads of the thread pool and are tied to their allocated thread for their entire lifetime.\
-Instances therefore <b>do not</b> need to be send nor sync (although the messages use to communicate with them do). \
+Instances therefore <b>do not need to be send nor sync</b> (although the messages used to communicate with them do). \
 
 The library infrastructure then allows the routing of messages to specific instances based on a key.\
 Any work required to respond to a message is executed on that instances assigned thread pool thread.\
