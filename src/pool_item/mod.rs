@@ -15,7 +15,7 @@ pub use self::new_pool_item_error::NewPoolItemError;
 pub trait PoolItem: Debug
 where
     Self: Sized,
-    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true> + IdTargeted,
+    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true> + Send + IdTargeted,
     Self::Api: Debug + Send + IdTargeted,
 {
     /// This is a struct that defines the message that will initiate a new instance

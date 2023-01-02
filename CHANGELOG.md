@@ -23,4 +23,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Make SenderAndReceiverMock Send & Sync for use in more scenarios
 - Change IdProvider to return usize instead u64
 - Remove unnecessary SizedIdProvider; replace with Arc&lt;dyn IdProvider&gt;
+- Relax Send constraint on IdTargeted trait.
 

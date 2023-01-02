@@ -4,8 +4,8 @@ pub mod randoms_batch_api;
 use std::sync::Arc;
 
 use crate::{
-    id_provider::IdProvider, samples::randoms::Randoms, thread_request_response::AddResponse,
-    ThreadPool,
+    id_provider::IdProvider, samples::randoms::Randoms, sender_and_receiver::SenderAndReceiver,
+    thread_request_response::AddResponse,
 };
 
 use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
@@ -22,33 +22,42 @@ use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
 /// For this reason the RandomsBatches need to share an id_provider which provides globally unique ids
 /// (ids, must be unique across the thread pool for obvious reasons)
 #[derive(Debug)]
-pub struct RandomsBatch {
+pub struct RandomsBatch<P>
+where
+    P: SenderAndReceiver<Randoms>,
+{
     pub id: usize,
     pub contained_random_ids: Vec<usize>,
     pub id_provider: Arc<dyn IdProvider>,
-    pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
+    pub randoms_thread_pool: Arc<P>,
 }
 
-impl RandomsBatch {
-    pub fn new(add_request: RandomsBatchAddRequest) -> Self {
+impl<P> RandomsBatch<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync,
+{
+    pub fn new(add_request: RandomsBatchAddRequest<P>) -> Self {
         let mut new = Self {
             id: add_request.id,
             contained_random_ids: vec![],
-            id_provider: add_request.id_provider.clone(),
+            id_provider: Arc::clone(&add_request.id_provider),
             randoms_thread_pool: Arc::clone(&add_request.randoms_thread_pool),
         };
 
+        let mut ids = Vec::<usize>::default();
         new.randoms_thread_pool()
             .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
             .for_each(|r: AddResponse| {
                 assert!(r.success(), "Request to add Randoms failed");
-                new.contained_random_ids_mut().push(r.id());
+                ids.push(r.id());
+                //new.contained_random_ids_mut().push(r.id());
             });
 
+        new.contained_random_ids_mut().append(&mut ids);
         new
     }
 
-    pub fn randoms_thread_pool(&self) -> &ThreadPool<Randoms> {
+    pub fn randoms_thread_pool(&self) -> &P {
         self.randoms_thread_pool.as_ref()
     }
 

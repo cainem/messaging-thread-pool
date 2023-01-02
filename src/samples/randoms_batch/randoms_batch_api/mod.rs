@@ -2,14 +2,15 @@ mod randoms_batch_add_request;
 mod sum_of_sums_request;
 mod sum_of_sums_response;
 
-use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponse, thread_request_response::*,
-};
-
 pub use self::{
     randoms_batch_add_request::RandomsBatchAddRequest, sum_of_sums_request::SumOfSumsRequest,
     sum_of_sums_response::SumOfSumsResponse,
 };
+use crate::{
+    id_targeted::IdTargeted, request_response::RequestResponse, samples::Randoms,
+    sender_and_receiver::SenderAndReceiver, thread_request_response::*,
+};
+use std::fmt::Debug;
 
 use super::RandomsBatch;
 
@@ -31,8 +32,11 @@ impl IdTargeted for RandomsBatchApi {
     }
 }
 
-impl From<ThreadRequestResponse<RandomsBatch>> for RandomsBatchApi {
-    fn from(response: ThreadRequestResponse<RandomsBatch>) -> Self {
+impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for RandomsBatchApi
+where
+    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
+{
+    fn from(response: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
         let ThreadRequestResponse::MessagePoolItem(result) = response else {
                 panic!("must be a response to a call to the element")
             };
@@ -40,7 +44,10 @@ impl From<ThreadRequestResponse<RandomsBatch>> for RandomsBatchApi {
     }
 }
 
-impl From<RandomsBatchApi> for ThreadRequestResponse<RandomsBatch> {
+impl<P> From<RandomsBatchApi> for ThreadRequestResponse<RandomsBatch<P>>
+where
+    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
+{
     fn from(request_response: RandomsBatchApi) -> Self {
         ThreadRequestResponse::MessagePoolItem(request_response)
     }

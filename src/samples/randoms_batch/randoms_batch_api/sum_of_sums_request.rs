@@ -1,9 +1,11 @@
 use crate::{
     id_targeted::IdTargeted,
     request_response::{RequestResponse, RequestResponseMessage},
-    samples::randoms_batch::RandomsBatch,
+    samples::{randoms_batch::RandomsBatch, Randoms},
+    sender_and_receiver::SenderAndReceiver,
     thread_request_response::ThreadRequestResponse,
 };
+use std::fmt::Debug;
 
 use super::{RandomsBatchApi, SUM_OF_SUMS};
 
@@ -20,7 +22,10 @@ impl IdTargeted for SumOfSumsRequest {
     }
 }
 
-impl From<SumOfSumsRequest> for ThreadRequestResponse<RandomsBatch> {
+impl<P> From<SumOfSumsRequest> for ThreadRequestResponse<RandomsBatch<P>>
+where
+    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
+{
     fn from(request: SumOfSumsRequest) -> Self {
         ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
             RequestResponse::Request(request),
@@ -28,8 +33,11 @@ impl From<SumOfSumsRequest> for ThreadRequestResponse<RandomsBatch> {
     }
 }
 
-impl From<ThreadRequestResponse<RandomsBatch>> for SumOfSumsRequest {
-    fn from(request: ThreadRequestResponse<RandomsBatch>) -> Self {
+impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for SumOfSumsRequest
+where
+    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
+{
+    fn from(request: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
         let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(RequestResponse::Request(result))) = request else {
             panic!("not expected")
         };
