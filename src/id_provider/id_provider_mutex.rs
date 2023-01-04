@@ -30,7 +30,7 @@ impl Clone for IdProviderMutex {
 }
 
 impl IdProvider for IdProviderMutex {
-    fn get_next_id(&self) -> usize {
+    fn next_id(&self) -> usize {
         let mut counter = self.internal_counter.lock().unwrap();
         // copy the value before mutating
         let value = *counter;
@@ -58,7 +58,7 @@ mod tests {
     fn gets_ids_as_expected() {
         let target = IdProviderMutex::default();
 
-        assert_eq!(0, target.get_next_id());
-        assert_eq!(1, target.get_next_id());
+        assert_eq!(0, target.next_id());
+        assert_eq!(1, target.next_id());
     }
 }
