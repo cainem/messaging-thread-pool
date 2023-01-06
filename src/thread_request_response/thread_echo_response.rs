@@ -1,7 +1,4 @@
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
 
 use super::{ThreadRequestResponse, THREAD_ECHO};
 
@@ -12,8 +9,6 @@ pub struct ThreadEchoResponse {
     message: String,
     responding_thread_id: usize,
 }
-
-impl RequestResponseMessage<THREAD_ECHO, false> for ThreadEchoResponse {}
 
 impl ThreadEchoResponse {
     pub fn new(thread_id: usize, message: String, responding_thread_id: usize) -> Self {
@@ -42,7 +37,7 @@ where
     T: PoolItem,
 {
     fn from(request: ThreadEchoResponse) -> Self {
-        ThreadRequestResponse::ThreadEcho(RequestResponse::Response(request))
+        ThreadRequestResponse::ThreadEcho(RequestResponse2::Response(request))
     }
 }
 
@@ -51,7 +46,7 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::ThreadEcho(RequestResponse::Response(response)) = response else {
+        let ThreadRequestResponse::<P>::ThreadEcho(RequestResponse2::Response(response)) = response else {
             panic!("unexpected")
         };
         response

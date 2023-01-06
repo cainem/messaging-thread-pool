@@ -4,7 +4,7 @@ use tracing::{event, subscriber::DefaultGuard, Level};
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponseMessage, thread_request_response::*,
+    id_targeted::IdTargeted, request_response_2::RequestWithResponse, thread_request_response::*,
 };
 use std::fmt::Debug;
 
@@ -15,7 +15,7 @@ pub use self::new_pool_item_error::NewPoolItemError;
 pub trait PoolItem: Debug
 where
     Self: Sized,
-    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true> + Send + IdTargeted,
+    Self::Init: Send + IdTargeted + RequestWithResponse<Self, Response = AddResponse>,
     Self::Api: Debug + Send + IdTargeted,
 {
     /// This is a struct that defines the message that will initiate a new instance

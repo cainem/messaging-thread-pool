@@ -1,7 +1,7 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    pool_item::PoolItem, request_response::RequestMessage,
+    pool_item::PoolItem, request_response_2::RequestWithResponse,
     thread_request_response::ThreadRequestResponse,
 };
 
@@ -20,9 +20,9 @@ where
     P: PoolItem,
 {
     /// Creates a new SenderCouplet
-    pub fn new<const N: usize, T>(return_to: Sender<ThreadRequestResponse<P>>, request: T) -> Self
+    pub fn new<T>(return_to: Sender<ThreadRequestResponse<P>>, request: T) -> Self
     where
-        T: RequestMessage<N, P>,
+        T: RequestWithResponse<P>,
     {
         Self {
             return_to,

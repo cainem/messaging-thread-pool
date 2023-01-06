@@ -1,15 +1,20 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
+    request_response_2::{RequestResponse2, RequestWithResponse},
 };
 
-use super::{ThreadRequestResponse, THREAD_SHUTDOWN};
+use super::{ThreadRequestResponse, ThreadShutdownResponse, THREAD_SHUTDOWN};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadShutdownRequest(pub usize);
 
-impl RequestResponseMessage<THREAD_SHUTDOWN, true> for ThreadShutdownRequest {}
+impl<P> RequestWithResponse<P> for ThreadShutdownRequest
+where
+    P: PoolItem,
+{
+    type Response = ThreadShutdownResponse;
+}
 
 impl IdTargeted for ThreadShutdownRequest {
     fn id(&self) -> usize {
@@ -22,7 +27,9 @@ where
     P: PoolItem,
 {
     fn from(request: ThreadShutdownRequest) -> Self {
-        ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request))
+        ThreadRequestResponse::ThreadShutdown(
+            RequestResponse2::<P, ThreadShutdownRequest>::Request(request),
+        )
     }
 }
 

@@ -1,8 +1,4 @@
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestMessage, ResponseMessage},
-    ThreadPool,
-};
+use crate::{pool_item::PoolItem, request_response_2::RequestWithResponse, ThreadPool};
 
 use super::SenderAndReceiver;
 
@@ -11,13 +7,12 @@ impl<P> SenderAndReceiver<P> for ThreadPool<P>
 where
     P: PoolItem,
 {
-    fn send_and_receive<'a, const N: usize, T, U>(
+    fn send_and_receive<'a, T>(
         &'a self,
         requests: impl Iterator<Item = T> + 'a,
-    ) -> Box<dyn Iterator<Item = U> + 'a>
+    ) -> Box<dyn Iterator<Item = T::Response> + 'a>
     where
-        T: RequestMessage<N, P> + 'a,
-        U: ResponseMessage<N, P> + 'a,
+        T: RequestWithResponse<P> + 'a,
     {
         Box::new(self.send_and_receive(requests))
     }

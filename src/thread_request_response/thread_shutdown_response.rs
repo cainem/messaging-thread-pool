@@ -1,7 +1,4 @@
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
 
 use super::{ThreadRequestResponse, THREAD_SHUTDOWN};
 
@@ -10,8 +7,6 @@ pub struct ThreadShutdownResponse {
     thread_id: usize,
     children: Vec<ThreadShutdownResponse>,
 }
-
-impl RequestResponseMessage<THREAD_SHUTDOWN, false> for ThreadShutdownResponse {}
 
 impl ThreadShutdownResponse {
     pub fn new(id: usize, children: Vec<ThreadShutdownResponse>) -> Self {
@@ -39,7 +34,7 @@ where
     T: PoolItem,
 {
     fn from(request: ThreadShutdownResponse) -> Self {
-        ThreadRequestResponse::ThreadShutdown(RequestResponse::Response(request))
+        ThreadRequestResponse::ThreadShutdown(RequestResponse2::Response(request))
     }
 }
 
@@ -48,7 +43,7 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::ThreadShutdown(RequestResponse::Response(response)) = response else {
+        let ThreadRequestResponse::<P>::ThreadShutdown(RequestResponse2::Response(response)) = response else {
             panic!("unexpected")
         };
         response

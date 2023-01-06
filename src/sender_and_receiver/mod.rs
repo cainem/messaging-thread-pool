@@ -1,10 +1,7 @@
 mod sender_and_receiver_mock;
 mod thread_pool;
 
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestMessage, ResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response_2::RequestWithResponse};
 
 pub use sender_and_receiver_mock::SenderAndReceiverMock;
 
@@ -18,13 +15,12 @@ where
     /// This function sends a request to a worker thread and receives a response back
     ///
     /// The request is received as a vec and the responses are received back in a vec
-    fn send_and_receive<'a, const N: usize, T, U>(
+    fn send_and_receive<'a, T>(
         &'a self,
         requests: impl Iterator<Item = T> + 'a,
-    ) -> Box<dyn Iterator<Item = U> + 'a>
+    ) -> Box<dyn Iterator<Item = T::Response> + 'a>
     where
-        T: RequestMessage<N, P> + 'a,
-        U: ResponseMessage<N, P> + 'a;
+        T: RequestWithResponse<P> + 'a;
 }
 
 /// This trait is useful when multiple levels are thread pools are used and each thread pool

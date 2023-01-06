@@ -1,10 +1,6 @@
-use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestResponse2};
 
-use super::{ThreadRequestResponse, ADD_POOL_ITEM};
+use super::ThreadRequestResponse;
 
 /// This struct is returned in response to a request to add a pool item to the thread pool
 /// The success field indicates that the pool item was successfully constructed
@@ -37,20 +33,18 @@ impl AddResponse {
     }
 }
 
-impl RequestResponseMessage<ADD_POOL_ITEM, false> for AddResponse {}
-
 impl IdTargeted for AddResponse {
     fn id(&self) -> usize {
         self.id
     }
 }
 
-impl<T> From<AddResponse> for ThreadRequestResponse<T>
+impl<P> From<AddResponse> for ThreadRequestResponse<P>
 where
-    T: PoolItem,
+    P: PoolItem,
 {
-    fn from(request: AddResponse) -> Self {
-        ThreadRequestResponse::AddPoolItem(RequestResponse::Response(request))
+    fn from(response: AddResponse) -> Self {
+        ThreadRequestResponse::AddPoolItem(RequestResponse2::<P, P::Init>::Response(response))
     }
 }
 
@@ -59,7 +53,7 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::AddPoolItem(RequestResponse::Response::<ADD_POOL_ITEM, P::Init, AddResponse>(response)) = response else {
+        let ThreadRequestResponse::<P>::AddPoolItem(RequestResponse2::<P, P::Init>::Response(response)) = response else {
             panic!("unexpected")
         };
         response

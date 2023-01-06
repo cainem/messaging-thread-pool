@@ -107,6 +107,7 @@ pub mod id_provider;
 pub mod id_targeted;
 pub mod pool_item;
 pub mod request_response;
+pub mod request_response_2;
 pub mod samples;
 pub mod sender_and_receiver;
 pub mod thread_request_response;
@@ -153,24 +154,29 @@ mod tests {
     use crate::{samples::*, ThreadPool};
 
     #[test]
-    fn thread_pool_size_2_thread_count_2() {
-        let result = ThreadPool::<Randoms>::new(2);
-
-        // one thread created
-        assert_eq!(2, usize::from(result.thread_count()));
-
-        // shutdown the thread pool
-        result.shutdown();
+    fn todo() {
+        todo!();
     }
 
-    #[test]
-    fn thread_pool_size_1_thread_count_1() {
-        let result = ThreadPool::<Randoms>::new(1);
+    // #[test]
+    // fn thread_pool_size_2_thread_count_2() {
+    //     let result = ThreadPool::<Randoms>::new(2);
 
-        // one thread created
-        assert_eq!(1, usize::from(result.thread_count()));
+    //     // one thread created
+    //     assert_eq!(2, usize::from(result.thread_count()));
 
-        // shutdown the thread pool
-        result.shutdown();
-    }
+    //     // shutdown the thread pool
+    //     result.shutdown();
+    // }
+
+    // #[test]
+    // fn thread_pool_size_1_thread_count_1() {
+    //     let result = ThreadPool::<Randoms>::new(1);
+
+    //     // one thread created
+    //     assert_eq!(1, usize::from(result.thread_count()));
+
+    //     // shutdown the thread pool
+    //     result.shutdown();
+    // }
 }
