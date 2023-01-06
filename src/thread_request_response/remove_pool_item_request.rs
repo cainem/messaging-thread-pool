@@ -4,7 +4,7 @@ use crate::{
     request_response_2::{RequestResponse2, RequestWithResponse},
 };
 
-use super::{RemovePoolItemResponse, ThreadRequestResponse, REMOVE_POOL_ITEM};
+use super::{RemovePoolItemResponse, ThreadRequestResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemRequest(pub usize);

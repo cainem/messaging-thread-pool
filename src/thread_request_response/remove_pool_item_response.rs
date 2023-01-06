@@ -1,6 +1,6 @@
 use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
 
-use super::{ThreadRequestResponse, REMOVE_POOL_ITEM};
+use super::ThreadRequestResponse;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemResponse {

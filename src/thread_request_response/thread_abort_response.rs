@@ -1,6 +1,6 @@
 use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
 
-use super::{ThreadRequestResponse, THREAD_ABORT};
+use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadAbortResponse(pub usize);

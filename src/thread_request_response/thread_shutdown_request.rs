@@ -4,7 +4,7 @@ use crate::{
     request_response_2::{RequestResponse2, RequestWithResponse},
 };
 
-use super::{ThreadRequestResponse, ThreadShutdownResponse, THREAD_SHUTDOWN};
+use super::{ThreadRequestResponse, ThreadShutdownResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadShutdownRequest(pub usize);

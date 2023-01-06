@@ -4,7 +4,7 @@ use crate::{
     request_response_2::{RequestResponse2, RequestWithResponse},
 };
 
-use super::{ThreadAbortResponse, ThreadRequestResponse, THREAD_ABORT};
+use super::{ThreadAbortResponse, ThreadRequestResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadAbortRequest(pub usize);

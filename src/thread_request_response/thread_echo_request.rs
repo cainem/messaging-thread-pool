@@ -4,7 +4,7 @@ use crate::{
     request_response_2::{RequestResponse2, RequestWithResponse},
 };
 
-use super::{ThreadEchoResponse, ThreadRequestResponse, THREAD_ECHO};
+use super::{ThreadEchoResponse, ThreadRequestResponse};
 
 /// For debug purposes only send a message to a thread within the thread pool
 #[derive(Debug, Clone, PartialEq, Eq)]

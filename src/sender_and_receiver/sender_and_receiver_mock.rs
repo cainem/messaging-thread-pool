@@ -113,8 +113,8 @@ where
             .lock()
             .unwrap()
             .drain(..actual_count)
-            .map(|r| <T1::Response as Into<ThreadRequestResponse<P>>>::into(r))
-            .map(|r| <T::Response as From<ThreadRequestResponse<P>>>::from(r))
+            .map(<T1::Response as Into<ThreadRequestResponse<P>>>::into)
+            .map(<T::Response as From<ThreadRequestResponse<P>>>::from)
             .collect();
 
         Box::new(results.into_iter())

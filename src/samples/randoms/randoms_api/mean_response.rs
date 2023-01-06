@@ -1,10 +1,8 @@
 use crate::{
-    request_response::{RequestResponse, RequestResponseMessage},
+    request_response_2::RequestResponse2,
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
 };
-
-use super::MEAN;
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,11 +17,9 @@ impl MeanResponse {
     }
 }
 
-impl RequestResponseMessage<MEAN, false> for MeanResponse {}
-
 impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: MeanResponse) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse2::Response(
             response,
         )))
     }
@@ -31,7 +27,7 @@ impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
 
 impl From<ThreadRequestResponse<Randoms>> for MeanResponse {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(result))) = response else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse2::Response(result))) = response else {
             panic!("not expected")
         };
         result

@@ -1,6 +1,6 @@
 use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
 
-use super::{ThreadRequestResponse, THREAD_ECHO};
+use super::ThreadRequestResponse;
 
 /// For debug purposes only; a message for responding to an echo request targeting a specific thread
 #[derive(Debug, Clone, PartialEq, Eq)]

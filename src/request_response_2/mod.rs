@@ -22,3 +22,37 @@ where
     Request(T),
     Response(T::Response),
 }
+
+impl<P, T> RequestResponse2<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    pub fn request(&self) -> &T {
+        let RequestResponse2::Request(request) = self else {
+            panic!("not expected");
+        };
+        request
+    }
+}
+
+impl<P, T> IdTargeted for RequestResponse2<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    fn id(&self) -> usize {
+        let RequestResponse2::Request(request) = self else {
+            panic!("not expected");
+        };
+        request.id()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn todo() {
+        todo!();
+    }
+}

@@ -1,16 +1,14 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response::{RequestResponse, RequestResponseMessage},
+    request_response_2::{RequestResponse2, RequestWithResponse},
     samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };
 
-use super::{RandomsApi, SUM};
+use super::{RandomsApi, SumResponse};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SumRequest(pub usize);
-
-impl RequestResponseMessage<SUM, true> for SumRequest {}
 
 impl IdTargeted for SumRequest {
     fn id(&self) -> usize {
@@ -18,15 +16,19 @@ impl IdTargeted for SumRequest {
     }
 }
 
+impl RequestWithResponse<Randoms> for SumRequest {
+    type Response = SumResponse;
+}
+
 impl From<SumRequest> for ThreadRequestResponse<Randoms> {
     fn from(request: SumRequest) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(request)))
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse2::Request(request)))
     }
 }
 
 impl From<ThreadRequestResponse<Randoms>> for SumRequest {
     fn from(request: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(result))) = request else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse2::Request(result))) = request else {
             panic!("not expected")
         };
         result

@@ -18,15 +18,6 @@ pub use self::{
     thread_shutdown_response::ThreadShutdownResponse,
 };
 
-/// define 2 constant to classify messages
-/// This allows us to leverage the type system avoid some runtime errors (and replace them with compile time errors)
-pub const THREAD_SHUTDOWN: usize = 0xff_00;
-pub const THREAD_ABORT: usize = 0xff_01;
-pub const THREAD_ECHO: usize = 0xff_02;
-pub const ADD_POOL_ITEM: usize = 0xff_03;
-pub const REMOVE_POOL_ITEM: usize = 0xff_04;
-pub const ID_ONLY: usize = 0xff_05;
-
 /// This enum defines all of the messages that can be used to communicate with the thread pool.
 /// Each element of the enum takes a [`RequestResponse`] struct which can contain either a request
 /// or a response
