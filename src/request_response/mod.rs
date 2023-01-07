@@ -1,6 +1,6 @@
-use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
-};
+mod id_targeted;
+
+use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse};
 use std::fmt::Debug;
 
 pub trait RequestWithResponse<P>: Debug + Into<ThreadRequestResponse<P>>
@@ -34,23 +34,29 @@ where
     }
 }
 
-impl<P, T> IdTargeted for RequestResponse<P, T>
-where
-    T: RequestWithResponse<P> + IdTargeted,
-    P: PoolItem,
-{
-    fn id(&self) -> usize {
-        let RequestResponse::Request(request) = self else {
-            panic!("not expected");
-        };
-        request.id()
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::{
+        samples::{Randoms, RandomsAddRequest},
+        thread_request_response::AddResponse,
+    };
+
+    use super::RequestResponse;
+
     #[test]
-    fn todo() {
-        todo!();
+    #[should_panic(expected = "not expected")]
+    fn request_response_contains_response_request_panics() {
+        let target = RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(
+            0, true, None,
+        ));
+
+        target.request();
+    }
+
+    #[test]
+    fn request_response_contains_request_request_returns_request() {
+        let target = RequestResponse::Request(RandomsAddRequest(0));
+
+        assert_eq!(&RandomsAddRequest(0), target.request());
     }
 }
