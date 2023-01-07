@@ -68,35 +68,30 @@ mod tests {
     use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
-    fn todo() {
-        todo!();
+    fn new_called_with_thread_pool_size_2_two_threads_created() {
+        let result = ThreadPool::<Randoms>::new(2);
+
+        // one thread created
+        assert_eq!(2, result.thread_endpoints.read().unwrap().len());
+
+        // thread had id 1
+        assert_eq!(
+            result.shutdown(),
+            &[
+                ThreadShutdownResponse::new(0, vec![]),
+                ThreadShutdownResponse::new(1, vec![])
+            ]
+        );
     }
 
-    // #[test]
-    // fn new_called_with_thread_pool_size_2_two_threads_created() {
-    //     let result = ThreadPool::<Randoms>::new(2);
+    #[test]
+    fn new_called_with_thread_pool_size_1_one_thread_created() {
+        let result = ThreadPool::<Randoms>::new(1);
 
-    //     // one thread created
-    //     assert_eq!(2, result.thread_endpoints.read().unwrap().len());
+        // one thread created
+        assert_eq!(1, result.thread_endpoints.read().unwrap().len());
 
-    //     // thread had id 1
-    //     assert_eq!(
-    //         result.shutdown(),
-    //         &[
-    //             ThreadShutdownResponse::new(0, vec![]),
-    //             ThreadShutdownResponse::new(1, vec![])
-    //         ]
-    //     );
-    // }
-
-    // #[test]
-    // fn new_called_with_thread_pool_size_1_one_thread_created() {
-    //     let result = ThreadPool::<Randoms>::new(1);
-
-    //     // one thread created
-    //     assert_eq!(1, result.thread_endpoints.read().unwrap().len());
-
-    //     // thread had id 0
-    //     assert_eq!(result.shutdown(), &[ThreadShutdownResponse::new(0, vec![])]);
-    // }
+        // thread had id 0
+        assert_eq!(result.shutdown(), &[ThreadShutdownResponse::new(0, vec![])]);
+    }
 }

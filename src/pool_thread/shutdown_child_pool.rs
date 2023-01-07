@@ -29,68 +29,63 @@ mod tests {
     };
 
     #[test]
-    fn todo() {
-        todo!();
+    fn thread_pool_contains_single_element_2() {
+        let (_send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
+
+        // request/response channel
+        let (_send_back, _receive_back_from) = bounded::<ThreadRequestResponse<Randoms>>(0);
+
+        let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
+
+        let sample_pool_item = Randoms {
+            id: 2,
+            numbers: vec![1, 2],
+        };
+
+        target.pool_item_hash_map.insert(2, sample_pool_item);
+
+        let result = target.shutdown_child_pool();
+
+        assert!(target.pool_item_hash_map.is_empty());
+        assert_eq!(1, result.len());
+        assert_eq!(ThreadShutdownResponse::new(2, vec![]), result[0]);
     }
 
-    // #[test]
-    // fn thread_pool_contains_single_element_2() {
-    //     let (_send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
+    #[test]
+    fn thread_pool_contains_single_element_1() {
+        let (_send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
 
-    //     // request/response channel
-    //     let (_send_back, _receive_back_from) = bounded::<ThreadRequestResponse<Randoms>>(0);
+        // request/response channel
+        let (_send_back, _receive_back_from) = bounded::<ThreadRequestResponse<Randoms>>(0);
 
-    //     let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
+        let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
 
-    //     let sample_pool_item = Randoms {
-    //         id: 2,
-    //         numbers: vec![1, 2],
-    //     };
+        let sample_pool_item = Randoms {
+            id: 1,
+            numbers: vec![100, 200],
+        };
 
-    //     target.pool_item_hash_map.insert(2, sample_pool_item);
+        target.pool_item_hash_map.insert(1, sample_pool_item);
 
-    //     let result = target.shutdown_child_pool();
+        let result = target.shutdown_child_pool();
 
-    //     assert!(target.pool_item_hash_map.is_empty());
-    //     assert_eq!(1, result.len());
-    //     assert_eq!(ThreadShutdownResponse::new(2, vec![]), result[0]);
-    // }
+        assert!(target.pool_item_hash_map.is_empty());
+        assert_eq!(1, result.len());
+        assert_eq!(ThreadShutdownResponse::new(1, vec![]), result[0]);
+    }
 
-    // #[test]
-    // fn thread_pool_contains_single_element_1() {
-    //     let (_send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
+    #[test]
+    fn thread_pool_contains_no_elements_shutdown_returns_empty_vec() {
+        let (_send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
 
-    //     // request/response channel
-    //     let (_send_back, _receive_back_from) = bounded::<ThreadRequestResponse<Randoms>>(0);
+        // request/response channel
+        let (_send_back, _receive_back_from) = bounded::<ThreadRequestResponse<Randoms>>(0);
 
-    //     let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
+        let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
 
-    //     let sample_pool_item = Randoms {
-    //         id: 1,
-    //         numbers: vec![100, 200],
-    //     };
+        let result = target.shutdown_child_pool();
 
-    //     target.pool_item_hash_map.insert(1, sample_pool_item);
-
-    //     let result = target.shutdown_child_pool();
-
-    //     assert!(target.pool_item_hash_map.is_empty());
-    //     assert_eq!(1, result.len());
-    //     assert_eq!(ThreadShutdownResponse::new(1, vec![]), result[0]);
-    // }
-
-    // #[test]
-    // fn thread_pool_contains_no_elements_shutdown_returns_empty_vec() {
-    //     let (_send_to_thread, receive_from_caller) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     // request/response channel
-    //     let (_send_back, _receive_back_from) = bounded::<ThreadRequestResponse<Randoms>>(0);
-
-    //     let mut target = PoolThread::<Randoms>::new(1, receive_from_caller);
-
-    //     let result = target.shutdown_child_pool();
-
-    //     assert!(target.pool_item_hash_map.is_empty());
-    //     assert!(result.is_empty());
-    // }
+        assert!(target.pool_item_hash_map.is_empty());
+        assert!(result.is_empty());
+    }
 }

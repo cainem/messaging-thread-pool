@@ -154,29 +154,24 @@ mod tests {
     use crate::{samples::*, ThreadPool};
 
     #[test]
-    fn todo() {
-        todo!();
+    fn thread_pool_size_2_thread_count_2() {
+        let result = ThreadPool::<Randoms>::new(2);
+
+        // one thread created
+        assert_eq!(2, usize::from(result.thread_count()));
+
+        // shutdown the thread pool
+        result.shutdown();
     }
 
-    // #[test]
-    // fn thread_pool_size_2_thread_count_2() {
-    //     let result = ThreadPool::<Randoms>::new(2);
+    #[test]
+    fn thread_pool_size_1_thread_count_1() {
+        let result = ThreadPool::<Randoms>::new(1);
 
-    //     // one thread created
-    //     assert_eq!(2, usize::from(result.thread_count()));
+        // one thread created
+        assert_eq!(1, usize::from(result.thread_count()));
 
-    //     // shutdown the thread pool
-    //     result.shutdown();
-    // }
-
-    // #[test]
-    // fn thread_pool_size_1_thread_count_1() {
-    //     let result = ThreadPool::<Randoms>::new(1);
-
-    //     // one thread created
-    //     assert_eq!(1, usize::from(result.thread_count()));
-
-    //     // shutdown the thread pool
-    //     result.shutdown();
-    // }
+        // shutdown the thread pool
+        result.shutdown();
+    }
 }

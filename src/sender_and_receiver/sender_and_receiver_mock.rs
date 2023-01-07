@@ -124,142 +124,130 @@ where
 #[cfg(test)]
 mod tests {
 
+    use crate::{
+        samples::{MeanRequest, MeanResponse, Randoms},
+        sender_and_receiver::SenderAndReceiver,
+    };
+
+    use super::SenderAndReceiverMock;
+
     #[test]
-    fn todo() {
-        todo!();
+    fn two_responses_returned_over_multiple_requests() {
+        let response_0 = MeanResponse { id: 1, mean: 22 };
+        let response_1 = MeanResponse { id: 2, mean: 44 };
+
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![
+            response_0.clone(),
+            response_1.clone(),
+        ]);
+
+        let results_0: Vec<MeanResponse> = mock
+            .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .collect();
+        let results_1: Vec<MeanResponse> = mock
+            .send_and_receive(vec![MeanRequest(2)].into_iter())
+            .collect();
+
+        assert_eq!(1, results_0.len());
+        assert_eq!(response_0, results_0[0]);
+        assert_eq!(1, results_1.len());
+        assert_eq!(response_1, results_1[0]);
     }
 
-    // use crate::{
-    //     samples::{MeanRequest, MeanResponse, Randoms},
-    //     sender_and_receiver::SenderAndReceiver,
-    // };
+    #[test]
+    #[should_panic]
+    fn one_expected_request_differs_from_one_actual_request() {
+        let request_0 = MeanRequest(1);
+        let response_0 = MeanResponse { id: 1, mean: 22 };
 
-    // use super::SenderAndReceiverMock;
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
+            vec![MeanRequest(2)],
+            vec![response_0.clone()],
+        );
 
-    // #[test]
-    // fn two_responses_returned_over_multiple_requests() {
-    //     let response_0 = MeanResponse { id: 1, mean: 22 };
-    //     let response_1 = MeanResponse { id: 2, mean: 44 };
+        let _results: Vec<MeanResponse> =
+            mock.send_and_receive(vec![request_0].into_iter()).collect();
+    }
 
-    //     let mock = SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![
-    //         response_0.clone(),
-    //         response_1.clone(),
-    //     ]);
+    #[test]
+    #[should_panic(expected = "count of expected [1] less than actual requests [2]")]
+    fn one_expected_request_actual_requests_2_panics() {
+        let request_0 = MeanRequest(1);
+        let response_0 = MeanResponse { id: 1, mean: 22 };
 
-    //     let results_0: Vec<MeanResponse> = mock
-    //         .send_and_receive(vec![MeanRequest(1)].into_iter())
-    //         .collect();
-    //     let results_1: Vec<MeanResponse> = mock
-    //         .send_and_receive(vec![MeanRequest(2)].into_iter())
-    //         .collect();
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
+            vec![request_0.clone()],
+            vec![response_0.clone()],
+        );
 
-    //     assert_eq!(1, results_0.len());
-    //     assert_eq!(response_0, results_0[0]);
-    //     assert_eq!(1, results_1.len());
-    //     assert_eq!(response_1, results_1[0]);
-    // }
+        let _results: Vec<MeanResponse> = mock
+            .send_and_receive(vec![MeanRequest(1), MeanRequest(2)].into_iter())
+            .collect();
+    }
 
-    // #[test]
-    // #[should_panic]
-    // fn one_expected_request_differs_from_one_actual_request() {
-    //     let request_0 = MeanRequest(1);
-    //     let response_0 = MeanResponse { id: 1, mean: 22 };
+    #[test]
+    fn empty_requests_and_responses_does_not_panic() {
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
+            vec![],
+            vec![],
+        );
 
-    //     let mock =
-    //         SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-    //             vec![MeanRequest(2)],
-    //             vec![response_0.clone()],
-    //         );
+        let _results: Vec<MeanResponse> = mock
+            .send_and_receive(Vec::<MeanRequest>::default().into_iter())
+            .collect();
+    }
 
-    //     let _results: Vec<MeanResponse> =
-    //         mock.send_and_receive(vec![request_0].into_iter()).collect();
-    // }
+    #[test]
+    #[should_panic(expected = "number of requests do not match number of responses")]
+    fn unmatched_requests_and_responses() {
+        let response_0 = MeanResponse { id: 1, mean: 22 };
 
-    // #[test]
-    // #[should_panic(expected = "count of expected [1] less than actual requests [2]")]
-    // fn one_expected_request_actual_requests_2_panics() {
-    //     let request_0 = MeanRequest(1);
-    //     let response_0 = MeanResponse { id: 1, mean: 22 };
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
+            vec![],
+            vec![response_0.clone()],
+        );
 
-    //     let mock =
-    //         SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-    //             vec![request_0.clone()],
-    //             vec![response_0.clone()],
-    //         );
+        let _results: Vec<MeanResponse> = mock
+            .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .collect();
+    }
 
-    //     let _results: Vec<MeanResponse> = mock
-    //         .send_and_receive(vec![MeanRequest(1), MeanRequest(2)].into_iter())
-    //         .collect();
-    // }
+    #[test]
+    fn one_response_only_returns_expected_response() {
+        let response_0 = MeanResponse { id: 1, mean: 22 };
 
-    // #[test]
-    // fn empty_requests_and_responses_does_not_panic() {
-    //     let mock =
-    //         SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-    //             vec![],
-    //             vec![],
-    //         );
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![response_0.clone()]);
 
-    //     let _results: Vec<MeanResponse> = mock
-    //         .send_and_receive(Vec::<MeanRequest>::default().into_iter())
-    //         .collect();
-    // }
+        let results: Vec<MeanResponse> = mock
+            .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .collect();
 
-    // #[test]
-    // #[should_panic(expected = "number of requests do not match number of responses")]
-    // fn unmatched_requests_and_responses() {
-    //     let response_0 = MeanResponse { id: 1, mean: 22 };
+        assert_eq!(1, results.len());
+        assert_eq!(response_0, results[0]);
+    }
 
-    //     let mock =
-    //         SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new_with_expected_requests(
-    //             vec![],
-    //             vec![response_0.clone()],
-    //         );
+    #[test]
+    fn one_response_empty_requests_returns_empty_iterator() {
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![MeanResponse {
+            id: 1,
+            mean: 0,
+        }]);
 
-    //     let _results: Vec<MeanResponse> = mock
-    //         .send_and_receive(vec![MeanRequest(1)].into_iter())
-    //         .collect();
-    // }
+        let results: Vec<MeanResponse> = mock
+            .send_and_receive(Vec::<MeanRequest>::default().into_iter())
+            .collect();
 
-    // #[test]
-    // fn one_response_only_returns_expected_response() {
-    //     let response_0 = MeanResponse { id: 1, mean: 22 };
+        assert_eq!(0, results.len());
+    }
 
-    //     let mock = SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![
-    //         response_0.clone(),
-    //     ]);
+    #[test]
+    fn zero_responses_returns_empty_iterator() {
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![]);
 
-    //     let results: Vec<MeanResponse> = mock
-    //         .send_and_receive(vec![MeanRequest(1)].into_iter())
-    //         .collect();
+        let results: Vec<MeanResponse> = mock
+            .send_and_receive(Vec::<MeanRequest>::default().into_iter())
+            .collect();
 
-    //     assert_eq!(1, results.len());
-    //     assert_eq!(response_0, results[0]);
-    // }
-
-    // #[test]
-    // fn one_response_empty_requests_returns_empty_iterator() {
-    //     let mock =
-    //         SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![MeanResponse {
-    //             id: 1,
-    //             mean: 0,
-    //         }]);
-
-    //     let results: Vec<MeanResponse> = mock
-    //         .send_and_receive(Vec::<MeanRequest>::default().into_iter())
-    //         .collect();
-
-    //     assert_eq!(0, results.len());
-    // }
-
-    // #[test]
-    // fn zero_responses_returns_empty_iterator() {
-    //     let mock = SenderAndReceiverMock::<Randoms, MeanRequest, MeanResponse>::new(vec![]);
-
-    //     let results: Vec<MeanResponse> = mock
-    //         .send_and_receive(Vec::<MeanRequest>::default().into_iter())
-    //         .collect();
-
-    //     assert_eq!(0, results.len());
-    // }
+        assert_eq!(0, results.len());
+    }
 }

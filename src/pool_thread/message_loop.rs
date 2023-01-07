@@ -152,437 +152,432 @@ mod tests {
     };
 
     #[test]
-    fn todo() {
-        todo!();
+    fn send_remove_element_with_id_12_expected_element_removed_from_hash_set() {
+        let id = 12;
+        let init_request = RandomsAddRequest(id);
+
+        let remove_pool_item_request = RemovePoolItemRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        // send the init request
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+
+        // send the remove request
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                remove_pool_item_request,
+            ))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadShutdownRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // there should be 2 response message on the response channel; throw the first one from the init away
+        response_receive.recv().unwrap();
+
+        // there should be one get state response message on the response channel
+        let remove_pool_item_response: RemovePoolItemResponse =
+            response_receive.recv().unwrap().into();
+
+        assert_eq!(id, remove_pool_item_response.id());
+        assert!(target.pool_item_hash_map.is_empty());
     }
 
-    // #[test]
-    // fn send_remove_element_with_id_12_expected_element_removed_from_hash_set() {
-    //     let id = 12;
-    //     let init_request = RandomsAddRequest(id);
-
-    //     let remove_pool_item_request = RemovePoolItemRequest(id);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     // send the init request
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request))
-    //         .unwrap();
-
-    //     // send the remove request
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             remove_pool_item_request,
-    //         ))
-    //         .unwrap();
-
-    //     // send the shutdown message so that the message loop exits
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadShutdownRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // there should be 2 response message on the response channel; throw the first one from the init away
-    //     response_receive.recv().unwrap();
-
-    //     // there should be one get state response message on the response channel
-    //     let remove_pool_item_response: RemovePoolItemResponse =
-    //         response_receive.recv().unwrap().into();
-
-    //     assert_eq!(id, remove_pool_item_response.id());
-    //     assert!(target.pool_item_hash_map.is_empty());
-    // }
-
-    // #[test]
-    // fn send_remove_element_with_id_2_expected_element_removed_from_hash_set() {
-    //     let id = 2;
-    //     let init_request = RandomsAddRequest(id);
-
-    //     let remove_pool_item_request = RemovePoolItemRequest(id);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     // send the init request
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request))
-    //         .unwrap();
-
-    //     // send the remove request
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             remove_pool_item_request,
-    //         ))
-    //         .unwrap();
-
-    //     // send the shutdown message so that the message loop exits
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadShutdownRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // there should be 2 response message on the response channel; throw the first one from the init away
-    //     response_receive.recv().unwrap();
-
-    //     // there should be one get state response message on the response channel
-    //     let remove_pool_item_response: RemovePoolItemResponse =
-    //         response_receive.recv().unwrap().into();
-
-    //     assert_eq!(id, remove_pool_item_response.id());
-
-    //     assert!(target.pool_item_hash_map.is_empty());
-    // }
-
-    // #[test]
-    // fn init_id_1_2_thread_shutdown_clears_the_elements_returns_expected_shutdown_threads() {
-    //     let init_request_0 = RandomsAddRequest(1);
-    //     let init_request_1 = RandomsAddRequest(2);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(15, request_receive);
-
-    //     // send the init requests
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request_0))
-    //         .unwrap();
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request_1))
-    //         .unwrap();
-
-    //     // send the shutdown message so that the message loop exits
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadShutdownRequest(15),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // there should be 3 response message on the response channel; throw the first two from the init away
-    //     response_receive.recv().unwrap();
-    //     response_receive.recv().unwrap();
-
-    //     let thread_shutdown_payload: ThreadShutdownResponse =
-    //         response_receive.recv().unwrap().into();
-
-    //     // there should be one thread shutdown
-    //     // Randoms pool item "pretends" that it has shutdown a thread pool and returns its id
-    //     // as there are 2 element is is non-deterministic which one will get called
-    //     assert!(
-    //         thread_shutdown_payload
-    //             == ThreadShutdownResponse::new(15, vec![ThreadShutdownResponse::new(1, vec![])])
-    //             || thread_shutdown_payload
-    //                 == ThreadShutdownResponse::new(
-    //                     15,
-    //                     vec![ThreadShutdownResponse::new(2, vec![])]
-    //                 )
-    //     );
-    //     assert!(target.pool_item_hash_map.is_empty());
-    // }
-
-    // #[test]
-    // fn init_id_101_102_thread_shutdown_clears_the_elements_returns_expected_shutdown_threads() {
-    //     let init_request_0 = RandomsAddRequest(101);
-    //     let init_request_1 = RandomsAddRequest(102);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(5, request_receive);
-
-    //     // send the init requests
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request_0))
-    //         .unwrap();
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request_1))
-    //         .unwrap();
-
-    //     // send the shutdown message so that the message loop exits
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadShutdownRequest(5),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // there should be 3 response message on the response channel; throw the first two from the init away
-    //     response_receive.recv().unwrap();
-    //     response_receive.recv().unwrap();
-
-    //     // there should be one thread shutdown
-    //     let thread_shutdown_response: ThreadShutdownResponse =
-    //         response_receive.recv().unwrap().into();
-    //     // Randoms element "pretends" that it has shutdown a thread pool with an id equal to its id
-    //     // as there are 2 pool items it is not deterministic which one will have shutdown called
-    //     assert!(
-    //         thread_shutdown_response
-    //             == ThreadShutdownResponse::new(5, vec![ThreadShutdownResponse::new(101, vec![])])
-    //             || thread_shutdown_response
-    //                 == ThreadShutdownResponse::new(
-    //                     5,
-    //                     vec![ThreadShutdownResponse::new(102, vec![])]
-    //                 )
-    //     );
-    //     assert!(target.pool_item_hash_map.is_empty());
-    // }
-
-    // #[test]
-    // fn init_id_101_send_get_state_message_to_element_retrieved_expected_response() {
-    //     let id = 101;
-    //     let init_request = RandomsAddRequest(id);
-    //     let get_state_request = SumRequest(id);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     // send the init request
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request))
-    //         .unwrap();
-
-    //     // send the get state request
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), get_state_request))
-    //         .unwrap();
-
-    //     // send the shutdown message so that the message loop exits
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadShutdownRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // there should be 2 response message on the response channel; throw the first one from the init away
-    //     response_receive.recv().unwrap();
-
-    //     let response: SumResponse = response_receive.recv().unwrap().into();
-    //     // there should be one get state response message on the response channel
-    //     assert_eq!(id, response.id);
-    //     assert!(response.sum > 0);
-    // }
-
-    // #[test]
-    // fn send_init_id_2_expected_element_added_to_hash_set() {
-    //     let id = 2;
-    //     let init_request = RandomsAddRequest(id);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(3, request_receive);
-
-    //     // send the init request
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request))
-    //         .unwrap();
-    //     // send the shutdown message so that the message loop exits
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadAbortRequest(3),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     let response: AddResponse = response_receive.recv().unwrap().into();
-
-    //     assert_eq!(2, response.id());
-    //     assert_eq!(1, target.pool_item_hash_map.len());
-    //     assert_eq!(2, target.pool_item_hash_map.get(&id).unwrap().id);
-    // }
-
-    // #[test]
-    // fn send_init_id_1_expected_element_added_to_hash_set() {
-    //     let id = 1;
-    //     let init_request = RandomsAddRequest(id);
-
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     // send the init request
-    //     request_send
-    //         .send(SenderCouplet::new(response_send.clone(), init_request))
-    //         .unwrap();
-    //     // send the abort message so that the message loop exits and keeps the state
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadAbortRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     let response: AddResponse = response_receive.recv().unwrap().into();
-
-    //     assert_eq!(1, response.id());
-    //     assert_eq!(1, target.pool_item_hash_map.len());
-    //     assert_eq!(1, target.pool_item_hash_map.get(&id).unwrap().id);
-    // }
-
-    // #[test]
-    // fn echo_message_responds_as_expected() {
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             // target id 2 will get processed by thread 1 as there is only one thread
-    //             ThreadEchoRequest::new(2, "ping".to_string()),
-    //         ))
-    //         .unwrap();
-    //     request_send
-    //         .send(SenderCouplet::new(
-    //             response_send.clone(),
-    //             ThreadShutdownRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     let thread_echo_response: ThreadEchoResponse = response_receive.recv().unwrap().into();
-
-    //     assert_eq!("ping".to_string(), thread_echo_response.message());
-    //     assert_eq!(2, thread_echo_response.thread_id());
-    //     assert_eq!(1, thread_echo_response.responding_thread_id());
-    // }
-
-    // #[test]
-    // fn id_2_receives_abort_message_exits_loop() {
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(2, request_receive);
-
-    //     request_send
-    //         .send(SenderCouplet::<Randoms>::new(
-    //             response_send,
-    //             ThreadAbortRequest(2),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // the test would never return if the loop didn't abort/shutdown
-
-    //     // there should be one thread shutdown response on the response channel
-    //     let thread_abort_response: ThreadAbortResponse = response_receive.recv().unwrap().into();
-
-    //     assert_eq!(2, thread_abort_response.thread_id());
-    // }
-
-    // #[test]
-    // fn id_1_receives_abort_message_exits_loop() {
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     request_send
-    //         .send(SenderCouplet::<Randoms>::new(
-    //             response_send,
-    //             ThreadAbortRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // the test would never return if the loop didn't abort/shutdown
-
-    //     // there should be one thread abort response on the response channel
-    //     let thread_abort_response: ThreadAbortResponse = response_receive.recv().unwrap().into();
-
-    //     assert_eq!(1, thread_abort_response.thread_id());
-    // }
-
-    // #[test]
-    // fn id_2_receives_shutdown_message_exits_loop() {
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(2, request_receive);
-
-    //     request_send
-    //         .send(SenderCouplet::<Randoms>::new(
-    //             response_send,
-    //             ThreadShutdownRequest(2),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // the test would never return if the loop didn't shutdown
-
-    //     // there should be one thread shutdown response on the response channel
-    //     let thread_shutdown_payload: ThreadShutdownResponse =
-    //         response_receive.recv().unwrap().into();
-
-    //     assert_eq!(2, thread_shutdown_payload.thread_id());
-    //     assert_eq!(
-    //         &Vec::<ThreadShutdownResponse>::default(),
-    //         thread_shutdown_payload.children()
-    //     )
-    // }
-
-    // #[test]
-    // fn id_1_receives_shutdown_message_exits_loop() {
-    //     let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
-    //     let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
-
-    //     let mut target = PoolThread::new(1, request_receive);
-
-    //     request_send
-    //         .send(SenderCouplet::<Randoms>::new(
-    //             response_send,
-    //             ThreadShutdownRequest(1),
-    //         ))
-    //         .unwrap();
-
-    //     target.message_loop();
-
-    //     // the test would never return if the loop didn't shutdown
-
-    //     // there should be one thread shutdown response on the response channel
-    //     let thread_shutdown_payload: ThreadShutdownResponse =
-    //         response_receive.recv().unwrap().into();
-
-    //     assert_eq!(1, thread_shutdown_payload.thread_id());
-    //     assert_eq!(
-    //         &Vec::<ThreadShutdownResponse>::default(),
-    //         thread_shutdown_payload.children()
-    //     )
-    // }
+    #[test]
+    fn send_remove_element_with_id_2_expected_element_removed_from_hash_set() {
+        let id = 2;
+        let init_request = RandomsAddRequest(id);
+
+        let remove_pool_item_request = RemovePoolItemRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        // send the init request
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+
+        // send the remove request
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                remove_pool_item_request,
+            ))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadShutdownRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // there should be 2 response message on the response channel; throw the first one from the init away
+        response_receive.recv().unwrap();
+
+        // there should be one get state response message on the response channel
+        let remove_pool_item_response: RemovePoolItemResponse =
+            response_receive.recv().unwrap().into();
+
+        assert_eq!(id, remove_pool_item_response.id());
+
+        assert!(target.pool_item_hash_map.is_empty());
+    }
+
+    #[test]
+    fn init_id_1_2_thread_shutdown_clears_the_elements_returns_expected_shutdown_threads() {
+        let init_request_0 = RandomsAddRequest(1);
+        let init_request_1 = RandomsAddRequest(2);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(15, request_receive);
+
+        // send the init requests
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request_0))
+            .unwrap();
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request_1))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadShutdownRequest(15),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // there should be 3 response message on the response channel; throw the first two from the init away
+        response_receive.recv().unwrap();
+        response_receive.recv().unwrap();
+
+        let thread_shutdown_payload: ThreadShutdownResponse =
+            response_receive.recv().unwrap().into();
+
+        // there should be one thread shutdown
+        // Randoms pool item "pretends" that it has shutdown a thread pool and returns its id
+        // as there are 2 element is is non-deterministic which one will get called
+        assert!(
+            thread_shutdown_payload
+                == ThreadShutdownResponse::new(15, vec![ThreadShutdownResponse::new(1, vec![])])
+                || thread_shutdown_payload
+                    == ThreadShutdownResponse::new(
+                        15,
+                        vec![ThreadShutdownResponse::new(2, vec![])]
+                    )
+        );
+        assert!(target.pool_item_hash_map.is_empty());
+    }
+
+    #[test]
+    fn init_id_101_102_thread_shutdown_clears_the_elements_returns_expected_shutdown_threads() {
+        let init_request_0 = RandomsAddRequest(101);
+        let init_request_1 = RandomsAddRequest(102);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(5, request_receive);
+
+        // send the init requests
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request_0))
+            .unwrap();
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request_1))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadShutdownRequest(5),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // there should be 3 response message on the response channel; throw the first two from the init away
+        response_receive.recv().unwrap();
+        response_receive.recv().unwrap();
+
+        // there should be one thread shutdown
+        let thread_shutdown_response: ThreadShutdownResponse =
+            response_receive.recv().unwrap().into();
+        // Randoms element "pretends" that it has shutdown a thread pool with an id equal to its id
+        // as there are 2 pool items it is not deterministic which one will have shutdown called
+        assert!(
+            thread_shutdown_response
+                == ThreadShutdownResponse::new(5, vec![ThreadShutdownResponse::new(101, vec![])])
+                || thread_shutdown_response
+                    == ThreadShutdownResponse::new(
+                        5,
+                        vec![ThreadShutdownResponse::new(102, vec![])]
+                    )
+        );
+        assert!(target.pool_item_hash_map.is_empty());
+    }
+
+    #[test]
+    fn init_id_101_send_get_state_message_to_element_retrieved_expected_response() {
+        let id = 101;
+        let init_request = RandomsAddRequest(id);
+        let get_state_request = SumRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        // send the init request
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+
+        // send the get state request
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), get_state_request))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadShutdownRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // there should be 2 response message on the response channel; throw the first one from the init away
+        response_receive.recv().unwrap();
+
+        let response: SumResponse = response_receive.recv().unwrap().into();
+        // there should be one get state response message on the response channel
+        assert_eq!(id, response.id);
+        assert!(response.sum > 0);
+    }
+
+    #[test]
+    fn send_init_id_2_expected_element_added_to_hash_set() {
+        let id = 2;
+        let init_request = RandomsAddRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(3, request_receive);
+
+        // send the init request
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadAbortRequest(3),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        let response: AddResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!(2, response.id());
+        assert_eq!(1, target.pool_item_hash_map.len());
+        assert_eq!(2, target.pool_item_hash_map.get(&id).unwrap().id);
+    }
+
+    #[test]
+    fn send_init_id_1_expected_element_added_to_hash_set() {
+        let id = 1;
+        let init_request = RandomsAddRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        // send the init request
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+        // send the abort message so that the message loop exits and keeps the state
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadAbortRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        let response: AddResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!(1, response.id());
+        assert_eq!(1, target.pool_item_hash_map.len());
+        assert_eq!(1, target.pool_item_hash_map.get(&id).unwrap().id);
+    }
+
+    #[test]
+    fn echo_message_responds_as_expected() {
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                // target id 2 will get processed by thread 1 as there is only one thread
+                ThreadEchoRequest::new(2, "ping".to_string()),
+            ))
+            .unwrap();
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                ThreadShutdownRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        let thread_echo_response: ThreadEchoResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!("ping".to_string(), thread_echo_response.message());
+        assert_eq!(2, thread_echo_response.thread_id());
+        assert_eq!(1, thread_echo_response.responding_thread_id());
+    }
+
+    #[test]
+    fn id_2_receives_abort_message_exits_loop() {
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(2, request_receive);
+
+        request_send
+            .send(SenderCouplet::<Randoms>::new(
+                response_send,
+                ThreadAbortRequest(2),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // the test would never return if the loop didn't abort/shutdown
+
+        // there should be one thread shutdown response on the response channel
+        let thread_abort_response: ThreadAbortResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!(2, thread_abort_response.thread_id());
+    }
+
+    #[test]
+    fn id_1_receives_abort_message_exits_loop() {
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        request_send
+            .send(SenderCouplet::<Randoms>::new(
+                response_send,
+                ThreadAbortRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // the test would never return if the loop didn't abort/shutdown
+
+        // there should be one thread abort response on the response channel
+        let thread_abort_response: ThreadAbortResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!(1, thread_abort_response.thread_id());
+    }
+
+    #[test]
+    fn id_2_receives_shutdown_message_exits_loop() {
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(2, request_receive);
+
+        request_send
+            .send(SenderCouplet::<Randoms>::new(
+                response_send,
+                ThreadShutdownRequest(2),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // the test would never return if the loop didn't shutdown
+
+        // there should be one thread shutdown response on the response channel
+        let thread_shutdown_payload: ThreadShutdownResponse =
+            response_receive.recv().unwrap().into();
+
+        assert_eq!(2, thread_shutdown_payload.thread_id());
+        assert_eq!(
+            &Vec::<ThreadShutdownResponse>::default(),
+            thread_shutdown_payload.children()
+        )
+    }
+
+    #[test]
+    fn id_1_receives_shutdown_message_exits_loop() {
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        request_send
+            .send(SenderCouplet::<Randoms>::new(
+                response_send,
+                ThreadShutdownRequest(1),
+            ))
+            .unwrap();
+
+        target.message_loop();
+
+        // the test would never return if the loop didn't shutdown
+
+        // there should be one thread shutdown response on the response channel
+        let thread_shutdown_payload: ThreadShutdownResponse =
+            response_receive.recv().unwrap().into();
+
+        assert_eq!(1, thread_shutdown_payload.thread_id());
+        assert_eq!(
+            &Vec::<ThreadShutdownResponse>::default(),
+            thread_shutdown_payload.children()
+        )
+    }
 }

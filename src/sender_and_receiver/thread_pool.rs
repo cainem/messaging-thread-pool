@@ -1,4 +1,7 @@
-use crate::{pool_item::PoolItem, request_response_2::RequestWithResponse, ThreadPool};
+use crate::{
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
+    ThreadPool,
+};
 
 use super::SenderAndReceiver;
 
@@ -12,7 +15,7 @@ where
         requests: impl Iterator<Item = T> + 'a,
     ) -> Box<dyn Iterator<Item = T::Response> + 'a>
     where
-        T: RequestWithResponse<P> + 'a,
+        T: RequestWithResponse<P> + IdTargeted + 'a,
     {
         Box::new(self.send_and_receive(requests))
     }

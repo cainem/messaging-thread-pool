@@ -2,7 +2,7 @@ use crossbeam_channel::Sender;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    pool_item::PoolItem, request_response_2::RequestWithResponse,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
@@ -24,7 +24,7 @@ where
         requests: impl Iterator<Item = T>,
     ) -> usize
     where
-        T: RequestWithResponse<P>,
+        T: RequestWithResponse<P> + IdTargeted,
     {
         let thread_count = self
             .thread_endpoints
@@ -55,66 +55,61 @@ mod tests {
     use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
-    fn todo() {
-        todo!();
+    fn pool_with_one_threads_send_two_echo_requests_both_processed_by_thread_0() {
+        let target = ThreadPool::<Randoms>::new(1);
+
+        let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
+
+        let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
+
+        target.send(send_back_to, requests);
+
+        let mut responses = Vec::<ThreadEchoResponse>::new();
+
+        for r in receive_from_thread {
+            responses.push(r.into());
+        }
+
+        assert!(responses.contains(&ThreadEchoResponse::new(0, "ping".to_string(), 0)));
+        assert!(responses.contains(&ThreadEchoResponse::new(1, "ping".to_string(), 0)));
     }
 
-    // #[test]
-    // fn pool_with_one_threads_send_two_echo_requests_both_processed_by_thread_0() {
-    //     let target = ThreadPool::<Randoms>::new(1);
+    #[test]
+    fn pool_with_two_threads_sends_echo_requests_echo_requests_processed_by_thread_0_and_thread_1()
+    {
+        let target = ThreadPool::<Randoms>::new(2);
 
-    //     let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-    //     let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
+        let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
 
-    //     target.send(send_back_to, requests);
+        target.send(send_back_to, requests);
 
-    //     let mut responses = Vec::<ThreadEchoResponse>::new();
+        let mut responses = Vec::<ThreadEchoResponse>::new();
 
-    //     for r in receive_from_thread {
-    //         responses.push(r.into());
-    //     }
+        for r in receive_from_thread {
+            responses.push(r.into());
+        }
 
-    //     assert!(responses.contains(&ThreadEchoResponse::new(0, "ping".to_string(), 0)));
-    //     assert!(responses.contains(&ThreadEchoResponse::new(1, "ping".to_string(), 0)));
-    // }
+        assert!(responses.contains(&ThreadEchoResponse::new(0, "ping2".to_string(), 0)));
+        assert!(responses.contains(&ThreadEchoResponse::new(1, "ping2".to_string(), 1)));
+    }
 
-    // #[test]
-    // fn pool_with_two_threads_sends_echo_requests_echo_requests_processed_by_thread_0_and_thread_1()
-    // {
-    //     let target = ThreadPool::<Randoms>::new(2);
+    #[test]
+    fn pool_with_single_thread_sends_echo_request_echo_request_processed_by_thread_0() {
+        let target = ThreadPool::<Randoms>::new(1);
 
-    //     let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-    //     let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
+        let requests = (0..1usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-    //     target.send(send_back_to, requests);
+        target.send(send_back_to, requests);
 
-    //     let mut responses = Vec::<ThreadEchoResponse>::new();
+        let thread_echo_response: ThreadEchoResponse = receive_from_thread.recv().unwrap().into();
 
-    //     for r in receive_from_thread {
-    //         responses.push(r.into());
-    //     }
-
-    //     assert!(responses.contains(&ThreadEchoResponse::new(0, "ping2".to_string(), 0)));
-    //     assert!(responses.contains(&ThreadEchoResponse::new(1, "ping2".to_string(), 1)));
-    // }
-
-    // #[test]
-    // fn pool_with_single_thread_sends_echo_request_echo_request_processed_by_thread_0() {
-    //     let target = ThreadPool::<Randoms>::new(1);
-
-    //     let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
-
-    //     let requests = (0..1usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
-
-    //     target.send(send_back_to, requests);
-
-    //     let thread_echo_response: ThreadEchoResponse = receive_from_thread.recv().unwrap().into();
-
-    //     assert_eq!(
-    //         ThreadEchoResponse::new(0, "ping".to_string(), 0),
-    //         thread_echo_response
-    //     )
-    // }
+        assert_eq!(
+            ThreadEchoResponse::new(0, "ping".to_string(), 0),
+            thread_echo_response
+        )
+    }
 }

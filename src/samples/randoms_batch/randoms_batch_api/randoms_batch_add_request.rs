@@ -1,10 +1,10 @@
 use crate::{
     id_provider::IdProvider,
     id_targeted::IdTargeted,
-    request_response::{RequestResponse, RequestResponseMessage},
+    request_response_2::{RequestResponse2, RequestWithResponse},
     samples::{randoms_batch::RandomsBatch, Randoms},
     sender_and_receiver::SenderAndReceiver,
-    thread_request_response::{ThreadRequestResponse, ADD_POOL_ITEM},
+    thread_request_response::{AddResponse, ThreadRequestResponse},
 };
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -39,11 +39,6 @@ where
     }
 }
 
-impl<P> RequestResponseMessage<ADD_POOL_ITEM, true> for RandomsBatchAddRequest<P> where
-    P: SenderAndReceiver<Randoms> + Send + Sync + Debug
-{
-}
-
 impl<P> IdTargeted for RandomsBatchAddRequest<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
@@ -53,12 +48,19 @@ where
     }
 }
 
+impl<P> RequestWithResponse<RandomsBatch<P>> for RandomsBatchAddRequest<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
+    type Response = AddResponse;
+}
+
 impl<P> From<RandomsBatchAddRequest<P>> for ThreadRequestResponse<RandomsBatch<P>>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
     fn from(request: RandomsBatchAddRequest<P>) -> Self {
-        ThreadRequestResponse::<RandomsBatch<P>>::AddPoolItem(RequestResponse::Request(request))
+        ThreadRequestResponse::<RandomsBatch<P>>::AddPoolItem(RequestResponse2::Request(request))
     }
 }
 
@@ -67,7 +69,7 @@ where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
     fn from(response: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
-        let ThreadRequestResponse::AddPoolItem(RequestResponse::Request(result)) = response else {
+        let ThreadRequestResponse::AddPoolItem(RequestResponse2::Request(result)) = response else {
             panic!("not expected")
         };
         result

@@ -1,7 +1,9 @@
 mod sender_and_receiver_mock;
 mod thread_pool;
 
-use crate::{pool_item::PoolItem, request_response_2::RequestWithResponse};
+use crate::{
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
+};
 
 pub use sender_and_receiver_mock::SenderAndReceiverMock;
 
@@ -20,7 +22,7 @@ where
         requests: impl Iterator<Item = T> + 'a,
     ) -> Box<dyn Iterator<Item = T::Response> + 'a>
     where
-        T: RequestWithResponse<P> + 'a;
+        T: RequestWithResponse<P> + IdTargeted + 'a;
 }
 
 /// This trait is useful when multiple levels are thread pools are used and each thread pool

@@ -2,7 +2,7 @@ use crossbeam_channel::unbounded;
 use tracing::instrument;
 
 use crate::{
-    pool_item::PoolItem, request_response_2::RequestWithResponse,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
@@ -19,7 +19,7 @@ where
         requests: impl Iterator<Item = T>,
     ) -> impl Iterator<Item = T::Response>
     where
-        T: RequestWithResponse<P>,
+        T: RequestWithResponse<P> + IdTargeted,
     {
         let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
         self.send(return_back_to, requests);
@@ -32,34 +32,29 @@ mod tests {
     use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
-    fn todo() {
-        todo!();
+    fn two_threads_three_echoes_receives_expected_response() {
+        let target = ThreadPool::<Randoms>::new(2);
+
+        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {}", i)));
+
+        let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).collect();
+
+        assert_eq!(results.len(), 3);
+
+        assert!(results.contains(&ThreadEchoResponse::new(0, "ping 0".to_string(), 0)));
+        assert!(results.contains(&ThreadEchoResponse::new(1, "ping 1".to_string(), 1)));
+        assert!(results.contains(&ThreadEchoResponse::new(2, "ping 2".to_string(), 0)));
     }
 
-    // #[test]
-    // fn two_threads_three_echoes_receives_expected_response() {
-    //     let target = ThreadPool::<Randoms>::new(2);
+    #[test]
+    fn single_thread_single_init_receives_expected_response() {
+        let target = ThreadPool::<Randoms>::new(1);
 
-    //     let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {}", i)));
+        let requests = (0..1).map(|id| RandomsAddRequest(id));
 
-    //     let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).collect();
+        let result: Vec<AddResponse> = target.send_and_receive(requests).collect();
 
-    //     assert_eq!(results.len(), 3);
-
-    //     assert!(results.contains(&ThreadEchoResponse::new(0, "ping 0".to_string(), 0)));
-    //     assert!(results.contains(&ThreadEchoResponse::new(1, "ping 1".to_string(), 1)));
-    //     assert!(results.contains(&ThreadEchoResponse::new(2, "ping 2".to_string(), 0)));
-    // }
-
-    // #[test]
-    // fn single_thread_single_init_receives_expected_response() {
-    //     let target = ThreadPool::<Randoms>::new(1);
-
-    //     let requests = (0..1).map(|id| RandomsAddRequest(id));
-
-    //     let result: Vec<AddResponse> = target.send_and_receive(requests).collect();
-
-    //     assert_eq!(result.len(), 1);
-    //     assert_eq!(0, result[0].id());
-    // }
+        assert_eq!(result.len(), 1);
+        assert_eq!(0, result[0].id());
+    }
 }

@@ -34,47 +34,42 @@ mod tests {
     };
 
     #[test]
-    fn todo() {
-        todo!();
+    fn pass_echo_message_through_echo_message_received_at_other_end_of_channel() {
+        let echo_request = ThreadEchoRequest::new(0, "hello".to_string());
+
+        // create a thread (which instantly terminates) purely for its join_handle
+        let join_handle = spawn(|| 1);
+
+        // create channels to send and receive responses
+        let (to_thread_sender, receiver_from_endpoint) = unbounded::<SenderCouplet<Randoms>>();
+        let (to_endpoint, from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
+
+        let target = ThreadEndpoint {
+            sender: to_thread_sender,
+            join_handle: join_handle,
+        };
+
+        // call send
+        target.send(&to_endpoint, echo_request.clone());
+
+        // get the message sent
+        let sender_couplet = receiver_from_endpoint.recv().unwrap();
+
+        // confirm that it is in the expected form; it is difficult to confirm the correct sender was sent
+        assert_eq!(sender_couplet.request(), &(echo_request.into()));
+
+        // create and send a response message
+        let response = ThreadEchoResponse::new(0, "hello".to_string(), 0);
+        sender_couplet
+            .return_to()
+            .send(response.clone().into())
+            .unwrap();
+        let response_result: ThreadEchoResponse = from_thread.recv().unwrap().into();
+
+        // confirm that the message received is as expected
+        assert_eq!(response_result, response);
+
+        // join back to the thread
+        target.join_handle.join().unwrap();
     }
-
-    // #[test]
-    // fn pass_echo_message_through_echo_message_received_at_other_end_of_channel() {
-    //     let echo_request = ThreadEchoRequest::new(0, "hello".to_string());
-
-    //     // create a thread (which instantly terminates) purely for its join_handle
-    //     let join_handle = spawn(|| 1);
-
-    //     // create channels to send and receive responses
-    //     let (to_thread_sender, receiver_from_endpoint) = unbounded::<SenderCouplet<Randoms>>();
-    //     let (to_endpoint, from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
-
-    //     let target = ThreadEndpoint {
-    //         sender: to_thread_sender,
-    //         join_handle: join_handle,
-    //     };
-
-    //     // call send
-    //     target.send(&to_endpoint, echo_request.clone());
-
-    //     // get the message sent
-    //     let sender_couplet = receiver_from_endpoint.recv().unwrap();
-
-    //     // confirm that it is in the expected form; it is difficult to confirm the correct sender was sent
-    //     assert_eq!(sender_couplet.request(), &(echo_request.into()));
-
-    //     // create and send a response message
-    //     let response = ThreadEchoResponse::new(0, "hello".to_string(), 0);
-    //     sender_couplet
-    //         .return_to()
-    //         .send(response.clone().into())
-    //         .unwrap();
-    //     let response_result: ThreadEchoResponse = from_thread.recv().unwrap().into();
-
-    //     // confirm that the message received is as expected
-    //     assert_eq!(response_result, response);
-
-    //     // join back to the thread
-    //     target.join_handle.join().unwrap();
-    // }
 }

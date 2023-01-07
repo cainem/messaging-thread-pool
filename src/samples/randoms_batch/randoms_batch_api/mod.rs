@@ -7,32 +7,34 @@ pub use self::{
     sum_of_sums_response::SumOfSumsResponse,
 };
 use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponse, samples::Randoms,
+    id_targeted::IdTargeted, request_response_2::RequestResponse2, samples::Randoms,
     sender_and_receiver::SenderAndReceiver, thread_request_response::*,
 };
 use std::fmt::Debug;
 
 use super::RandomsBatch;
 
-/// define 2 constant to classify messages
-/// This allows us to leverage the type system avoid some runtime errors (and replace them with compile time errors)
-pub const SUM_OF_SUMS: usize = 0;
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum RandomsBatchApi {
-    SumOfSums(RequestResponse<SUM_OF_SUMS, SumOfSumsRequest, SumOfSumsResponse>),
+#[derive(Debug)]
+pub enum RandomsBatchApi<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
+    SumOfSums(RequestResponse2<RandomsBatch<P>, SumOfSumsRequest>),
 }
 
-impl IdTargeted for RandomsBatchApi {
+impl<P> IdTargeted for RandomsBatchApi<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
     fn id(&self) -> usize {
-        let RandomsBatchApi::SumOfSums(RequestResponse::Request(sum_of_sum_request)) = self else {
+        let RandomsBatchApi::SumOfSums(RequestResponse2::Request(sum_of_sum_request)) = self else {
             panic!("id not required to be implemented for responses")
         };
         sum_of_sum_request.id()
     }
 }
 
-impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for RandomsBatchApi
+impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for RandomsBatchApi<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
 {
@@ -44,11 +46,11 @@ where
     }
 }
 
-impl<P> From<RandomsBatchApi> for ThreadRequestResponse<RandomsBatch<P>>
+impl<P> From<RandomsBatchApi<P>> for ThreadRequestResponse<RandomsBatch<P>>
 where
     P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
 {
-    fn from(request_response: RandomsBatchApi) -> Self {
+    fn from(request_response: RandomsBatchApi<P>) -> Self {
         ThreadRequestResponse::MessagePoolItem(request_response)
     }
 }

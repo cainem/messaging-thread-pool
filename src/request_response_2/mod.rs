@@ -3,12 +3,10 @@ use crate::{
 };
 use std::fmt::Debug;
 
-pub trait RequestWithResponse<P>:
-    IdTargeted + Debug + PartialEq + Into<ThreadRequestResponse<P>>
+pub trait RequestWithResponse<P>: Debug + Into<ThreadRequestResponse<P>>
 where
     P: PoolItem,
-    Self::Response:
-        Debug + PartialEq + From<ThreadRequestResponse<P>> + Into<ThreadRequestResponse<P>>,
+    Self::Response: Debug + From<ThreadRequestResponse<P>> + Into<ThreadRequestResponse<P>>,
 {
     type Response;
 }
@@ -38,7 +36,7 @@ where
 
 impl<P, T> IdTargeted for RequestResponse2<P, T>
 where
-    T: RequestWithResponse<P>,
+    T: RequestWithResponse<P> + IdTargeted,
     P: PoolItem,
 {
     fn id(&self) -> usize {

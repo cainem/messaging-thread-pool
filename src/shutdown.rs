@@ -65,59 +65,54 @@ mod tests {
     use crate::{samples::*, thread_request_response::*, ThreadPool};
 
     #[test]
-    fn todo() {
-        todo!();
+    fn two_threads_each_containing_a_sample_element_shutdown_simulates_child_thread_shutdown() {
+        let target = ThreadPool::<Randoms>::new(2);
+
+        // two thread created
+        assert_eq!(2, target.thread_endpoints.read().unwrap().len());
+
+        // adds two Randoms to the thread pool
+        let _: Vec<AddResponse> = target
+            .send_and_receive(
+                iter::once(RandomsAddRequest(0)).chain(iter::once(RandomsAddRequest(1))),
+            )
+            .collect();
+
+        // thread had id 0, 1
+        assert_eq!(
+            target.shutdown(),
+            &[
+                ThreadShutdownResponse::new(0, vec![ThreadShutdownResponse::new(0, vec![])]),
+                ThreadShutdownResponse::new(1, vec![ThreadShutdownResponse::new(1, vec![])]),
+            ]
+        );
     }
 
-    // #[test]
-    // fn two_threads_each_containing_a_sample_element_shutdown_simulates_child_thread_shutdown() {
-    //     let target = ThreadPool::<Randoms>::new(2);
+    #[test]
+    fn two_threads_clean_shutdown_as_expected() {
+        let result = ThreadPool::<Randoms>::new(2);
 
-    //     // two thread created
-    //     assert_eq!(2, target.thread_endpoints.read().unwrap().len());
+        // two threads created
+        assert_eq!(2, result.thread_endpoints.read().unwrap().len());
 
-    //     // adds two Randoms to the thread pool
-    //     let _: Vec<AddResponse> = target
-    //         .send_and_receive(
-    //             iter::once(RandomsAddRequest(0)).chain(iter::once(RandomsAddRequest(1))),
-    //         )
-    //         .collect();
+        // thread had id 0, 1
+        assert_eq!(
+            result.shutdown(),
+            &[
+                ThreadShutdownResponse::new(0, vec![]),
+                ThreadShutdownResponse::new(1, vec![])
+            ]
+        );
+    }
 
-    //     // thread had id 0, 1
-    //     assert_eq!(
-    //         target.shutdown(),
-    //         &[
-    //             ThreadShutdownResponse::new(0, vec![ThreadShutdownResponse::new(0, vec![])]),
-    //             ThreadShutdownResponse::new(1, vec![ThreadShutdownResponse::new(1, vec![])]),
-    //         ]
-    //     );
-    // }
+    #[test]
+    fn single_thread_clean_shutdown_as_expected() {
+        let result = ThreadPool::<Randoms>::new(1);
 
-    // #[test]
-    // fn two_threads_clean_shutdown_as_expected() {
-    //     let result = ThreadPool::<Randoms>::new(2);
+        // one thread created
+        assert_eq!(1, result.thread_endpoints.read().unwrap().len());
 
-    //     // two threads created
-    //     assert_eq!(2, result.thread_endpoints.read().unwrap().len());
-
-    //     // thread had id 0, 1
-    //     assert_eq!(
-    //         result.shutdown(),
-    //         &[
-    //             ThreadShutdownResponse::new(0, vec![]),
-    //             ThreadShutdownResponse::new(1, vec![])
-    //         ]
-    //     );
-    // }
-
-    // #[test]
-    // fn single_thread_clean_shutdown_as_expected() {
-    //     let result = ThreadPool::<Randoms>::new(1);
-
-    //     // one thread created
-    //     assert_eq!(1, result.thread_endpoints.read().unwrap().len());
-
-    //     // thread had id 0
-    //     assert_eq!(result.shutdown(), &[ThreadShutdownResponse::new(0, vec![])]);
-    // }
+        // thread had id 0
+        assert_eq!(result.shutdown(), &[ThreadShutdownResponse::new(0, vec![])]);
+    }
 }

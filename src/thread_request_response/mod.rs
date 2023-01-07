@@ -8,7 +8,10 @@ mod thread_echo_response;
 mod thread_shutdown_request;
 mod thread_shutdown_response;
 
-use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
+use crate::{
+    pool_item::PoolItem,
+    request_response_2::{RequestResponse2, RequestWithResponse},
+};
 
 pub use self::{
     add_response::AddResponse, remove_pool_item_request::RemovePoolItemRequest,
@@ -44,4 +47,11 @@ where
     /// Send a message from the pool items defined api to a given pool item
     /// The message is routed to the owning thread and any work is performed there
     MessagePoolItem(P::Api),
+}
+
+impl<P> RequestWithResponse<P> for ThreadRequestResponse<P>
+where
+    P: PoolItem,
+{
+    type Response = ThreadRequestResponse<P>;
 }
