@@ -2,7 +2,7 @@ use crossbeam_channel::unbounded;
 use tracing::instrument;
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestWithResponse,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 

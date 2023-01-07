@@ -10,7 +10,7 @@ mod thread_shutdown_response;
 
 use crate::{
     pool_item::PoolItem,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
 };
 
 pub use self::{
@@ -31,19 +31,19 @@ where
 {
     /// Causes the message loop of the thread to be exited and the thread is rejoined to the main thread
     /// Give contained pool items the opportunity to (optionally) shut down a child thread pool
-    ThreadShutdown(RequestResponse2<P, ThreadShutdownRequest>),
+    ThreadShutdown(RequestResponse<P, ThreadShutdownRequest>),
     /// As shutdown but leaves all of the state thread state intact (for use in testing)
-    ThreadAbort(RequestResponse2<P, ThreadAbortRequest>),
+    ThreadAbort(RequestResponse<P, ThreadAbortRequest>),
     /// For testing thread communications in test
-    ThreadEcho(RequestResponse2<P, ThreadEchoRequest>),
+    ThreadEcho(RequestResponse<P, ThreadEchoRequest>),
     /// Add a new pool item to the thread pool
     /// The pool item will be assigned a thread within the thread pool and it will be instantiated there
     /// It remain on that thread for its entire life
     /// The form of the message to create the pool item is defined by the pool item
-    AddPoolItem(RequestResponse2<P, P::Init>),
+    AddPoolItem(RequestResponse<P, P::Init>),
     /// Requests that an item be removed from the thread pool
     /// The request is routed to the thread that has ownership and the pool item is dropped
-    RemovePoolItem(RequestResponse2<P, RemovePoolItemRequest>),
+    RemovePoolItem(RequestResponse<P, RemovePoolItemRequest>),
     /// Send a message from the pool items defined api to a given pool item
     /// The message is routed to the owning thread and any work is performed there
     MessagePoolItem(P::Api),

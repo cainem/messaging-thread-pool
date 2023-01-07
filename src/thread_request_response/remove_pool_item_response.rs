@@ -1,4 +1,4 @@
-use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
@@ -27,7 +27,7 @@ where
     T: PoolItem,
 {
     fn from(request: RemovePoolItemResponse) -> Self {
-        ThreadRequestResponse::RemovePoolItem(RequestResponse2::Response(request))
+        ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(request))
     }
 }
 
@@ -36,7 +36,7 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::RemovePoolItem(RequestResponse2::Response(response)) = response else {
+        let ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(response)) = response else {
             panic!("not expected");
         };
         response

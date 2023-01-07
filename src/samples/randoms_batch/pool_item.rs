@@ -1,7 +1,7 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
-    request_response_2::RequestResponse2,
+    request_response::RequestResponse,
     samples::Randoms,
     sender_and_receiver::SenderAndReceiver,
     thread_request_response::*,
@@ -19,7 +19,7 @@ where
 
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
-            RandomsBatchApi::SumOfSums(RequestResponse2::Request(request)) => {
+            RandomsBatchApi::SumOfSums(RequestResponse::Request(request)) => {
                 let id = request.id();
                 let sum_of_sums = self.sum_of_sums();
                 SumOfSumsResponse { id, sum_of_sums }.into()

@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
     samples::{randoms_batch::RandomsBatch, Randoms},
     sender_and_receiver::SenderAndReceiver,
     thread_request_response::ThreadRequestResponse,
@@ -33,7 +33,7 @@ where
 {
     fn from(request: SumOfSumsRequest) -> Self {
         ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
-            RequestResponse2::Request(request),
+            RequestResponse::Request(request),
         ))
     }
 }
@@ -43,7 +43,7 @@ where
     P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
 {
     fn from(request: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(RequestResponse2::Request(result))) = request else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(RequestResponse::Request(result))) = request else {
             panic!("not expected")
         };
         result

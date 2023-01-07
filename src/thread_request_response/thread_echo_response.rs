@@ -1,4 +1,4 @@
-use crate::{pool_item::PoolItem, request_response_2::RequestResponse2};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
@@ -37,7 +37,7 @@ where
     T: PoolItem,
 {
     fn from(request: ThreadEchoResponse) -> Self {
-        ThreadRequestResponse::ThreadEcho(RequestResponse2::Response(request))
+        ThreadRequestResponse::ThreadEcho(RequestResponse::Response(request))
     }
 }
 
@@ -46,7 +46,7 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::ThreadEcho(RequestResponse2::Response(response)) = response else {
+        let ThreadRequestResponse::<P>::ThreadEcho(RequestResponse::Response(response)) = response else {
             panic!("unexpected")
         };
         response

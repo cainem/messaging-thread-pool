@@ -1,58 +1,56 @@
-// mod id_targeted;
-// mod request_message;
-// mod request_response_message;
-// mod response_message;
+use crate::{
+    id_targeted::IdTargeted, pool_item::PoolItem, thread_request_response::ThreadRequestResponse,
+};
+use std::fmt::Debug;
 
-// pub use request_message::RequestMessage;
-// pub use request_response_message::RequestResponseMessage;
-// pub use response_message::ResponseMessage;
+pub trait RequestWithResponse<P>: Debug + Into<ThreadRequestResponse<P>>
+where
+    P: PoolItem,
+    Self::Response: Debug + From<ThreadRequestResponse<P>> + Into<ThreadRequestResponse<P>>,
+{
+    type Response;
+}
 
-// /// This enum is used for defining request/response pairs \
-// /// The protocol insists that every request has a corresponding response \
-// /// This enum defines the 2 types that are used
-// #[derive(Debug, PartialEq, Eq)]
-// pub enum RequestResponse<const N: usize, Req, Res>
-// where
-//     Req: RequestResponseMessage<N, true>,
-//     Res: RequestResponseMessage<N, false>,
-// {
-//     Request(Req),
-//     Response(Res),
-// }
+#[derive(Debug, PartialEq)]
+pub enum RequestResponse<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    Request(T),
+    Response(T::Response),
+}
 
-// impl<const N: usize, Req, Res> RequestResponse<N, Req, Res>
-// where
-//     Req: RequestResponseMessage<N, true>,
-//     Res: RequestResponseMessage<N, false>,
-// {
-//     pub fn request(&self) -> &Req {
-//         let RequestResponse::Request(result) = self else {
-//             panic!("not a request");
-//         };
-//         result
-//     }
-// }
+impl<P, T> RequestResponse<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    pub fn request(&self) -> &T {
+        let RequestResponse::Request(request) = self else {
+            panic!("not expected");
+        };
+        request
+    }
+}
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::thread_request_response::ID_ONLY;
+impl<P, T> IdTargeted for RequestResponse<P, T>
+where
+    T: RequestWithResponse<P> + IdTargeted,
+    P: PoolItem,
+{
+    fn id(&self) -> usize {
+        let RequestResponse::Request(request) = self else {
+            panic!("not expected");
+        };
+        request.id()
+    }
+}
 
-//     use super::RequestResponse;
-
-//     #[test]
-//     #[should_panic(expected = "not a request")]
-//     fn request_response_contains_a_response_request_panics() {
-//         let response = 1;
-//         let target = RequestResponse::<ID_ONLY, usize, usize>::Response(response);
-
-//         let _ = target.request();
-//     }
-
-//     #[test]
-//     fn request_response_contains_a_request_request_unwraps_request() {
-//         let request = 1;
-//         let target = RequestResponse::<ID_ONLY, usize, usize>::Request(request);
-
-//         assert_eq!(&request, target.request());
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn todo() {
+        todo!();
+    }
+}

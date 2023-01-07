@@ -1,7 +1,7 @@
 use tracing::{event, Level};
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestResponse2,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
     sender_couplet::SenderCouplet, thread_request_response::*,
 };
 
@@ -37,7 +37,7 @@ where
             let SenderCouplet { return_to, request } = sender_couplet;
 
             let response = match request {
-                ThreadRequestResponse::ThreadAbort(RequestResponse2::Request(request)) => {
+                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
                     let id = request.id();
                     debug_assert_eq!(
                         self.thread_id, id,
@@ -51,7 +51,7 @@ where
                     // return breaking out of the message loop and thus ending the thread.
                     return;
                 }
-                ThreadRequestResponse::ThreadEcho(RequestResponse2::Request(request)) => {
+                ThreadRequestResponse::ThreadEcho(RequestResponse::Request(request)) => {
                     ThreadEchoResponse::new(
                         request.id(),
                         request.message().to_string(),
@@ -59,7 +59,7 @@ where
                     )
                     .into()
                 }
-                ThreadRequestResponse::AddPoolItem(RequestResponse2::Request(request)) => {
+                ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
                     let new_pool_item = P::new_pool_item(request);
 
@@ -94,12 +94,12 @@ where
 
                     response
                 }
-                ThreadRequestResponse::RemovePoolItem(RequestResponse2::Request(request)) => {
+                ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
                     let success = self.pool_item_hash_map.remove(&id).is_some();
                     RemovePoolItemResponse::new(id, success).into()
                 }
-                ThreadRequestResponse::ThreadShutdown(RequestResponse2::Request(request)) => {
+                ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
                     let id = request.id();
                     debug_assert_eq!(
                         self.thread_id, id,

@@ -1,7 +1,7 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
 };
 
 use super::{RemovePoolItemResponse, ThreadRequestResponse};
@@ -27,9 +27,9 @@ where
     P: PoolItem,
 {
     fn from(request: RemovePoolItemRequest) -> Self {
-        ThreadRequestResponse::RemovePoolItem(
-            RequestResponse2::<P, RemovePoolItemRequest>::Request(request),
-        )
+        ThreadRequestResponse::RemovePoolItem(RequestResponse::<P, RemovePoolItemRequest>::Request(
+            request,
+        ))
     }
 }
 

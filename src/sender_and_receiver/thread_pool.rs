@@ -1,6 +1,5 @@
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
-    ThreadPool,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestWithResponse, ThreadPool,
 };
 
 use super::SenderAndReceiver;

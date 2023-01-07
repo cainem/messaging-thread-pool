@@ -1,7 +1,7 @@
 use crossbeam_channel::Sender;
 
 use crate::{
-    pool_item::PoolItem, request_response_2::RequestWithResponse,
+    pool_item::PoolItem, request_response::RequestWithResponse,
     thread_request_response::ThreadRequestResponse,
 };
 

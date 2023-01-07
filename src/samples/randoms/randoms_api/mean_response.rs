@@ -1,5 +1,5 @@
 use crate::{
-    request_response_2::RequestResponse2,
+    request_response::RequestResponse,
     samples::{randoms::randoms_api::RandomsApi, Randoms},
     thread_request_response::ThreadRequestResponse,
 };
@@ -19,7 +19,7 @@ impl MeanResponse {
 
 impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: MeanResponse) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse2::Response(
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(
             response,
         )))
     }
@@ -27,7 +27,7 @@ impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
 
 impl From<ThreadRequestResponse<Randoms>> for MeanResponse {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse2::Response(result))) = response else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(result))) = response else {
             panic!("not expected")
         };
         result

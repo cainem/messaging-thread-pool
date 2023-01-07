@@ -1,7 +1,7 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
 };
 
 use super::{ThreadEchoResponse, ThreadRequestResponse};
@@ -45,9 +45,7 @@ where
     P: PoolItem,
 {
     fn from(request: ThreadEchoRequest) -> Self {
-        ThreadRequestResponse::ThreadEcho(RequestResponse2::<P, ThreadEchoRequest>::Request(
-            request,
-        ))
+        ThreadRequestResponse::ThreadEcho(RequestResponse::<P, ThreadEchoRequest>::Request(request))
     }
 }
 

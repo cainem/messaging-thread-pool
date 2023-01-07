@@ -1,7 +1,7 @@
 use crate::{
     id_provider::IdProvider,
     id_targeted::IdTargeted,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
     samples::{randoms_batch::RandomsBatch, Randoms},
     sender_and_receiver::SenderAndReceiver,
     thread_request_response::{AddResponse, ThreadRequestResponse},
@@ -60,7 +60,7 @@ where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
     fn from(request: RandomsBatchAddRequest<P>) -> Self {
-        ThreadRequestResponse::<RandomsBatch<P>>::AddPoolItem(RequestResponse2::Request(request))
+        ThreadRequestResponse::<RandomsBatch<P>>::AddPoolItem(RequestResponse::Request(request))
     }
 }
 
@@ -69,7 +69,7 @@ where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
     fn from(response: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
-        let ThreadRequestResponse::AddPoolItem(RequestResponse2::Request(result)) = response else {
+        let ThreadRequestResponse::AddPoolItem(RequestResponse::Request(result)) = response else {
             panic!("not expected")
         };
         result

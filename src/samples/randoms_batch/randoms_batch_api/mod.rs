@@ -7,7 +7,7 @@ pub use self::{
     sum_of_sums_response::SumOfSumsResponse,
 };
 use crate::{
-    id_targeted::IdTargeted, request_response_2::RequestResponse2, samples::Randoms,
+    id_targeted::IdTargeted, request_response::RequestResponse, samples::Randoms,
     sender_and_receiver::SenderAndReceiver, thread_request_response::*,
 };
 use std::fmt::Debug;
@@ -19,7 +19,7 @@ pub enum RandomsBatchApi<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
-    SumOfSums(RequestResponse2<RandomsBatch<P>, SumOfSumsRequest>),
+    SumOfSums(RequestResponse<RandomsBatch<P>, SumOfSumsRequest>),
 }
 
 impl<P> IdTargeted for RandomsBatchApi<P>
@@ -27,7 +27,7 @@ where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
     fn id(&self) -> usize {
-        let RandomsBatchApi::SumOfSums(RequestResponse2::Request(sum_of_sum_request)) = self else {
+        let RandomsBatchApi::SumOfSums(RequestResponse::Request(sum_of_sum_request)) = self else {
             panic!("id not required to be implemented for responses")
         };
         sum_of_sum_request.id()

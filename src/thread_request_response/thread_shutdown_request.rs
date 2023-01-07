@@ -1,7 +1,7 @@
 use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
 };
 
 use super::{ThreadRequestResponse, ThreadShutdownResponse};
@@ -27,9 +27,9 @@ where
     P: PoolItem,
 {
     fn from(request: ThreadShutdownRequest) -> Self {
-        ThreadRequestResponse::ThreadShutdown(
-            RequestResponse2::<P, ThreadShutdownRequest>::Request(request),
-        )
+        ThreadRequestResponse::ThreadShutdown(RequestResponse::<P, ThreadShutdownRequest>::Request(
+            request,
+        ))
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
     samples::Randoms,
     thread_request_response::ThreadRequestResponse,
 };
@@ -22,13 +22,13 @@ impl RequestWithResponse<Randoms> for SumRequest {
 
 impl From<SumRequest> for ThreadRequestResponse<Randoms> {
     fn from(request: SumRequest) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse2::Request(request)))
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(request)))
     }
 }
 
 impl From<ThreadRequestResponse<Randoms>> for SumRequest {
     fn from(request: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse2::Request(result))) = request else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Request(result))) = request else {
             panic!("not expected")
         };
         result

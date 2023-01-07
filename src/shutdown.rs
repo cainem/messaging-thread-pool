@@ -1,8 +1,7 @@
 use crossbeam_channel::bounded;
 
 use crate::{
-    pool_item::PoolItem, request_response_2::RequestResponse2, thread_request_response::*,
-    ThreadPool,
+    pool_item::PoolItem, request_response::RequestResponse, thread_request_response::*, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -39,7 +38,7 @@ where
                 .recv()
                 .expect("the single response to the shutdown request")
             {
-                ThreadRequestResponse::ThreadShutdown(RequestResponse2::Response(
+                ThreadRequestResponse::ThreadShutdown(RequestResponse::Response(
                     thread_shutdown_payload,
                 )) => {
                     child_threads.append(&mut thread_shutdown_payload.take_children());

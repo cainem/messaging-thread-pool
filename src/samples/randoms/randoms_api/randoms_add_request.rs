@@ -1,6 +1,6 @@
 use crate::{
     id_targeted::IdTargeted,
-    request_response_2::{RequestResponse2, RequestWithResponse},
+    request_response::{RequestResponse, RequestWithResponse},
     samples::Randoms,
     thread_request_response::{AddResponse, ThreadRequestResponse},
 };
@@ -21,13 +21,13 @@ impl RequestWithResponse<Randoms> for RandomsAddRequest {
 
 impl From<RandomsAddRequest> for ThreadRequestResponse<Randoms> {
     fn from(add_request: RandomsAddRequest) -> Self {
-        ThreadRequestResponse::<Randoms>::AddPoolItem(RequestResponse2::Request(add_request))
+        ThreadRequestResponse::<Randoms>::AddPoolItem(RequestResponse::Request(add_request))
     }
 }
 
 impl From<ThreadRequestResponse<Randoms>> for RandomsAddRequest {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::AddPoolItem(RequestResponse2::Request(result)) = response else {
+        let ThreadRequestResponse::AddPoolItem(RequestResponse::Request(result)) = response else {
             panic!("not expected")
         };
         result

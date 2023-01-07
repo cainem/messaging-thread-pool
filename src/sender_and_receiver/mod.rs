@@ -1,9 +1,7 @@
 mod sender_and_receiver_mock;
 mod thread_pool;
 
-use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_response_2::RequestWithResponse,
-};
+use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestWithResponse};
 
 pub use sender_and_receiver_mock::SenderAndReceiverMock;
 

@@ -11,7 +11,7 @@ pub use sum_request::SumRequest;
 pub use sum_response::SumResponse;
 
 use crate::{
-    id_targeted::IdTargeted, request_response_2::RequestResponse2,
+    id_targeted::IdTargeted, request_response::RequestResponse,
     thread_request_response::ThreadRequestResponse,
 };
 
@@ -23,9 +23,9 @@ use super::Randoms;
 #[derive(Debug, PartialEq)]
 pub enum RandomsApi {
     /// a request response pair to handle the calculation of the mean of the contained randoms
-    Mean(RequestResponse2<Randoms, MeanRequest>),
+    Mean(RequestResponse<Randoms, MeanRequest>),
     /// a request response pair to handle the calculation of the sum of the contained randoms
-    Sum(RequestResponse2<Randoms, SumRequest>),
+    Sum(RequestResponse<Randoms, SumRequest>),
 }
 
 impl IdTargeted for RandomsApi {
