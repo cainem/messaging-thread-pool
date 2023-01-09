@@ -1,11 +1,5 @@
-use crate::{
-    id_targeted::IdTargeted,
-    request_response::{RequestResponse, RequestWithResponse},
-    samples::Randoms,
-    thread_request_response::ThreadRequestResponse,
-};
-
 use super::{RandomsApi, SumResponse};
+use crate::{samples::Randoms, *};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SumRequest(pub usize);

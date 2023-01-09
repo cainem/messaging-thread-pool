@@ -1,4 +1,4 @@
-use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
+use messaging_thread_pool::{samples::*, *};
 use std::iter;
 
 #[test]

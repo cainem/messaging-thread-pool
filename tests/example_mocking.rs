@@ -1,7 +1,6 @@
 use messaging_thread_pool::{
     samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-    sender_and_receiver::SenderAndReceiver,
-    thread_request_response::AddResponse,
+    AddResponse, SenderAndReceiver,
 };
 
 /// A struct that contains a thread pool that needs to be mocked should hold a trait of
@@ -47,9 +46,7 @@ where
 mod tests {
     use messaging_thread_pool::{
         samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-        sender_and_receiver::SenderAndReceiverMock,
-        thread_request_response::{AddResponse, ThreadRequestResponse},
-        ThreadPool,
+        AddResponse, SenderAndReceiverMock, ThreadPool, ThreadRequestResponse,
     };
 
     use crate::Complex;

@@ -9,8 +9,8 @@ mod thread_shutdown_request;
 mod thread_shutdown_response;
 
 use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestWithResponse},
+    pool_item::PoolItem, request_response::RequestResponse,
+    request_with_response::RequestWithResponse,
 };
 
 pub use self::{
@@ -49,6 +49,7 @@ where
     MessagePoolItem(P::Api),
 }
 
+/// A [`ThreadRequestResponse`] is always a RequestWithResponse
 impl<P> RequestWithResponse<P> for ThreadRequestResponse<P>
 where
     P: PoolItem,

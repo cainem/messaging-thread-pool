@@ -1,15 +1,7 @@
 mod id_targeted;
 
-use crate::{pool_item::PoolItem, thread_request_response::ThreadRequestResponse};
+use crate::{pool_item::PoolItem, request_with_response::RequestWithResponse};
 use std::fmt::Debug;
-
-pub trait RequestWithResponse<P>: Debug + Into<ThreadRequestResponse<P>>
-where
-    P: PoolItem,
-    Self::Response: Debug + From<ThreadRequestResponse<P>> + Into<ThreadRequestResponse<P>>,
-{
-    type Response;
-}
 
 #[derive(Debug, PartialEq)]
 pub enum RequestResponse<P, T>

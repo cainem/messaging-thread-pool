@@ -1,11 +1,5 @@
-use crate::{
-    id_targeted::IdTargeted,
-    request_response::{RequestResponse, RequestWithResponse},
-    samples::Randoms,
-    thread_request_response::ThreadRequestResponse,
-};
-
 use super::{MeanResponse, RandomsApi};
+use crate::{samples::Randoms, *};
 
 /// This defines a request to calculate the mean of the contained randoms
 #[derive(Debug, Clone, PartialEq, Eq)]

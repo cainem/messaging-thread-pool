@@ -1,6 +1,8 @@
-use crate::{id_targeted::IdTargeted, pool_item::PoolItem};
+use crate::{
+    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
+};
 
-use super::{RequestResponse, RequestWithResponse};
+use super::RequestResponse;
 
 impl<P, T> IdTargeted for RequestResponse<P, T>
 where

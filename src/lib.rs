@@ -23,7 +23,7 @@
 //! # Example
 //! ```
 //! use std::iter;
-//! use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
+//! use messaging_thread_pool::{*, samples::*};
 //!
 //!    // creates a thread pool with 4 threads.
 //!    // The lifetime of the elements created (the Randoms in this case) will be tied to the
@@ -99,28 +99,35 @@
 //!
 use std::sync::RwLock;
 
-use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
 pub mod global_test_scope;
 pub mod id_provider;
-pub mod id_targeted;
-pub mod pool_item;
-pub mod request_response;
 pub mod samples;
-pub mod sender_and_receiver;
-pub mod thread_request_response;
 
 mod drop;
+mod id_targeted;
 mod new;
+mod pool_item;
 mod pool_thread;
 mod pool_thread_old;
 mod receive;
+mod request_response;
+mod request_with_response;
 mod send;
 mod send_and_receive;
+mod sender_and_receiver;
 mod sender_couplet;
 mod shutdown;
 mod thread_endpoint;
+mod thread_request_response;
+
+pub use id_targeted::IdTargeted;
+pub use pool_item::*;
+pub use request_response::RequestResponse;
+pub use request_with_response::RequestWithResponse;
+pub use sender_and_receiver::*;
+pub use thread_request_response::*;
 
 /// This struct represents a pool of threads that can target a particular type of
 /// resource (a resource being a struct that implements [`PoolItem`])

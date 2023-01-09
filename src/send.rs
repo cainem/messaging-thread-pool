@@ -2,7 +2,7 @@ use crossbeam_channel::Sender;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestWithResponse,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 

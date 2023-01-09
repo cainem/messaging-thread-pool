@@ -10,12 +10,8 @@ pub use randoms_add_request::RandomsAddRequest;
 pub use sum_request::SumRequest;
 pub use sum_response::SumResponse;
 
-use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponse,
-    thread_request_response::ThreadRequestResponse,
-};
-
 use super::Randoms;
+use crate::*;
 
 /// This enum defines the api used to communicate with the Randoms struct
 /// It defines two pairs of messages \

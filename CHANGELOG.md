@@ -24,4 +24,6 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Change IdProvider to return usize instead u64
 - Remove unnecessary SizedIdProvider; replace with Arc&lt;dyn IdProvider&gt;
 - Relax Send constraint on IdTargeted trait.
+- Replace RequestResponseMessage with RequestWithResponse trait to simplify use.
+- Add more re-exports to simplify exposed modules
 

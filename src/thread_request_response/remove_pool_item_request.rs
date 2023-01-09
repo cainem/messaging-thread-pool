@@ -1,7 +1,6 @@
 use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestWithResponse},
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
+    request_with_response::RequestWithResponse,
 };
 
 use super::{RemovePoolItemResponse, ThreadRequestResponse};

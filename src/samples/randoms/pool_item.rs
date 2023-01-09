@@ -1,11 +1,8 @@
-use crate::{
-    id_targeted::IdTargeted,
-    pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
-    samples::{MeanResponse, RandomsAddRequest, SumResponse},
-    thread_request_response::*,
-};
-
 use super::{randoms_api::RandomsApi, Randoms};
+use crate::{
+    samples::{MeanResponse, RandomsAddRequest, SumResponse},
+    *,
+};
 
 /// The implementation of this trait allows the Randoms struct to be used in the thread pool infrastructure
 impl PoolItem for Randoms {

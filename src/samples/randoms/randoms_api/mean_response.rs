@@ -1,8 +1,6 @@
-use crate::{
-    request_response::RequestResponse,
-    samples::{randoms::randoms_api::RandomsApi, Randoms},
-    thread_request_response::ThreadRequestResponse,
-};
+use crate::{samples::Randoms, *};
+
+use super::RandomsApi;
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]

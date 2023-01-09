@@ -3,12 +3,8 @@ pub mod randoms_batch_api;
 
 use std::sync::Arc;
 
-use crate::{
-    id_provider::IdProvider, samples::randoms::Randoms, sender_and_receiver::SenderAndReceiver,
-    thread_request_response::AddResponse,
-};
-
 use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
+use crate::{id_provider::IdProvider, samples::Randoms, *};
 
 /// An example of an element that contains a child thread pool
 ///
