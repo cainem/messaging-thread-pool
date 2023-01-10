@@ -48,7 +48,7 @@ where
 
             // now join the thread
             return_codes.push(ThreadShutdownResponse::new(
-                endpoint.join_handle.join().expect("join to succeed"),
+                endpoint.join_handle().join().expect("join to succeed"),
                 child_threads,
             ));
         }

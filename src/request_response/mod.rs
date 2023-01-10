@@ -3,7 +3,7 @@ mod id_targeted;
 use crate::{pool_item::PoolItem, request_with_response::RequestWithResponse};
 use std::fmt::Debug;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum RequestResponse<P, T>
 where
     T: RequestWithResponse<P>,
@@ -11,6 +11,21 @@ where
 {
     Request(T),
     Response(T::Response),
+}
+
+impl<P, T> PartialEq for RequestResponse<P, T>
+where
+    T: RequestWithResponse<P> + PartialEq,
+    T::Response: PartialEq,
+    P: PoolItem,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Request(l0), Self::Request(r0)) => l0 == r0,
+            (Self::Response(l0), Self::Response(r0)) => l0 == r0,
+            _ => false,
+        }
+    }
 }
 
 impl<P, T> RequestResponse<P, T>

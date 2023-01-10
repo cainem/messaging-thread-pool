@@ -51,10 +51,7 @@ where
                 i
             });
 
-            building.push(ThreadEndpoint {
-                sender: send_to_thread,
-                join_handle,
-            });
+            building.push(ThreadEndpoint::new(send_to_thread, join_handle));
         }
 
         ThreadPool {

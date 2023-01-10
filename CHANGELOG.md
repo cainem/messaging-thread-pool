@@ -26,4 +26,6 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Relax Send constraint on IdTargeted trait.
 - Replace RequestResponseMessage with RequestWithResponse trait to simplify use.
 - Add more re-exports to simplify exposed modules
+- Add custom partial_eq implementation to request_response.
+- Make ThreadEndpoint fields private
 
