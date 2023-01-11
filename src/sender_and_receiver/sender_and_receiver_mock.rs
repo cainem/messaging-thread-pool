@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::sync::Mutex;
 
 use crate::{
@@ -26,7 +25,6 @@ where
     P: PoolItem,
     T: RequestWithResponse<P>,
 {
-    phantom_data: PhantomData<P>,
     assert_requests_equal: bool,
     expected_requests: Mutex<Vec<T>>,
     returned_responses: Mutex<Vec<T::Response>>,
@@ -47,7 +45,6 @@ where
             "number of requests do not match number of responses"
         );
         Self {
-            phantom_data: PhantomData,
             assert_requests_equal: true,
             expected_requests: Mutex::new(expected_requests),
             returned_responses: Mutex::new(returned_responses),
@@ -56,7 +53,6 @@ where
 
     pub fn new(returned_responses: Vec<T::Response>) -> Self {
         Self {
-            phantom_data: PhantomData,
             assert_requests_equal: false,
             expected_requests: Mutex::new(vec![]),
             returned_responses: Mutex::new(returned_responses),
