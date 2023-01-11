@@ -3,6 +3,7 @@ mod id_targeted;
 use crate::{pool_item::PoolItem, request_with_response::RequestWithResponse};
 use std::fmt::Debug;
 
+/// This enum holds either a request or it's associated response
 #[derive(Debug)]
 pub enum RequestResponse<P, T>
 where
@@ -11,6 +12,18 @@ where
 {
     Request(T),
     Response(T::Response),
+}
+
+impl<P, T> RequestResponse<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    /// Creates a new request from a type that implements RequestWithResponse
+    /// i.e. it is known to be a request
+    pub fn new(request_with_response: T) -> Self {
+        RequestResponse::Request(request_with_response)
+    }
 }
 
 impl<P, T> PartialEq for RequestResponse<P, T>

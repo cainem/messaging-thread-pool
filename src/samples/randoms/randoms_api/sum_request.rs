@@ -10,6 +10,7 @@ impl IdTargeted for SumRequest {
     }
 }
 
+/// ties together the request with a response
 impl RequestWithResponse<Randoms> for SumRequest {
     type Response = SumResponse;
 }

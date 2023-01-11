@@ -12,6 +12,7 @@ impl IdTargeted for MeanRequest {
     }
 }
 
+/// ties together the request with a response
 impl RequestWithResponse<Randoms> for MeanRequest {
     type Response = MeanResponse;
 }

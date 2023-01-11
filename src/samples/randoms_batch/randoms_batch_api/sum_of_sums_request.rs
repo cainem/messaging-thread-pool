@@ -17,6 +17,7 @@ impl IdTargeted for SumOfSumsRequest {
     }
 }
 
+/// ties together the request with a response
 impl<P> RequestWithResponse<RandomsBatch<P>> for SumOfSumsRequest
 where
     P: SenderAndReceiver<Randoms> + Send + Debug + Sync,

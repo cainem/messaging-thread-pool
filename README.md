@@ -8,8 +8,10 @@
 
 `messaging_thread_pool` provides a set traits and structs that allows the construction of a simple typed thread pool.
 
+It is useful when the type that needs to be distributed has complex state that is not send/sync.\
+If the state is send and sync then it is probably better to use a more conventional thread pool such as rayon.\
 Instances of the type are distributed across the threads of the thread pool and are tied to their allocated thread for their entire lifetime.\
-Instances therefore <b>do not need to be send nor sync</b> (although the messages used to communicate with them do). \
+Hence instances <b>do not need to be send nor sync</b> (although the messages used to communicate with them do). \
 
 The library infrastructure then allows the routing of messages to specific instances based on a key.\
 Any work required to respond to a message is executed on that instances assigned thread pool thread.\
@@ -40,22 +42,25 @@ This approximately equates to providing a constructor for the pool items, a set 
 ```rust
 // defining the api with which to communicate with the pool item
 pub enum RandomsApi {
-    Mean(RequestResponse<MEAN, MeanRequest, MeanResponse>),
-    Sum(RequestResponse<SUM, SumRequest, SumResponse>),
+    Mean(RequestResponse<Randoms, MeanRequest>),
+    Sum(RequestResponse<Randoms, SumRequest>),
 }
 
 // a request needs to contain the id of the targeted pool item
 pub struct MeanRequest(pub usize);
+
+// implementing this trait binds together a request and response
+// it tells the pool infrastructure what response is expected
+// from a given request
+impl RequestWithResponse<Randoms> for MeanRequest {
+    type Response = MeanResponse;
+}
 
 // a response contains the results of the operation
 pub struct MeanResponse {
     pub id: usize,
     pub mean: u128,
 }
-
-// requests and responses are associated at compile time by a 
-// common constant
-pub const SUM: usize = 1;
 
 // this function (from the PoolItem trait) defines what to do 
 // on receipt of a request and how to respond to it
