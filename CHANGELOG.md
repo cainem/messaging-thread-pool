@@ -29,4 +29,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add custom partial_eq implementation to request_response.
 - Make ThreadEndpoint fields private
 - Remove unnecessary PhantomData from SenderAndReceiverMock
+- Add was_called to SenderAndReceiverMock
 

@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use std::sync::Mutex;
+use std::{cell::Cell, fmt::Debug};
 
 use crate::{
     pool_item::PoolItem, request_with_response::RequestWithResponse,
@@ -26,6 +26,7 @@ where
     T: RequestWithResponse<P>,
 {
     assert_requests_equal: bool,
+    was_called: Cell<bool>,
     expected_requests: Mutex<Vec<T>>,
     returned_responses: Mutex<Vec<T::Response>>,
 }
@@ -45,6 +46,7 @@ where
             "number of requests do not match number of responses"
         );
         Self {
+            was_called: Cell::new(false),
             assert_requests_equal: true,
             expected_requests: Mutex::new(expected_requests),
             returned_responses: Mutex::new(returned_responses),
@@ -53,10 +55,15 @@ where
 
     pub fn new(returned_responses: Vec<T::Response>) -> Self {
         Self {
+            was_called: Cell::new(false),
             assert_requests_equal: false,
             expected_requests: Mutex::new(vec![]),
             returned_responses: Mutex::new(returned_responses),
         }
+    }
+
+    pub fn was_called(&self) -> bool {
+        self.was_called.get()
     }
 }
 
@@ -78,6 +85,7 @@ where
         // materialize requests to establish len
         let requests: Vec<T> = requests.into_iter().collect();
         let actual_count = requests.len();
+        self.was_called.set(true);
 
         if self.assert_requests_equal {
             let expected_count = self.expected_requests.lock().unwrap().iter().count();
@@ -136,6 +144,7 @@ mod tests {
             response_0.clone(),
             response_1.clone(),
         ]);
+        assert!(!mock.was_called());
 
         let results_0: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1)].into_iter())
@@ -163,6 +172,7 @@ mod tests {
 
         let _results: Vec<MeanResponse> =
             mock.send_and_receive(vec![request_0].into_iter()).collect();
+        assert!(mock.was_called());
     }
 
     #[test]
@@ -179,6 +189,7 @@ mod tests {
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1), MeanRequest(2)].into_iter())
             .collect();
+        assert!(mock.was_called());
     }
 
     #[test]
@@ -191,6 +202,7 @@ mod tests {
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
             .collect();
+        assert!(mock.was_called());
     }
 
     #[test]
@@ -220,6 +232,7 @@ mod tests {
 
         assert_eq!(1, results.len());
         assert_eq!(response_0, results[0]);
+        assert!(mock.was_called());
     }
 
     #[test]
@@ -234,6 +247,7 @@ mod tests {
             .collect();
 
         assert_eq!(0, results.len());
+        assert!(mock.was_called());
     }
 
     #[test]
@@ -245,5 +259,6 @@ mod tests {
             .collect();
 
         assert_eq!(0, results.len());
+        assert!(mock.was_called());
     }
 }
