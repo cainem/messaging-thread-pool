@@ -1,5 +1,5 @@
+use std::fmt::Debug;
 use std::sync::Mutex;
-use std::{cell::Cell, fmt::Debug};
 
 use crate::{
     pool_item::PoolItem, request_with_response::RequestWithResponse,
@@ -26,7 +26,7 @@ where
     T: RequestWithResponse<P>,
 {
     assert_requests_equal: bool,
-    was_called: Cell<bool>,
+    was_called: Mutex<bool>,
     expected_requests: Mutex<Vec<T>>,
     returned_responses: Mutex<Vec<T::Response>>,
 }
@@ -46,7 +46,7 @@ where
             "number of requests do not match number of responses"
         );
         Self {
-            was_called: Cell::new(false),
+            was_called: Mutex::new(false),
             assert_requests_equal: true,
             expected_requests: Mutex::new(expected_requests),
             returned_responses: Mutex::new(returned_responses),
@@ -55,7 +55,7 @@ where
 
     pub fn new(returned_responses: Vec<T::Response>) -> Self {
         Self {
-            was_called: Cell::new(false),
+            was_called: Mutex::new(false),
             assert_requests_equal: false,
             expected_requests: Mutex::new(vec![]),
             returned_responses: Mutex::new(returned_responses),
@@ -63,7 +63,7 @@ where
     }
 
     pub fn was_called(&self) -> bool {
-        self.was_called.get()
+        *self.was_called.lock().expect("that lock will never fail")
     }
 }
 
@@ -85,7 +85,10 @@ where
         // materialize requests to establish len
         let requests: Vec<T> = requests.into_iter().collect();
         let actual_count = requests.len();
-        self.was_called.set(true);
+        match self.was_called.lock() {
+            Ok(mut result) => *result = true,
+            _ => panic!(),
+        }
 
         if self.assert_requests_equal {
             let expected_count = self.expected_requests.lock().unwrap().iter().count();
@@ -128,12 +131,28 @@ where
 #[cfg(test)]
 mod tests {
 
+    use criterion::black_box;
+
     use crate::{
         samples::{MeanRequest, MeanResponse, Randoms},
         sender_and_receiver::SenderAndReceiver,
     };
 
     use super::SenderAndReceiverMock;
+
+    #[test]
+    fn check_mock_send_and_sync() {
+        // enforce that the mock is send and sync when the request is
+        let target = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![]);
+        send_and_sync(target);
+    }
+
+    fn send_and_sync<T>(_check_me: T)
+    where
+        T: Send + Sync,
+    {
+        black_box(())
+    }
 
     #[test]
     fn two_responses_returned_over_multiple_requests() {
