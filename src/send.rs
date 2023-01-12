@@ -38,7 +38,12 @@ where
         for request in requests {
             // route to correct thread; share the load based on id and the mod of the thread count
             let targeted = request.id() % thread_count;
-            event!(Level::DEBUG, "Sending to target {}", request.id());
+            event!(
+                Level::DEBUG,
+                "Sending to target {} id={}",
+                std::any::type_name::<T>(),
+                request.id()
+            );
             event!(Level::TRACE, ?request);
             guard[targeted].send(&send_back_to.clone(), request);
             request_count += 1;
