@@ -122,6 +122,7 @@ use messaging_thread_pool::{samples::*,
     // itself is dropped.
     thread_pool
         .send_and_receive((0..1000usize)
+        .expect("thread pool to be available")
         .map(|i| RandomsAddRequest(i)))
         .for_each(|response: AddResponse| 
             assert!(response.success()));
@@ -134,6 +135,7 @@ use messaging_thread_pool::{samples::*,
     // the responses returned
     let sums: Vec<SumResponse> = thread_pool
         .send_and_receive((0..1000usize)
+        .expect("thread pool to be available")
         .map(|i| SumRequest(i)))
         .collect();
     assert_eq!(1000, sums.len());
@@ -143,6 +145,7 @@ use messaging_thread_pool::{samples::*,
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
         .send_and_receive(iter::once(MeanRequest(0)))
+        .expect("thread pool to be available")
         .nth(0)
         .unwrap();
     println!("{}", mean_response_0.mean());
@@ -152,12 +155,14 @@ use messaging_thread_pool::{samples::*,
     // freeing up any memory it was using
     thread_pool
         .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+        .expect("thread pool to be available")
         .for_each(|response: RemovePoolItemResponse| 
             assert!(response.success()));
 
     // add a new object with id 1000
     thread_pool
         .send_and_receive(iter::once(RandomsAddRequest(1000)))
+        .expect("thread pool to be available")
         .for_each(|response: AddResponse| 
             assert!(response.success()));
 

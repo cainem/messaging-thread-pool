@@ -21,8 +21,9 @@ where
     fn new(contained_thread_pool: T, ids: impl Iterator<Item = usize>) -> Self {
         let ids: Vec<_> = ids.collect();
 
-        let _: Box<dyn Iterator<Item = AddResponse>> =
-            contained_thread_pool.send_and_receive(ids.iter().map(|id| RandomsAddRequest(*id)));
+        let _: Box<dyn Iterator<Item = AddResponse>> = contained_thread_pool
+            .send_and_receive(ids.iter().map(|id| RandomsAddRequest(*id)))
+            .expect("contained thread pool to be available");
 
         Self {
             contained_ids: ids,
@@ -36,6 +37,7 @@ where
         let result: u128 = self
             .contained_thread_pool
             .send_and_receive(self.contained_ids.iter().map(|id| MeanRequest(*id)))
+            .expect("contained thread pool to be available")
             .map(|res: MeanResponse| res.mean)
             .sum();
 

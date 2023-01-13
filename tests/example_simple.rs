@@ -15,6 +15,7 @@ pub fn example_simple_one_level_thread_pool() {
     // is dropped.
     thread_pool
         .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
+        .expect("thread pool to be available")
         .for_each(|response: AddResponse| assert!(response.success()));
 
     // now create 1000 messages asking them for the sum of the Randoms objects contained random numbers
@@ -22,6 +23,7 @@ pub fn example_simple_one_level_thread_pool() {
     // This call will block until all of the work is done and the responses returned
     let sums: Vec<SumResponse> = thread_pool
         .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
+        .expect("thread pool to be available")
         .collect();
     assert_eq!(1000, sums.len());
 
@@ -29,6 +31,7 @@ pub fn example_simple_one_level_thread_pool() {
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
         .send_and_receive(iter::once(MeanRequest(0)))
+        .expect("thread pool to be available")
         .nth(0)
         .unwrap();
     println!("{}", mean_response_0.mean());
@@ -37,11 +40,13 @@ pub fn example_simple_one_level_thread_pool() {
     // it will be dropped from the thread where it was residing
     thread_pool
         .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+        .expect("thread pool to be available")
         .for_each(|response: RemovePoolItemResponse| assert!(response.success()));
 
     // add a new pool item with id 1000
     thread_pool
         .send_and_receive(iter::once(RandomsAddRequest(1000)))
+        .expect("thread pool to be available")
         .for_each(|response: AddResponse| assert!(response.success()));
 
     // all pool items are dropped when the basic thread pool batcher is dropped

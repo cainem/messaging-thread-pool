@@ -8,6 +8,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
             thread_pool
                 .send_and_receive((0..1000).map(|i| RandomsAddRequest(i)))
+                .expect("thread pool to exist")
                 .for_each(|_: AddResponse| {});
 
             thread_pool.shutdown();

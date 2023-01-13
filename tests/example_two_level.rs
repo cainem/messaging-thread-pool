@@ -44,6 +44,7 @@ pub fn example_random_batches_() {
             id_provider: id_provider.clone(),
             randoms_thread_pool: Arc::clone(&randoms_thread_pool),
         }))
+        .expect("thread pool to be available")
         .for_each(|response: AddResponse| assert!(response.success()));
 
     // now request the "sum of sums" from each RandomBatch by sending a request to each of the RandomsBatches
@@ -54,6 +55,7 @@ pub fn example_random_batches_() {
     // this call distributes the work across the thread pool and blocks until all of the work is done
     let sum_of_sums: Vec<u128> = randoms_batch_thread_pool
         .send_and_receive((0..10).map(|id| SumOfSumsRequest(id)))
+        .expect("thread pool to be available")
         .map(|response: SumOfSumsResponse| response.sum_of_sums())
         .collect();
 

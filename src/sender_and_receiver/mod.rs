@@ -3,8 +3,10 @@ mod thread_pool;
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
+    sender_couplet::SenderCouplet,
 };
 
+use crossbeam_channel::SendError;
 pub use sender_and_receiver_mock::SenderAndReceiverMock;
 
 /// This trait allows a consumer to use a trait instead of the concrete implementation of thread pool.\\
@@ -20,7 +22,7 @@ where
     fn send_and_receive<'a, T>(
         &'a self,
         requests: impl Iterator<Item = T> + 'a,
-    ) -> Box<dyn Iterator<Item = T::Response> + 'a>
+    ) -> Result<Box<dyn Iterator<Item = T::Response> + 'a>, SendError<SenderCouplet<P>>>
     where
         T: RequestWithResponse<P> + IdTargeted + 'a;
 }

@@ -1,9 +1,9 @@
-use crossbeam_channel::Sender;
+use crossbeam_channel::{SendError, Sender};
 use tracing::{event, instrument, Level};
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
-    thread_request_response::ThreadRequestResponse, ThreadPool,
+    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -22,7 +22,7 @@ where
         &self,
         send_back_to: Sender<ThreadRequestResponse<P>>,
         requests: impl Iterator<Item = T>,
-    ) -> usize
+    ) -> Result<usize, SendError<SenderCouplet<P>>>
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
@@ -45,11 +45,11 @@ where
                 request.id()
             );
             event!(Level::TRACE, ?request);
-            guard[targeted].send(&send_back_to.clone(), request);
+            guard[targeted].send(&send_back_to.clone(), request)?;
             request_count += 1;
         }
 
-        request_count
+        Ok(request_count)
     }
 }
 
@@ -67,7 +67,7 @@ mod tests {
 
         let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-        target.send(send_back_to, requests);
+        target.send(send_back_to, requests).unwrap();
 
         let mut responses = Vec::<ThreadEchoResponse>::new();
 
@@ -88,7 +88,7 @@ mod tests {
 
         let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
 
-        target.send(send_back_to, requests);
+        target.send(send_back_to, requests).unwrap();
 
         let mut responses = Vec::<ThreadEchoResponse>::new();
 
@@ -108,7 +108,7 @@ mod tests {
 
         let requests = (0..1usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-        target.send(send_back_to, requests);
+        target.send(send_back_to, requests).unwrap();
 
         let thread_echo_response: ThreadEchoResponse = receive_from_thread.recv().unwrap().into();
 

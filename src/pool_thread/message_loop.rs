@@ -37,27 +37,17 @@ where
             let SenderCouplet { return_to, request } = sender_couplet;
 
             let response = match request {
-                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
+                ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
-                    debug_assert_eq!(
-                        self.thread_id, id,
-                        "this messages should have targeted this thread"
-                    );
 
-                    return_to
-                        .send(ThreadAbortResponse(id).into())
-                        .expect("the send should always succeed");
+                    // find the pool item that needs to process the request
+                    let response = if let Some(targeted) = self.pool_item_hash_map.get_mut(&id) {
+                        targeted.process_message(request)
+                    } else {
+                        P::id_not_found(&request)
+                    };
 
-                    // return breaking out of the message loop and thus ending the thread.
-                    return;
-                }
-                ThreadRequestResponse::ThreadEcho(RequestResponse::Request(request)) => {
-                    ThreadEchoResponse::new(
-                        request.id(),
-                        request.message().to_string(),
-                        self.thread_id,
-                    )
-                    .into()
+                    response
                 }
                 ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
@@ -81,18 +71,6 @@ where
                         ),
                     }
                     .into()
-                }
-                ThreadRequestResponse::MessagePoolItem(request) => {
-                    let id = request.id();
-
-                    // find the pool item that needs to process the request
-                    let response = if let Some(targeted) = self.pool_item_hash_map.get_mut(&id) {
-                        targeted.process_message(request)
-                    } else {
-                        P::id_not_found(&request)
-                    };
-
-                    response
                 }
                 ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
@@ -119,6 +97,29 @@ where
                     // return breaking out of the message loop and thus ending the thread.
                     return;
                 }
+                ThreadRequestResponse::ThreadEcho(RequestResponse::Request(request)) => {
+                    ThreadEchoResponse::new(
+                        request.id(),
+                        request.message().to_string(),
+                        self.thread_id,
+                    )
+                    .into()
+                }
+                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
+                    let id = request.id();
+                    debug_assert_eq!(
+                        self.thread_id, id,
+                        "this messages should have targeted this thread"
+                    );
+
+                    return_to
+                        .send(ThreadAbortResponse(id).into())
+                        .expect("the send should always succeed");
+
+                    // return breaking out of the message loop and thus ending the thread.
+                    return;
+                }
+
                 _ => panic!("unrecognised thread thread request"),
             };
             event!(Level::TRACE, ?response, message = "sending response");

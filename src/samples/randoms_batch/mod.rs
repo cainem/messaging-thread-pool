@@ -43,6 +43,7 @@ where
         let mut ids = Vec::<usize>::default();
         new.randoms_thread_pool()
             .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
+            .expect("randoms thread pool to be available")
             .for_each(|r: AddResponse| {
                 assert!(r.success(), "Request to add Randoms failed");
                 ids.push(r.id());
@@ -62,6 +63,7 @@ where
         // and then add them all up
         self.randoms_thread_pool()
             .send_and_receive(self.contained_random_ids.iter().map(|id| SumRequest(*id)))
+            .expect("randoms thread pool to be available")
             .map(|response: SumResponse| response.sum())
             .sum()
     }

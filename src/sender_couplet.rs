@@ -7,7 +7,7 @@ use crate::{
 
 /// A struct that defines the contents of a message sent to the thread pool
 #[derive(Debug)]
-pub(crate) struct SenderCouplet<P>
+pub struct SenderCouplet<P>
 where
     P: PoolItem,
 {

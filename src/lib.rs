@@ -38,6 +38,7 @@
 //!    // thread pool itself is dropped.
 //!    thread_pool
 //!        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
+//!        .expect("thread pool to be available")
 //!        .for_each(|response: AddResponse| assert!(response.success()));
 //!
 //!    // now create 1000 messages asking them for the sum of the Randoms objects contained
@@ -46,6 +47,7 @@
 //!    // This call will block until all of the work is done and the responses returned
 //!    let sums: Vec<SumResponse> = thread_pool
 //!        .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
+//!        .expect("thread pool to be available")
 //!        .collect();
 //!    assert_eq!(1000, sums.len());
 //!
@@ -53,6 +55,7 @@
 //!    // this call will block until complete
 //!    let mean_response_0: MeanResponse = thread_pool
 //!        .send_and_receive(iter::once(MeanRequest(0)))
+//!        .expect("thread pool to be available")
 //!        .nth(0)
 //!        .unwrap();
 //!    println!("{}", mean_response_0.mean());
@@ -61,29 +64,19 @@
 //!    // it will be dropped from the thread where it was residing
 //!    thread_pool
 //!        .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+//!        .expect("thread pool to be available")
 //!        .for_each(|response: RemovePoolItemResponse| assert!(response.success()));
 //!
 //!    // add a new object with id 1000
 //!    thread_pool
 //!        .send_and_receive(iter::once(RandomsAddRequest(1000)))
+//!        .expect("thread pool to be available")
 //!        .for_each(|response: AddResponse| assert!(response.success()));
 //!
 //!    // all objects are dropped when the basic thread pool batcher is dropped
 //!    // the threads are shutdown and joined back the the main thread
 //!    drop(thread_pool);
 //! ```
-//!
-//! # Panics
-//!
-//! There are several reasons currently why the thread pool will panic.\
-//!
-//! The list of reasons includes the following:-
-//!
-//! * If a request is made to create an instance whose id already exists.
-//! * If a request is made to shutdown or abort a thread with a given id does not exist.
-//!
-//! Also if any of the internal instances themselves panic there is no protection provided against this
-//! and the thread panic, which in turn causes the thread pool to eventually panic.
 //!
 //! # Limitations
 //!
@@ -104,6 +97,7 @@ use thread_endpoint::ThreadEndpoint;
 pub mod global_test_scope;
 pub mod id_provider;
 pub mod samples;
+pub mod sender_couplet;
 
 mod drop;
 mod id_targeted;
@@ -117,7 +111,6 @@ mod request_with_response;
 mod send;
 mod send_and_receive;
 mod sender_and_receiver;
-mod sender_couplet;
 mod shutdown;
 mod thread_endpoint;
 mod thread_request_response;
@@ -127,6 +120,7 @@ pub use pool_item::*;
 pub use request_response::RequestResponse;
 pub use request_with_response::RequestWithResponse;
 pub use sender_and_receiver::*;
+pub use sender_couplet::*;
 pub use thread_request_response::*;
 
 /// This struct represents a pool of threads that can target a particular type of

@@ -44,7 +44,7 @@ mod tests {
 
         let requests = (0..3usize).map(|id| ThreadEchoRequest::new(id, format!("ping {}", id)));
 
-        target.send(send_to_pool, requests);
+        target.send(send_to_pool, requests).unwrap();
 
         let results: Vec<ThreadEchoResponse> = target
             .receive::<ThreadEchoRequest>(receive_from_thread)
@@ -65,7 +65,7 @@ mod tests {
 
         let requests: Vec<_> = (0..1).map(|id| RandomsAddRequest(id)).collect();
 
-        target.send(send_to_pool, requests.into_iter());
+        target.send(send_to_pool, requests.into_iter()).unwrap();
 
         let result: Vec<AddResponse> = target
             .receive::<RandomsAddRequest>(receive_from_thread)

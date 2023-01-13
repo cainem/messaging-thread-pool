@@ -30,4 +30,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Make ThreadEndpoint fields private
 - Remove unnecessary PhantomData from SenderAndReceiverMock
 - Add was_called to SenderAndReceiverMock
+- Change send to return a Result and propagate result where necessary
 

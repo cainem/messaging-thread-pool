@@ -9,7 +9,6 @@ impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
 
-    /// here
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsApi::Mean(request) => MeanResponse {
@@ -22,6 +21,7 @@ impl PoolItem for Randoms {
                 sum: self.sum(),
             }
             .into(),
+            RandomsApi::Panic(_request) => panic!("request to panic received"),
         }
     }
 

@@ -1,6 +1,8 @@
+use crossbeam_channel::SendError;
+
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
-    ThreadPool,
+    sender_couplet::SenderCouplet, ThreadPool,
 };
 
 use super::SenderAndReceiver;
@@ -13,10 +15,13 @@ where
     fn send_and_receive<'a, T>(
         &'a self,
         requests: impl Iterator<Item = T> + 'a,
-    ) -> Box<dyn Iterator<Item = T::Response> + 'a>
+    ) -> Result<Box<dyn Iterator<Item = T::Response> + 'a>, SendError<SenderCouplet<P>>>
     where
         T: RequestWithResponse<P> + IdTargeted + 'a,
     {
-        Box::new(self.send_and_receive(requests))
+        match self.send_and_receive(requests) {
+            Ok(result) => Ok(Box::new(result)),
+            Err(err) => Err(err),
+        }
     }
 }

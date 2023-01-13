@@ -1,8 +1,10 @@
 use std::fmt::Debug;
 use std::sync::Mutex;
 
+use crossbeam_channel::SendError;
+
 use crate::{
-    pool_item::PoolItem, request_with_response::RequestWithResponse,
+    pool_item::PoolItem, request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
     thread_request_response::ThreadRequestResponse,
 };
 
@@ -78,7 +80,7 @@ where
     fn send_and_receive<'a, T>(
         &'a self,
         requests: impl Iterator<Item = T> + 'a,
-    ) -> Box<dyn Iterator<Item = T::Response> + 'a>
+    ) -> Result<Box<dyn Iterator<Item = T::Response> + 'a>, SendError<SenderCouplet<P>>>
     where
         T: RequestWithResponse<P> + 'a,
     {
@@ -124,7 +126,7 @@ where
             .map(<T::Response as From<ThreadRequestResponse<P>>>::from)
             .collect();
 
-        Box::new(results.into_iter())
+        Ok(Box::new(results.into_iter()))
     }
 }
 
@@ -167,9 +169,11 @@ mod tests {
 
         let results_0: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .unwrap()
             .collect();
         let results_1: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(2)].into_iter())
+            .unwrap()
             .collect();
 
         assert_eq!(1, results_0.len());
@@ -189,8 +193,10 @@ mod tests {
             vec![response_0.clone()],
         );
 
-        let _results: Vec<MeanResponse> =
-            mock.send_and_receive(vec![request_0].into_iter()).collect();
+        let _results: Vec<MeanResponse> = mock
+            .send_and_receive(vec![request_0].into_iter())
+            .unwrap()
+            .collect();
         assert!(mock.was_called());
     }
 
@@ -207,6 +213,7 @@ mod tests {
 
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1), MeanRequest(2)].into_iter())
+            .unwrap()
             .collect();
         assert!(mock.was_called());
     }
@@ -220,6 +227,7 @@ mod tests {
 
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
+            .unwrap()
             .collect();
         assert!(mock.was_called());
     }
@@ -236,6 +244,7 @@ mod tests {
 
         let _results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .unwrap()
             .collect();
     }
 
@@ -247,6 +256,7 @@ mod tests {
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .unwrap()
             .collect();
 
         assert_eq!(1, results.len());
@@ -263,6 +273,7 @@ mod tests {
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
+            .unwrap()
             .collect();
 
         assert_eq!(0, results.len());
@@ -275,6 +286,7 @@ mod tests {
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())
+            .unwrap()
             .collect();
 
         assert_eq!(0, results.len());

@@ -1,9 +1,9 @@
-use crossbeam_channel::unbounded;
+use crossbeam_channel::{unbounded, SendError};
 use tracing::instrument;
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
-    thread_request_response::ThreadRequestResponse, ThreadPool,
+    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -17,13 +17,13 @@ where
     pub fn send_and_receive<T>(
         &self,
         requests: impl Iterator<Item = T>,
-    ) -> impl Iterator<Item = T::Response>
+    ) -> Result<impl Iterator<Item = T::Response>, SendError<SenderCouplet<P>>>
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
         let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
-        self.send(return_back_to, requests);
-        self.receive::<T>(receive_from_worker)
+        self.send(return_back_to, requests)?;
+        Ok(self.receive::<T>(receive_from_worker))
     }
 }
 
@@ -37,7 +37,7 @@ mod tests {
 
         let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {}", i)));
 
-        let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).collect();
+        let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).unwrap().collect();
 
         assert_eq!(results.len(), 3);
 
@@ -52,7 +52,7 @@ mod tests {
 
         let requests = (0..1).map(|id| RandomsAddRequest(id));
 
-        let result: Vec<AddResponse> = target.send_and_receive(requests).collect();
+        let result: Vec<AddResponse> = target.send_and_receive(requests).unwrap().collect();
 
         assert_eq!(result.len(), 1);
         assert_eq!(0, result[0].id());
