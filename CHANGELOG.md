@@ -31,4 +31,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Remove unnecessary PhantomData from SenderAndReceiverMock
 - Add was_called to SenderAndReceiverMock
 - Change send to return a Result and propagate result where necessary
+- Make error_message in NewPoolItemError public
 

@@ -64,11 +64,9 @@ where
                             self.pool_item_hash_map.insert(id, new_pool_item);
                             AddResponse::new(id, true, None)
                         }
-                        Err(new_pool_item_error) => AddResponse::new(
-                            id,
-                            false,
-                            Some(new_pool_item_error.take_error_message()),
-                        ),
+                        Err(new_pool_item_error) => {
+                            AddResponse::new(id, false, Some(new_pool_item_error.error_message))
+                        }
                     }
                     .into()
                 }
