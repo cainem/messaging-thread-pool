@@ -177,10 +177,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -223,10 +220,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -263,10 +257,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(15),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(15)))
             .unwrap();
 
         target.message_loop();
@@ -313,10 +304,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(5),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(5)))
             .unwrap();
 
         target.message_loop();
@@ -365,10 +353,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -398,10 +383,7 @@ mod tests {
             .unwrap();
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadAbortRequest(3),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadAbortRequest(3)))
             .unwrap();
 
         target.message_loop();
@@ -429,10 +411,7 @@ mod tests {
             .unwrap();
         // send the abort message so that the message loop exits and keeps the state
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadAbortRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadAbortRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -459,10 +438,7 @@ mod tests {
             ))
             .unwrap();
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();

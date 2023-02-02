@@ -49,7 +49,7 @@ mod tests {
 
         let target = ThreadEndpoint {
             sender: to_thread_sender,
-            join_handle: join_handle,
+            join_handle,
         };
 
         // call send

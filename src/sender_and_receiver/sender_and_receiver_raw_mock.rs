@@ -98,9 +98,7 @@ where
             let expected_count = self.expected_requests.lock().unwrap().iter().count();
             assert!(
                 expected_count >= actual_count,
-                "count of expected [{}] less than actual requests [{}]",
-                expected_count,
-                actual_count
+                "count of expected [{expected_count}] less than actual requests [{actual_count}]"
             );
             self.expected_requests
                 .lock()
@@ -216,7 +214,7 @@ mod tests {
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new_with_expected_requests(
             vec![MeanRequest(2).into()],
-            vec![response_0.clone().into()],
+            vec![response_0.into()],
         );
 
         let _results: Vec<MeanResponse> = mock
@@ -233,8 +231,8 @@ mod tests {
         let response_0 = MeanResponse { id: 1, mean: 22 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new_with_expected_requests(
-            vec![request_0.clone().into()],
-            vec![response_0.clone().into()],
+            vec![request_0.into()],
+            vec![response_0.into()],
         );
 
         let _results: Vec<MeanResponse> = mock
@@ -262,7 +260,7 @@ mod tests {
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new_with_expected_requests(
             vec![],
-            vec![response_0.clone().into()],
+            vec![response_0.into()],
         );
 
         let _results: Vec<MeanResponse> = mock

@@ -96,9 +96,7 @@ where
             let expected_count = self.expected_requests.lock().unwrap().iter().count();
             assert!(
                 expected_count >= actual_count,
-                "count of expected [{}] less than actual requests [{}]",
-                expected_count,
-                actual_count
+                "count of expected [{expected_count}] less than actual requests [{actual_count}]"
             );
             self.expected_requests
                 .lock()
@@ -190,7 +188,7 @@ mod tests {
 
         let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
             vec![MeanRequest(2)],
-            vec![response_0.clone()],
+            vec![response_0],
         );
 
         let _results: Vec<MeanResponse> = mock
@@ -207,8 +205,8 @@ mod tests {
         let response_0 = MeanResponse { id: 1, mean: 22 };
 
         let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
-            vec![request_0.clone()],
-            vec![response_0.clone()],
+            vec![request_0],
+            vec![response_0],
         );
 
         let _results: Vec<MeanResponse> = mock
@@ -239,7 +237,7 @@ mod tests {
 
         let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
             vec![],
-            vec![response_0.clone()],
+            vec![response_0],
         );
 
         let _results: Vec<MeanResponse> = mock

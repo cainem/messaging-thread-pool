@@ -7,7 +7,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             let thread_pool = ThreadPool::<Randoms>::new(20);
 
             thread_pool
-                .send_and_receive((0..1000).map(|i| RandomsAddRequest(i)))
+                .send_and_receive((0..1000).map(RandomsAddRequest))
                 .expect("thread pool to exist")
                 .for_each(|_: AddResponse| {});
 

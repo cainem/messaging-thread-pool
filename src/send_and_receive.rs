@@ -35,7 +35,7 @@ mod tests {
     fn two_threads_three_echoes_receives_expected_response() {
         let target = ThreadPool::<Randoms>::new(2);
 
-        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {}", i)));
+        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {i}")));
 
         let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).unwrap().collect();
 
@@ -50,7 +50,7 @@ mod tests {
     fn single_thread_single_init_receives_expected_response() {
         let target = ThreadPool::<Randoms>::new(1);
 
-        let requests = (0..1).map(|id| RandomsAddRequest(id));
+        let requests = (0..1).map(RandomsAddRequest);
 
         let result: Vec<AddResponse> = target.send_and_receive(requests).unwrap().collect();
 

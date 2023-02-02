@@ -42,7 +42,7 @@ mod tests {
 
         let (send_to_pool, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests = (0..3usize).map(|id| ThreadEchoRequest::new(id, format!("ping {}", id)));
+        let requests = (0..3usize).map(|id| ThreadEchoRequest::new(id, format!("ping {id}")));
 
         target.send(send_to_pool, requests).unwrap();
 
@@ -63,7 +63,7 @@ mod tests {
 
         let (send_to_pool, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests: Vec<_> = (0..1).map(|id| RandomsAddRequest(id)).collect();
+        let requests: Vec<_> = (0..1).map(RandomsAddRequest).collect();
 
         target.send(send_to_pool, requests.into_iter()).unwrap();
 

@@ -54,7 +54,7 @@ pub fn example_random_batches_() {
 
     // this call distributes the work across the thread pool and blocks until all of the work is done
     let sum_of_sums: Vec<u128> = randoms_batch_thread_pool
-        .send_and_receive((0..10).map(|id| SumOfSumsRequest(id)))
+        .send_and_receive((0..10).map(SumOfSumsRequest))
         .expect("thread pool to be available")
         .map(|response: SumOfSumsResponse| response.sum_of_sums())
         .collect();

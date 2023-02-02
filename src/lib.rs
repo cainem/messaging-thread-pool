@@ -158,7 +158,7 @@ mod tests {
         let result = ThreadPool::<Randoms>::new(2);
 
         // one thread created
-        assert_eq!(2, usize::from(result.thread_count()));
+        assert_eq!(2, result.thread_count());
 
         // shutdown the thread pool
         result.shutdown();
@@ -169,7 +169,7 @@ mod tests {
         let result = ThreadPool::<Randoms>::new(1);
 
         // one thread created
-        assert_eq!(1, usize::from(result.thread_count()));
+        assert_eq!(1, result.thread_count());
 
         // shutdown the thread pool
         result.shutdown();
