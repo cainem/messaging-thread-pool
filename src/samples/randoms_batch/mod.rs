@@ -42,7 +42,10 @@ where
 
         let mut ids = Vec::<usize>::default();
         new.randoms_thread_pool()
-            .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
+            .send_and_receive(
+                (0..add_request.number_of_contained_randoms)
+                    .map(|_| RandomsAddRequest(new.id_provider.next_id())),
+            )
             .expect("randoms thread pool to be available")
             .for_each(|r: AddResponse| {
                 assert!(r.result().is_ok(), "Request to add Randoms failed");

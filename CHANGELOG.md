@@ -35,4 +35,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add SendAndReceiverRawMock to deal with heterogeneous streams of messages
 - Change success() to item_existed() in RemovePoolItemResponse
 - Change success() to result in AddResponse
+- Ignore requests to add and existing key; return appropriate error in response
 

@@ -1,3 +1,5 @@
+use std::collections::btree_map::Entry;
+
 use tracing::{event, Level};
 
 use crate::{
@@ -51,18 +53,26 @@ where
                 }
                 ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
-                    let new_pool_item = P::new_pool_item(request);
 
-                    // element did exist therefore it can only be a request to create a new pool item
-                    match new_pool_item {
+                    match P::new_pool_item(request) {
                         Ok(new_pool_item) => {
                             event!(
                                 Level::DEBUG,
                                 "Inserting a new {:?} into the threads map",
                                 new_pool_item.name()
                             );
-                            self.pool_item_map.insert(id, new_pool_item);
-                            AddResponse::new(id, Ok(()))
+
+                            // try and add the new item
+                            match self.pool_item_map.entry(id) {
+                                Entry::Vacant(v) => {
+                                    v.insert(new_pool_item);
+                                    AddResponse::new(id, Ok(()))
+                                }
+                                Entry::Occupied(_) => AddResponse::new(
+                                    id,
+                                    Err("failed to add; pool item already exists".to_string()),
+                                ),
+                            }
                         }
                         Err(new_pool_item_error) => {
                             AddResponse::new(id, Err(new_pool_item_error.error_message))
@@ -149,6 +159,51 @@ mod tests {
         pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
         thread_request_response::*,
     };
+
+    #[test]
+    fn send_init_id_2_twice_returns_response_indicating_second_request_was_ignored() {
+        let id = 2;
+        let init_request = RandomsAddRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(3, request_receive);
+
+        // send the init request twice
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                init_request.clone(),
+            ))
+            .unwrap();
+
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(response_send, ThreadAbortRequest(3)))
+            .unwrap();
+
+        target.message_loop();
+
+        let response_0: AddResponse = response_receive.recv().unwrap().into();
+        let response_1: AddResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!(2, response_0.id());
+        assert!(response_0.result().is_ok());
+        assert_eq!(1, target.pool_item_map.len());
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
+
+        assert_eq!(2, response_1.id());
+        assert!(response_1.result().is_err());
+        assert_eq!(
+            "failed to add; pool item already exists",
+            response_1.result().err().unwrap()
+        )
+    }
 
     #[test]
     fn send_remove_element_with_id_12_expected_element_removed_from_map_set() {
