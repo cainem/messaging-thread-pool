@@ -17,7 +17,7 @@ where
     /// This function will be running in the context of its own dedicated thread
     ///
     /// Messages split logically into 2 types, pool item requests and thread requests
-    /// Pool requests are forwarded to the appropriate pool item (that is contained in a hashmap)
+    /// Pool requests are forwarded to the appropriate pool item (that is contained in a btree)
     /// The message can be targeted by virtue of the fact they all contain a key of the target that
     /// the message is intended for.
     ///
@@ -41,7 +41,7 @@ where
                     let id = request.id();
 
                     // find the pool item that needs to process the request
-                    let response = if let Some(targeted) = self.pool_item_hash_map.get_mut(&id) {
+                    let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
                         targeted.process_message(request)
                     } else {
                         P::id_not_found(&request)
@@ -58,10 +58,10 @@ where
                         Ok(new_pool_item) => {
                             event!(
                                 Level::DEBUG,
-                                "Inserting a new {:?} into the threads hash map",
+                                "Inserting a new {:?} into the threads map",
                                 new_pool_item.name()
                             );
-                            self.pool_item_hash_map.insert(id, new_pool_item);
+                            self.pool_item_map.insert(id, new_pool_item);
                             AddResponse::new(id, Ok(()))
                         }
                         Err(new_pool_item_error) => {
@@ -72,7 +72,7 @@ where
                 }
                 ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
-                    let success = self.pool_item_hash_map.remove(&id).is_some();
+                    let success = self.pool_item_map.remove(&id).is_some();
                     RemovePoolItemResponse::new(id, success).into()
                 }
                 ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
@@ -81,7 +81,7 @@ where
                         self.thread_id, id,
                         "this messages should have targeted this thread"
                     );
-                    // this call to shutdown the child threads and consequently empty the internal hash map
+                    // this call to shutdown the child threads and consequently empty the internal map
                     // is how thread shutdown differs from thread abort. Abort just exist the loop and leaves the
                     // state in place
                     let children = self.shutdown_child_pool();
@@ -89,7 +89,7 @@ where
                         .send(ThreadShutdownResponse::new(id, children).into())
                         .expect("the send should always succeed");
                     debug_assert!(
-                        self.pool_item_hash_map.is_empty(),
+                        self.pool_item_map.is_empty(),
                         "ThreadShutdown should drain all elements"
                     );
                     // return breaking out of the message loop and thus ending the thread.
@@ -151,7 +151,7 @@ mod tests {
     };
 
     #[test]
-    fn send_remove_element_with_id_12_expected_element_removed_from_hash_set() {
+    fn send_remove_element_with_id_12_expected_element_removed_from_map_set() {
         let id = 12;
         let init_request = RandomsAddRequest(id);
 
@@ -190,11 +190,11 @@ mod tests {
             response_receive.recv().unwrap().into();
 
         assert_eq!(id, remove_pool_item_response.id());
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
-    fn send_remove_element_with_id_2_expected_element_removed_from_hash_set() {
+    fn send_remove_element_with_id_2_expected_element_removed_from_map_set() {
         let id = 2;
         let init_request = RandomsAddRequest(id);
 
@@ -234,7 +234,7 @@ mod tests {
 
         assert_eq!(id, remove_pool_item_response.id());
 
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
@@ -281,7 +281,7 @@ mod tests {
                         vec![ThreadShutdownResponse::new(2, vec![])]
                     )
         );
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
@@ -327,7 +327,7 @@ mod tests {
                         vec![ThreadShutdownResponse::new(102, vec![])]
                     )
         );
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
@@ -368,7 +368,7 @@ mod tests {
     }
 
     #[test]
-    fn send_init_id_2_expected_element_added_to_hash_set() {
+    fn send_init_id_2_expected_element_added_to_map_set() {
         let id = 2;
         let init_request = RandomsAddRequest(id);
 
@@ -391,12 +391,12 @@ mod tests {
         let response: AddResponse = response_receive.recv().unwrap().into();
 
         assert_eq!(2, response.id());
-        assert_eq!(1, target.pool_item_hash_map.len());
-        assert_eq!(2, target.pool_item_hash_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_map.len());
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
     }
 
     #[test]
-    fn send_init_id_1_expected_element_added_to_hash_set() {
+    fn send_init_id_1_expected_element_added_to_map() {
         let id = 1;
         let init_request = RandomsAddRequest(id);
 
@@ -419,8 +419,8 @@ mod tests {
         let response: AddResponse = response_receive.recv().unwrap().into();
 
         assert_eq!(1, response.id());
-        assert_eq!(1, target.pool_item_hash_map.len());
-        assert_eq!(1, target.pool_item_hash_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_map.len());
+        assert_eq!(1, target.pool_item_map.get(&id).unwrap().id);
     }
 
     #[test]

@@ -10,8 +10,9 @@ where
     /// in this thread pool
     pub fn shutdown_child_pool(&mut self) -> Vec<ThreadShutdownResponse> {
         // all pool items should, if they contain a reference to a thread pool, have the ability to shut
-        // it down, so just take the last one (so as to drop all of the contained pool items) and call shutdown_child_threads
-        if let Some((_, pool_item)) = self.pool_item_hash_map.drain().last() {
+        // it down, so just take the first one, clear the map of all others and call shutdown_child_threads
+        if let Some((_, pool_item)) = self.pool_item_map.pop_first() {
+            self.pool_item_map.clear();
             pool_item.shutdown_pool()
         } else {
             vec![]
@@ -42,11 +43,11 @@ mod tests {
             numbers: vec![1, 2],
         };
 
-        target.pool_item_hash_map.insert(2, sample_pool_item);
+        target.pool_item_map.insert(2, sample_pool_item);
 
         let result = target.shutdown_child_pool();
 
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
         assert_eq!(1, result.len());
         assert_eq!(ThreadShutdownResponse::new(2, vec![]), result[0]);
     }
@@ -65,11 +66,11 @@ mod tests {
             numbers: vec![100, 200],
         };
 
-        target.pool_item_hash_map.insert(1, sample_pool_item);
+        target.pool_item_map.insert(1, sample_pool_item);
 
         let result = target.shutdown_child_pool();
 
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
         assert_eq!(1, result.len());
         assert_eq!(ThreadShutdownResponse::new(1, vec![]), result[0]);
     }
@@ -85,7 +86,7 @@ mod tests {
 
         let result = target.shutdown_child_pool();
 
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
         assert!(result.is_empty());
     }
 }

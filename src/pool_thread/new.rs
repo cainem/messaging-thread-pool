@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crossbeam_channel::Receiver;
 
@@ -25,7 +25,7 @@ where
         Self {
             thread_id: id,
             pool_thread_receiver,
-            pool_item_hash_map: HashMap::default(),
+            pool_item_map: BTreeMap::default(),
         }
     }
 }

@@ -20,7 +20,7 @@
 //     ///
 //     /// Messages are split into 2 types, element requests and non-element requests
 //     /// Element requests are forwarded to the appropriate target element (that is contained in a local
-//     /// hashmap)
+//     /// btree map)
 //     /// The message can be targeted by virtue of the fact they all contain a key of the target that
 //     /// the message is intended for.
 //     ///
