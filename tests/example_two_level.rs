@@ -45,7 +45,7 @@ pub fn example_random_batches_() {
             randoms_thread_pool: Arc::clone(&randoms_thread_pool),
         }))
         .expect("thread pool to be available")
-        .for_each(|response: AddResponse| assert!(response.success()));
+        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 
     // now request the "sum of sums" from each RandomBatch by sending a request to each of the RandomsBatches
     // This generates a large amount of work across the 2 thread pools.

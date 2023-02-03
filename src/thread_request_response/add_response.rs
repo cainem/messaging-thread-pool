@@ -4,32 +4,23 @@ use super::ThreadRequestResponse;
 
 /// This struct is returned in response to a request to add a pool item to the thread pool
 /// The success field indicates that the pool item was successfully constructed
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddResponse {
     id: usize,
-    success: bool,
-    error_message: Option<String>,
+    result: Result<(), String>,
 }
 
 impl AddResponse {
-    pub fn new(id: usize, success: bool, error_message: Option<String>) -> Self {
-        Self {
-            id,
-            success,
-            error_message,
-        }
-    }
-
-    pub fn success(&self) -> bool {
-        self.success
-    }
-
-    pub fn error_message(&self) -> Option<&String> {
-        self.error_message.as_ref()
+    pub fn new(id: usize, result: Result<(), String>) -> Self {
+        Self { id, result }
     }
 
     pub fn id(&self) -> usize {
         self.id
+    }
+
+    pub fn result(&self) -> Result<&(), &String> {
+        self.result.as_ref()
     }
 }
 
@@ -66,14 +57,14 @@ mod tests {
 
     #[test]
     fn id_2_id_returns_2() {
-        let target = AddResponse::new(2, true, None);
+        let target = AddResponse::new(2, Ok(()));
 
         assert_eq!(2, target.id());
     }
 
     #[test]
     fn id_1_id_returns_1() {
-        let target = AddResponse::new(1, true, None);
+        let target = AddResponse::new(1, Ok(()));
 
         assert_eq!(1, target.id());
     }

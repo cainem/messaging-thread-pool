@@ -39,7 +39,7 @@
 //!    thread_pool
 //!        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
 //!        .expect("thread pool to be available")
-//!        .for_each(|response: AddResponse| assert!(response.success()));
+//!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 //!
 //!    // now create 1000 messages asking them for the sum of the Randoms objects contained
 //!    // random numbers.
@@ -65,13 +65,13 @@
 //!    thread_pool
 //!        .send_and_receive(iter::once(RemovePoolItemRequest(1)))
 //!        .expect("thread pool to be available")
-//!        .for_each(|response: RemovePoolItemResponse| assert!(response.success()));
+//!        .for_each(|response: RemovePoolItemResponse| assert!(response.item_existed()));
 //!
 //!    // add a new object with id 1000
 //!    thread_pool
 //!        .send_and_receive(iter::once(RandomsAddRequest(1000)))
 //!        .expect("thread pool to be available")
-//!        .for_each(|response: AddResponse| assert!(response.success()));
+//!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 //!
 //!    // all objects are dropped when the basic thread pool batcher is dropped
 //!    // the threads are shutdown and joined back the the main thread

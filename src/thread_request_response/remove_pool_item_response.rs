@@ -5,20 +5,23 @@ use super::ThreadRequestResponse;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemResponse {
     id: usize,
-    success: bool,
+    item_existed: bool,
 }
 
 impl RemovePoolItemResponse {
     pub fn new(id: usize, success: bool) -> Self {
-        Self { id, success }
+        Self {
+            id,
+            item_existed: success,
+        }
     }
 
     pub fn id(&self) -> usize {
         self.id
     }
 
-    pub fn success(&self) -> bool {
-        self.success
+    pub fn item_existed(&self) -> bool {
+        self.item_existed
     }
 }
 

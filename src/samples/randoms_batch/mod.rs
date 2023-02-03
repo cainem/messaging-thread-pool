@@ -45,9 +45,8 @@ where
             .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
             .expect("randoms thread pool to be available")
             .for_each(|r: AddResponse| {
-                assert!(r.success(), "Request to add Randoms failed");
+                assert!(r.result().is_ok(), "Request to add Randoms failed");
                 ids.push(r.id());
-                //new.contained_random_ids_mut().push(r.id());
             });
 
         new.contained_random_ids_mut().append(&mut ids);

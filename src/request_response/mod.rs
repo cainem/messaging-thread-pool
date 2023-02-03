@@ -66,9 +66,8 @@ mod tests {
     #[test]
     #[should_panic(expected = "not expected")]
     fn request_response_contains_response_request_panics() {
-        let target = RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(
-            0, true, None,
-        ));
+        let target =
+            RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(0, Ok(())));
 
         target.request();
     }
