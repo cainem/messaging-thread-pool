@@ -9,11 +9,8 @@ pub struct RemovePoolItemResponse {
 }
 
 impl RemovePoolItemResponse {
-    pub fn new(id: usize, success: bool) -> Self {
-        Self {
-            id,
-            item_existed: success,
-        }
+    pub fn new(id: usize, item_existed: bool) -> Self {
+        Self { id, item_existed }
     }
 
     pub fn id(&self) -> usize {

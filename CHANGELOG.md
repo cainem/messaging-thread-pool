@@ -36,4 +36,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Change success() to item_existed() in RemovePoolItemResponse
 - Change success() to result in AddResponse
 - Ignore requests to add and existing key; return appropriate error in response
+- Add default implementation of send_and_receive_one to SenderAndReceiver trait
 
