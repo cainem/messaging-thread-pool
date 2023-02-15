@@ -64,8 +64,17 @@ where
         }
     }
 
+    /// Verify that the mock send_and_receive was called at least once
     pub fn was_called(&self) -> bool {
         *self.was_called.lock().expect("that lock will never fail")
+    }
+
+    /// Verify that all of the responses have been returned
+    pub fn is_complete(&self) -> bool {
+        self.returned_responses
+            .lock()
+            .expect("that the lock will never fail")
+            .is_empty()
     }
 }
 
@@ -155,6 +164,25 @@ mod tests {
     }
 
     #[test]
+    fn two_responses_only_one_returned_is_complete_returns_false() {
+        let response_0 = MeanResponse { id: 1, mean: 22 };
+        let response_1 = MeanResponse { id: 2, mean: 44 };
+
+        let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![
+            response_0.clone(),
+            response_1.clone(),
+        ]);
+        assert!(!mock.was_called());
+
+        let _results_0: Vec<MeanResponse> = mock
+            .send_and_receive(vec![MeanRequest(1)].into_iter())
+            .unwrap()
+            .collect();
+
+        assert!(!mock.is_complete());
+    }
+
+    #[test]
     fn two_responses_returned_over_multiple_requests() {
         let response_0 = MeanResponse { id: 1, mean: 22 };
         let response_1 = MeanResponse { id: 2, mean: 44 };
@@ -174,6 +202,7 @@ mod tests {
             .unwrap()
             .collect();
 
+        assert!(mock.is_complete());
         assert_eq!(1, results_0.len());
         assert_eq!(response_0, results_0[0]);
         assert_eq!(1, results_1.len());
