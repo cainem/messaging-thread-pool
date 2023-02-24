@@ -30,7 +30,7 @@ mod tests {
     #[should_panic(expected = "not expected; only requests are required to support IdTargeted")]
     fn request_response_contains_response_request_panics() {
         let target =
-            RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(0, Ok(())));
+            RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(0, Ok(0)));
 
         target.id();
     }

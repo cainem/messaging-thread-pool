@@ -66,7 +66,7 @@ where
                             match self.pool_item_map.entry(id) {
                                 Entry::Vacant(v) => {
                                     v.insert(new_pool_item);
-                                    AddResponse::new(id, Ok(()))
+                                    AddResponse::new(id, Ok(id))
                                 }
                                 Entry::Occupied(_) => AddResponse::new(
                                     id,

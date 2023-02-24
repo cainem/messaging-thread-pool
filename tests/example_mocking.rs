@@ -62,8 +62,8 @@ mod tests {
             MeanRequest(2).into(),
         ];
         let responses: Vec<ThreadRequestResponse<Randoms>> = vec![
-            AddResponse::new(1, Ok(())).into(),
-            AddResponse::new(2, Ok(())).into(),
+            AddResponse::new(1, Ok(1)).into(),
+            AddResponse::new(2, Ok(2)).into(),
             MeanResponse { id: 1, mean: 3 }.into(),
             MeanResponse { id: 2, mean: 5 }.into(),
         ];

@@ -1,4 +1,4 @@
-use crate::{id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
@@ -7,11 +7,15 @@ use super::ThreadRequestResponse;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddResponse {
     id: usize,
-    result: Result<(), String>,
+    result: Result<usize, String>,
 }
 
 impl AddResponse {
-    pub fn new(id: usize, result: Result<(), String>) -> Self {
+    pub fn new(id: usize, result: Result<usize, String>) -> Self {
+        assert!(
+            result.is_err() || result.clone().unwrap() == id,
+            "id in the success result must match the result"
+        );
         Self { id, result }
     }
 
@@ -19,14 +23,8 @@ impl AddResponse {
         self.id
     }
 
-    pub fn result(&self) -> Result<&(), &String> {
+    pub fn result(&self) -> Result<&usize, &String> {
         self.result.as_ref()
-    }
-}
-
-impl IdTargeted for AddResponse {
-    fn id(&self) -> usize {
-        self.id
     }
 }
 
@@ -48,24 +46,5 @@ where
             panic!("unexpected")
         };
         response
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::AddResponse;
-
-    #[test]
-    fn id_2_id_returns_2() {
-        let target = AddResponse::new(2, Ok(()));
-
-        assert_eq!(2, target.id());
-    }
-
-    #[test]
-    fn id_1_id_returns_1() {
-        let target = AddResponse::new(1, Ok(()));
-
-        assert_eq!(1, target.id());
     }
 }
