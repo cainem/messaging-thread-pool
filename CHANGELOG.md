@@ -39,4 +39,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add default implementation of send_and_receive_one to SenderAndReceiver trait
 - Add is_complete function to mocks
 - Add id to the result of AddResponse
+- Implement the insertion of pool item tracing
 

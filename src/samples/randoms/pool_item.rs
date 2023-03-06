@@ -1,5 +1,6 @@
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
+    guard_drop::GuardDrop,
     samples::{MeanResponse, RandomsAddRequest, SumResponse},
     *,
 };
@@ -23,6 +24,10 @@ impl PoolItem for Randoms {
             .into(),
             RandomsApi::Panic(_request) => panic!("request to panic received"),
         }
+    }
+
+    fn add_pool_item_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
+        Self::randoms_tracing(id)
     }
 
     fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {

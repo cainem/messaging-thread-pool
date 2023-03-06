@@ -1,6 +1,6 @@
 use std::collections::btree_map::Entry;
 
-use tracing::{event, Level};
+use tracing::{event, instrument, Level};
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
@@ -26,6 +26,7 @@ where
     /// Thread requests are handled within this loop and are used to control the thread pool
     ///
     /// ThreadShutdown and ThreadAbort messages cause the message loop to exit and as a result end the thread.
+    #[instrument(skip(self))]
     pub fn message_loop(&mut self) {
         // will loop until the queue is empty and the sender is dropped
         while let Ok(sender_couplet) = self.pool_thread_receiver.recv() {
@@ -42,12 +43,17 @@ where
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
 
+                    // give the opportunity to add element tracing
+                    let guards = P::add_pool_item_tracing(id);
+
                     // find the pool item that needs to process the request
                     let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
                         targeted.process_message(request)
                     } else {
                         P::id_not_found(&request)
                     };
+
+                    drop(guards);
 
                     response
                 }
