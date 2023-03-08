@@ -11,8 +11,6 @@ impl Randoms {
     /// In this case the element 950 will output tracing (at DEBUG and above) to the console
     pub(crate) fn randoms_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
         if id == 950 {
-            println!("adding logging for {id:?}");
-
             let mut guards: Vec<Box<dyn GuardDrop>> = vec![];
             let subscriber = FmtSubscriber::builder()
                 // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)

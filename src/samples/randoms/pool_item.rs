@@ -10,6 +10,10 @@ impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
 
+    fn name() -> &'static str {
+        "Randoms"
+    }
+
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsApi::Mean(request) => MeanResponse {

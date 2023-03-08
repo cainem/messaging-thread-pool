@@ -10,6 +10,10 @@ where
     type Init = RandomsBatchAddRequest<P>;
     type Api = RandomsBatchApi<P>;
 
+    fn name() -> &'static str {
+        "RandomsBatch"
+    }
+
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsBatchApi::SumOfSums(RequestResponse::Request(request)) => {

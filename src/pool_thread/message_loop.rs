@@ -26,14 +26,13 @@ where
     /// Thread requests are handled within this loop and are used to control the thread pool
     ///
     /// ThreadShutdown and ThreadAbort messages cause the message loop to exit and as a result end the thread.
-    #[instrument(skip(self))]
+    #[instrument(skip(self), fields(id=self.thread_id, name=P::name()))]
     pub fn message_loop(&mut self) {
         // will loop until the queue is empty and the sender is dropped
         while let Ok(sender_couplet) = self.pool_thread_receiver.recv() {
             event!(
                 Level::TRACE,
-                "thread {:?} receiving request for {:?}",
-                self.thread_id,
+                "receiving request {:?}",
                 sender_couplet.request(),
             );
 
@@ -65,7 +64,7 @@ where
                             event!(
                                 Level::DEBUG,
                                 "Inserting a new {:?} into the threads map",
-                                new_pool_item.name()
+                                P::name()
                             );
 
                             // try and add the new item
@@ -136,7 +135,7 @@ where
 
                 _ => panic!("unrecognised thread thread request"),
             };
-            event!(Level::TRACE, ?response, message = "sending response");
+            event!(Level::TRACE, ?response);
 
             match return_to.send(response) {
                 Ok(_) => (),

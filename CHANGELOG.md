@@ -40,4 +40,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add is_complete function to mocks
 - Add id to the result of AddResponse
 - Implement the insertion of pool item tracing
+- tidy up tracing
 

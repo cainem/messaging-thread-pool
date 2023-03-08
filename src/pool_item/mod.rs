@@ -44,7 +44,7 @@ where
     }
 
     /// used for debug only; allows logging to output the name of the type
-    fn name(&self) -> &str {
+    fn name() -> &'static str {
         std::any::type_name::<Self>()
     }
 

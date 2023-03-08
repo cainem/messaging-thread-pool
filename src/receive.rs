@@ -1,10 +1,8 @@
-use crossbeam_channel::Receiver;
-use tracing::{event, instrument, Level};
-
 use crate::{
     pool_item::PoolItem, request_with_response::RequestWithResponse,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
+use crossbeam_channel::Receiver;
 
 impl<P> ThreadPool<P>
 where
@@ -15,7 +13,6 @@ where
     /// The request is received as a vec and the responses are received back in a vec
     /// The idea here is that size of these vecs is restricted to a single compartments
     /// worth of requests
-    #[instrument(skip(self, receive_from_worker))]
     pub(super) fn receive<T>(
         &self,
         receive_from_worker: Receiver<ThreadRequestResponse<P>>,
@@ -23,10 +20,7 @@ where
     where
         T: RequestWithResponse<P>,
     {
-        receive_from_worker.into_iter().map(|r| {
-            event!(Level::TRACE, "receiving message {:?}", r);
-            r.into()
-        })
+        receive_from_worker.into_iter().map(|r| r.into())
     }
 }
 

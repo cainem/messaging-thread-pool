@@ -17,7 +17,7 @@ where
     /// The work is distributed within the thread pool and returned as a vec of responses
     ///
     /// The work will be distributed based on the mod of the id of the requests target
-    #[instrument(skip(self, send_back_to, requests))]
+    #[instrument(skip(self, send_back_to, requests), fields(name=P::name()))]
     pub(super) fn send<T>(
         &self,
         send_back_to: Sender<ThreadRequestResponse<P>>,
@@ -41,7 +41,7 @@ where
             event!(
                 Level::DEBUG,
                 "Sending to target {} id={}",
-                std::any::type_name::<T>(),
+                P::name(),
                 request.id()
             );
             event!(Level::TRACE, ?request);
