@@ -6,9 +6,9 @@ use crate::guard_drop::GuardDrop;
 use super::Randoms;
 
 impl Randoms {
-    /// An example of how to add conditional logging for a specific pool element.
+    /// An example of how to add conditional logging for a specific pool item.
     ///
-    /// In this case the element 950 will output tracing (at DEBUG and above) to the console
+    /// In this case the pool item 950 will output tracing (at DEBUG and above) to the console
     pub(crate) fn randoms_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
         if id == 950 {
             let mut guards: Vec<Box<dyn GuardDrop>> = vec![];

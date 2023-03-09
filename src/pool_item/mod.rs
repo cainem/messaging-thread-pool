@@ -62,9 +62,8 @@ where
     /// The tracing is removed once the message is processed.
     /// If the tracing is being written to a file it is important that the file is not truncated
     /// The implementation needs to return a vec of guards of any subscribers added.
-    #[allow(unused_variables)]
-    fn add_pool_item_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
-        // by default no element tracing
+    fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+        // by default no pool item tracing
         None
     }
 

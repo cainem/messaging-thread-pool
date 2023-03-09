@@ -36,7 +36,7 @@ pub fn example_simple_one_level_thread_pool() {
         .unwrap();
     println!("{}", mean_response_0.mean());
 
-    // remove element with id 1
+    // remove pool item with id 1
     // it will be dropped from the thread where it was residing
     thread_pool
         .send_and_receive(iter::once(RemovePoolItemRequest(1)))

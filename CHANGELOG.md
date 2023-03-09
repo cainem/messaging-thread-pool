@@ -41,4 +41,5 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add id to the result of AddResponse
 - Implement the insertion of pool item tracing
 - tidy up tracing
+- Change add_pool_item_tracing to take a reference to the pool item, not just its id
 

@@ -42,17 +42,18 @@ where
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
 
-                    // give the opportunity to add element tracing
-                    let guards = P::add_pool_item_tracing(id);
-
                     // find the pool item that needs to process the request
                     let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
-                        targeted.process_message(request)
+                        // give the opportunity to add pool item tracing
+                        let guards = P::add_pool_item_tracing(targeted);
+                        // process the message
+                        let response = targeted.process_message(request);
+
+                        drop(guards);
+                        response
                     } else {
                         P::id_not_found(&request)
                     };
-
-                    drop(guards);
 
                     response
                 }
@@ -331,7 +332,7 @@ mod tests {
 
         // there should be one thread shutdown
         // Randoms pool item "pretends" that it has shutdown a thread pool and returns its id
-        // as there are 2 element is is non-deterministic which one will get called
+        // as there are 2 pool items is is non-deterministic which one will get called
         assert!(
             thread_shutdown_payload
                 == ThreadShutdownResponse::new(15, vec![ThreadShutdownResponse::new(1, vec![])])
@@ -376,7 +377,7 @@ mod tests {
         // there should be one thread shutdown
         let thread_shutdown_response: ThreadShutdownResponse =
             response_receive.recv().unwrap().into();
-        // Randoms element "pretends" that it has shutdown a thread pool with an id equal to its id
+        // Randoms pool item "pretends" that it has shutdown a thread pool with an id equal to its id
         // as there are 2 pool items it is not deterministic which one will have shutdown called
         assert!(
             thread_shutdown_response

@@ -104,7 +104,6 @@ mod id_targeted;
 mod new;
 mod pool_item;
 mod pool_thread;
-mod pool_thread_old;
 mod receive;
 mod request_response;
 mod request_with_response;

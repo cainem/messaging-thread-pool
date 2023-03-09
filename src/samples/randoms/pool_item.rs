@@ -30,8 +30,8 @@ impl PoolItem for Randoms {
         }
     }
 
-    fn add_pool_item_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
-        Self::randoms_tracing(id)
+    fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+        Self::randoms_tracing(self.id())
     }
 
     fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
