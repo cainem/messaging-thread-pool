@@ -40,9 +40,10 @@ where
             let targeted = request.id() % thread_count;
             event!(
                 Level::DEBUG,
-                "Sending to target {} id={}",
+                "Sending to target=[{}], id=[{}], message type=[{}]",
                 P::name(),
-                request.id()
+                request.id(),
+                std::any::type_name::<T>()
             );
             event!(Level::TRACE, ?request);
             guard[targeted].send(&send_back_to.clone(), request)?;

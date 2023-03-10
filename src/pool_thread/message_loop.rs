@@ -64,8 +64,9 @@ where
                         Ok(new_pool_item) => {
                             event!(
                                 Level::DEBUG,
-                                "Inserting a new {:?} into the threads map",
-                                P::name()
+                                "Inserting a new {:?} into the threads map, id={:?}",
+                                P::name(),
+                                id
                             );
 
                             // try and add the new item
@@ -88,7 +89,17 @@ where
                 }
                 ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
                     let id = request.id();
+
                     let success = self.pool_item_map.remove(&id).is_some();
+
+                    event!(
+                        Level::DEBUG,
+                        "Trying to remove a {:?} from the threads map, id={:?}, success={:?}",
+                        P::name(),
+                        id,
+                        success
+                    );
+
                     RemovePoolItemResponse::new(id, success).into()
                 }
                 ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
