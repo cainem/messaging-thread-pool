@@ -1,8 +1,7 @@
 pub mod guard_drop;
 pub mod new_pool_item_error;
 
-use tracing::{event, subscriber::DefaultGuard, Level};
-use tracing_appender::non_blocking::WorkerGuard;
+use tracing::{event, Level};
 
 use crate::{
     id_targeted::IdTargeted, request_with_response::RequestWithResponse, thread_request_response::*,
@@ -70,7 +69,8 @@ where
     /// This method provides any required tracing in the pool items thread pool threads
     /// This tracing is added when the thread is spawned and remains in place until the thread dies
     #[allow(unused_variables)]
-    fn add_pool_thread_tracing(id: usize) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
+    fn add_pool_thread_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
+        // by default no pool thread tracing
         None
     }
 }
