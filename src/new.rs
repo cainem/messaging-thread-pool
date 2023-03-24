@@ -32,6 +32,8 @@ where
         for i in 0..thread_pool_size {
             let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet<P>>();
 
+            event!(Level::INFO, "Creating thread {}-{}", P::name(), i);
+
             let thread_builder = Builder::new().name(format!("{}-{}", P::name(), i));
             let join_handle = thread_builder
                 .spawn(move || {
