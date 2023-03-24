@@ -16,7 +16,7 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 ## [2.0.2]
 - Add Default to AddResponse
 
-## [3.0.*-alpha]
+## [3.1.0]
 - Change PoolItem trait to take ownership of requests rather than references to the request.
 - Rename ThreadPoolMock to SenderAndReceiverMock
 - Rename ThreadPoolSenderAndReceiver to SenderAndReceiver
