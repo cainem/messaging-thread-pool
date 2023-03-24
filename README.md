@@ -11,13 +11,13 @@
 It is useful when the type that needs to be distributed has complex state that is not send/sync.\
 If the state is send and sync then it is probably better to use a more conventional thread pool such as rayon.\
 Instances of the type are distributed across the threads of the thread pool and are tied to their allocated thread for their entire lifetime.\
-Hence instances <b>do not need to be send nor sync</b> (although the messages used to communicate with them do). \
+Hence instances <b>do not need to be send nor sync</b> (although the messages used to communicate with them do).
 
 The library infrastructure then allows the routing of messages to specific instances based on a key.\
 Any work required to respond to a message is executed on that instances assigned thread pool thread.\
 Response messages are then routed back to the caller via the infrastructure.
 
-It provides simple call schematics, easy to reason about lifetimes and predictable pool behaviour. \
+It provides simple call schematics, easy to reason about lifetimes and predictable pool behaviour. 
 
 
 The type needs to define an enum of message types and provide implementations of a few simple traits to enable it to be
