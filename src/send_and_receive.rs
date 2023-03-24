@@ -1,11 +1,9 @@
-use crossbeam_channel::unbounded;
+use crossbeam_channel::{unbounded, SendError};
 use tracing::instrument;
 
 use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestMessage, ResponseMessage},
-    thread_request_response::ThreadRequestResponse,
-    ThreadPool,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
+    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -16,17 +14,16 @@ where
     ///
     /// The request is received as a vec and the responses are received back in a vec
     #[instrument(skip(self, requests))]
-    pub fn send_and_receive<const N: usize, T, U>(
+    pub fn send_and_receive<T>(
         &self,
         requests: impl Iterator<Item = T>,
-    ) -> impl Iterator<Item = U>
+    ) -> Result<impl Iterator<Item = T::Response>, SendError<SenderCouplet<P>>>
     where
-        T: RequestMessage<N, P>,
-        U: ResponseMessage<N, P>,
+        T: RequestWithResponse<P> + IdTargeted,
     {
         let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
-        self.send(return_back_to, requests);
-        self.receive(receive_from_worker)
+        self.send(return_back_to, requests)?;
+        Ok(self.receive::<T>(receive_from_worker))
     }
 }
 
@@ -38,9 +35,9 @@ mod tests {
     fn two_threads_three_echoes_receives_expected_response() {
         let target = ThreadPool::<Randoms>::new(2);
 
-        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {}", i)));
+        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {i}")));
 
-        let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).collect();
+        let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).unwrap().collect();
 
         assert_eq!(results.len(), 3);
 
@@ -53,9 +50,9 @@ mod tests {
     fn single_thread_single_init_receives_expected_response() {
         let target = ThreadPool::<Randoms>::new(1);
 
-        let requests = (0..1).map(|id| RandomsAddRequest(id));
+        let requests = (0..1).map(RandomsAddRequest);
 
-        let result: Vec<AddResponse> = target.send_and_receive(requests).collect();
+        let result: Vec<AddResponse> = target.send_and_receive(requests).unwrap().collect();
 
         assert_eq!(result.len(), 1);
         assert_eq!(0, result[0].id());

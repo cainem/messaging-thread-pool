@@ -3,12 +3,8 @@ pub mod randoms_batch_api;
 
 use std::sync::Arc;
 
-use crate::{
-    id_provider::sized_id_provider::SizedIdProvider, samples::randoms::Randoms,
-    thread_request_response::AddResponse, ThreadPool,
-};
-
 use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
+use crate::{id_provider::IdProvider, samples::Randoms, *};
 
 /// An example of an element that contains a child thread pool
 ///
@@ -22,33 +18,45 @@ use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
 /// For this reason the RandomsBatches need to share an id_provider which provides globally unique ids
 /// (ids, must be unique across the thread pool for obvious reasons)
 #[derive(Debug)]
-pub struct RandomsBatch {
+pub struct RandomsBatch<P>
+where
+    P: SenderAndReceiver<Randoms>,
+{
     pub id: usize,
     pub contained_random_ids: Vec<usize>,
-    pub id_provider: SizedIdProvider,
-    pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
+    pub id_provider: Arc<dyn IdProvider>,
+    pub randoms_thread_pool: Arc<P>,
 }
 
-impl RandomsBatch {
-    pub fn new(add_request: &RandomsBatchAddRequest) -> Self {
+impl<P> RandomsBatch<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync,
+{
+    pub fn new(add_request: RandomsBatchAddRequest<P>) -> Self {
         let mut new = Self {
             id: add_request.id,
             contained_random_ids: vec![],
-            id_provider: add_request.id_provider.clone(),
+            id_provider: Arc::clone(&add_request.id_provider),
             randoms_thread_pool: Arc::clone(&add_request.randoms_thread_pool),
         };
 
+        let mut ids = Vec::<usize>::default();
         new.randoms_thread_pool()
-            .send_and_receive((0..add_request.number_of_contained_randoms).map(RandomsAddRequest))
+            .send_and_receive(
+                (0..add_request.number_of_contained_randoms)
+                    .map(|_| RandomsAddRequest(new.id_provider.next_id())),
+            )
+            .expect("randoms thread pool to be available")
             .for_each(|r: AddResponse| {
-                assert!(r.success(), "Request to add Randoms failed");
-                new.contained_random_ids_mut().push(r.id());
+                assert!(r.result().is_ok(), "Request to add Randoms failed");
+                ids.push(r.id());
             });
 
+        new.contained_random_ids_mut().append(&mut ids);
         new
     }
 
-    pub fn randoms_thread_pool(&self) -> &ThreadPool<Randoms> {
+    pub fn randoms_thread_pool(&self) -> &P {
         self.randoms_thread_pool.as_ref()
     }
 
@@ -57,6 +65,7 @@ impl RandomsBatch {
         // and then add them all up
         self.randoms_thread_pool()
             .send_and_receive(self.contained_random_ids.iter().map(|id| SumRequest(*id)))
+            .expect("randoms thread pool to be available")
             .map(|response: SumResponse| response.sum())
             .sum()
     }

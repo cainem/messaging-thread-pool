@@ -1,19 +1,20 @@
-use crate::{
-    id_targeted::IdTargeted,
-    pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
-    samples::{MeanResponse, RandomsAddRequest, SumResponse},
-    thread_request_response::*,
-};
-
 use super::{randoms_api::RandomsApi, Randoms};
+use crate::{
+    guard_drop::GuardDrop,
+    samples::{MeanResponse, RandomsAddRequest, SumResponse},
+    *,
+};
 
 /// The implementation of this trait allows the Randoms struct to be used in the thread pool infrastructure
 impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
 
-    /// here
-    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
+    fn name() -> &'static str {
+        "Randoms"
+    }
+
+    fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
             RandomsApi::Mean(request) => MeanResponse {
                 id: request.id(),
@@ -25,10 +26,15 @@ impl PoolItem for Randoms {
                 sum: self.sum(),
             }
             .into(),
+            RandomsApi::Panic(_request) => panic!("request to panic received"),
         }
     }
 
-    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError> {
+    fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+        Self::randoms_tracing(self.id())
+    }
+
+    fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(Randoms::new(request.0))
     }
 

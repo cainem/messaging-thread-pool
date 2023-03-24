@@ -1,9 +1,11 @@
 pub mod randoms_api;
 
 mod pool_item;
+mod randoms_tracing;
 
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
+use tracing::{event, Level};
 
 use crate::id_targeted::IdTargeted;
 
@@ -32,11 +34,13 @@ impl Randoms {
     }
 
     pub fn mean(&self) -> u128 {
+        event!(Level::DEBUG, "evaluating mean");
         self.numbers.iter().map(|n| *n as u128).sum::<u128>() / self.numbers.len() as u128
     }
 
     #[no_mangle]
     pub fn sum(&self) -> u128 {
+        event!(Level::DEBUG, "evaluating sum");
         // do this very slowly with unnecessary loops
         for i in 0..=50 {
             let r = self.numbers.iter().map(|n| *n as u128).sum::<u128>();

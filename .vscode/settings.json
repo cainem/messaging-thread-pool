@@ -4,6 +4,7 @@
         "Seedable",
         "struct",
         "structs",
+        "usize",
         "vecs",
         "xoshiro"
     ]

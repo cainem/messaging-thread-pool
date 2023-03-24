@@ -1,13 +1,8 @@
+use crate::id_provider::IdProvider;
+use crate::samples::RandomsBatch;
+use crate::{samples::Randoms, *};
+use std::fmt::Debug;
 use std::sync::Arc;
-
-use crate::{
-    id_provider::sized_id_provider::SizedIdProvider,
-    id_targeted::IdTargeted,
-    request_response::{RequestResponse, RequestResponseMessage},
-    samples::{randoms_batch::RandomsBatch, Randoms},
-    thread_request_response::{ThreadRequestResponse, ADD_POOL_ITEM},
-    ThreadPool,
-};
 
 /// This is the request that is sent to create a new RandomsBatch
 /// It contains a field to configure the size of the contained child thread pool.
@@ -15,17 +10,23 @@ use crate::{
 ///
 /// RandomsBatches will also need to share a common "source of ids" for the Randoms that it will create
 #[derive(Debug, Clone)]
-pub struct RandomsBatchAddRequest {
+pub struct RandomsBatchAddRequest<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync,
+{
     pub id: usize,
     pub number_of_contained_randoms: usize,
-    pub id_provider: SizedIdProvider,
+    pub id_provider: Arc<dyn IdProvider>,
     // this thread pool will be shared by all of the Randoms
-    pub randoms_thread_pool: Arc<ThreadPool<Randoms>>,
+    pub randoms_thread_pool: Arc<P>,
 }
 
-impl RandomsBatchAddRequest {
-    pub fn id_provider(&self) -> &SizedIdProvider {
-        &self.id_provider
+impl<P> RandomsBatchAddRequest<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync,
+{
+    pub fn id_provider(&self) -> &dyn IdProvider {
+        self.id_provider.as_ref()
     }
 
     pub fn id(&self) -> usize {
@@ -33,22 +34,36 @@ impl RandomsBatchAddRequest {
     }
 }
 
-impl RequestResponseMessage<ADD_POOL_ITEM, true> for RandomsBatchAddRequest {}
-
-impl IdTargeted for RandomsBatchAddRequest {
+impl<P> IdTargeted for RandomsBatchAddRequest<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
     fn id(&self) -> usize {
         self.id
     }
 }
 
-impl From<RandomsBatchAddRequest> for ThreadRequestResponse<RandomsBatch> {
-    fn from(request: RandomsBatchAddRequest) -> Self {
-        ThreadRequestResponse::<RandomsBatch>::AddPoolItem(RequestResponse::Request(request))
+impl<P> RequestWithResponse<RandomsBatch<P>> for RandomsBatchAddRequest<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
+    type Response = AddResponse;
+}
+
+impl<P> From<RandomsBatchAddRequest<P>> for ThreadRequestResponse<RandomsBatch<P>>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
+    fn from(request: RandomsBatchAddRequest<P>) -> Self {
+        ThreadRequestResponse::<RandomsBatch<P>>::AddPoolItem(RequestResponse::Request(request))
     }
 }
 
-impl From<ThreadRequestResponse<RandomsBatch>> for RandomsBatchAddRequest {
-    fn from(response: ThreadRequestResponse<RandomsBatch>) -> Self {
+impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for RandomsBatchAddRequest<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
+    fn from(response: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
         let ThreadRequestResponse::AddPoolItem(RequestResponse::Request(result)) = response else {
             panic!("not expected")
         };

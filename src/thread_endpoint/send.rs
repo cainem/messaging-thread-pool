@@ -1,7 +1,7 @@
-use crossbeam_channel::Sender;
+use crossbeam_channel::{SendError, Sender};
 
 use crate::{
-    pool_item::PoolItem, request_response::RequestMessage, sender_couplet::SenderCouplet,
+    pool_item::PoolItem, request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
     thread_request_response::ThreadRequestResponse,
 };
 
@@ -12,13 +12,16 @@ where
     P: PoolItem,
 {
     /// This function send an asynchronous request to a thread pool
-    pub fn send<const N: usize, T>(&self, sender: &Sender<ThreadRequestResponse<P>>, request: T)
+    pub fn send<T>(
+        &self,
+        sender: &Sender<ThreadRequestResponse<P>>,
+        request: T,
+    ) -> Result<(), SendError<SenderCouplet<P>>>
     where
-        T: RequestMessage<N, P>,
+        T: RequestWithResponse<P>,
     {
         self.sender
             .send(SenderCouplet::<P>::new(sender.clone(), request))
-            .expect("The receiver thread to always be available");
     }
 }
 
@@ -46,11 +49,11 @@ mod tests {
 
         let target = ThreadEndpoint {
             sender: to_thread_sender,
-            join_handle: join_handle,
+            join_handle,
         };
 
         // call send
-        target.send(&to_endpoint, echo_request.clone());
+        target.send(&to_endpoint, echo_request.clone()).unwrap();
 
         // get the message sent
         let sender_couplet = receiver_from_endpoint.recv().unwrap();

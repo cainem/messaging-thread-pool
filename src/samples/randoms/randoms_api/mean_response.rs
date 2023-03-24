@@ -1,10 +1,6 @@
-use crate::{
-    request_response::{RequestResponse, RequestResponseMessage},
-    samples::{randoms::randoms_api::RandomsApi, Randoms},
-    thread_request_response::ThreadRequestResponse,
-};
+use crate::{samples::Randoms, *};
 
-use super::MEAN;
+use super::RandomsApi;
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,8 +14,6 @@ impl MeanResponse {
         self.mean
     }
 }
-
-impl RequestResponseMessage<MEAN, false> for MeanResponse {}
 
 impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: MeanResponse) -> Self {

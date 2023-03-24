@@ -1,31 +1,26 @@
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
-use super::{ThreadRequestResponse, REMOVE_POOL_ITEM};
+use super::ThreadRequestResponse;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemResponse {
     id: usize,
-    success: bool,
+    item_existed: bool,
 }
 
 impl RemovePoolItemResponse {
-    pub fn new(id: usize, success: bool) -> Self {
-        Self { id, success }
+    pub fn new(id: usize, item_existed: bool) -> Self {
+        Self { id, item_existed }
     }
 
     pub fn id(&self) -> usize {
         self.id
     }
 
-    pub fn success(&self) -> bool {
-        self.success
+    pub fn item_existed(&self) -> bool {
+        self.item_existed
     }
 }
-
-impl RequestResponseMessage<REMOVE_POOL_ITEM, false> for RemovePoolItemResponse {}
 
 impl<T> From<RemovePoolItemResponse> for ThreadRequestResponse<T>
 where

@@ -1,56 +1,39 @@
-use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
-use super::{ThreadRequestResponse, ADD_POOL_ITEM};
+use super::ThreadRequestResponse;
 
 /// This struct is returned in response to a request to add a pool item to the thread pool
 /// The success field indicates that the pool item was successfully constructed
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddResponse {
     id: usize,
-    success: bool,
-    error_message: Option<String>,
+    result: Result<usize, String>,
 }
 
 impl AddResponse {
-    pub fn new(id: usize, success: bool, error_message: Option<String>) -> Self {
-        Self {
-            id,
-            success,
-            error_message,
-        }
-    }
-
-    pub fn success(&self) -> bool {
-        self.success
-    }
-
-    pub fn error_message(&self) -> Option<&String> {
-        self.error_message.as_ref()
+    pub fn new(id: usize, result: Result<usize, String>) -> Self {
+        assert!(
+            result.is_err() || result.clone().unwrap() == id,
+            "id in the success result must match the result"
+        );
+        Self { id, result }
     }
 
     pub fn id(&self) -> usize {
         self.id
     }
-}
 
-impl RequestResponseMessage<ADD_POOL_ITEM, false> for AddResponse {}
-
-impl IdTargeted for AddResponse {
-    fn id(&self) -> usize {
-        self.id
+    pub fn result(&self) -> Result<&usize, &String> {
+        self.result.as_ref()
     }
 }
 
-impl<T> From<AddResponse> for ThreadRequestResponse<T>
+impl<P> From<AddResponse> for ThreadRequestResponse<P>
 where
-    T: PoolItem,
+    P: PoolItem,
 {
-    fn from(request: AddResponse) -> Self {
-        ThreadRequestResponse::AddPoolItem(RequestResponse::Response(request))
+    fn from(response: AddResponse) -> Self {
+        ThreadRequestResponse::AddPoolItem(RequestResponse::<P, P::Init>::Response(response))
     }
 }
 
@@ -59,28 +42,9 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::AddPoolItem(RequestResponse::Response::<ADD_POOL_ITEM, P::Init, AddResponse>(response)) = response else {
+        let ThreadRequestResponse::<P>::AddPoolItem(RequestResponse::<P, P::Init>::Response(response)) = response else {
             panic!("unexpected")
         };
         response
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::AddResponse;
-
-    #[test]
-    fn id_2_id_returns_2() {
-        let target = AddResponse::new(2, true, None);
-
-        assert_eq!(2, target.id());
-    }
-
-    #[test]
-    fn id_1_id_returns_1() {
-        let target = AddResponse::new(1, true, None);
-
-        assert_eq!(1, target.id());
     }
 }

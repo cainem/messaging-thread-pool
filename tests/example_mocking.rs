@@ -1,12 +1,14 @@
 use messaging_thread_pool::{
     samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-    thread_pool_sender_and_receiver::ThreadPoolSenderAndReceiver,
-    thread_request_response::AddResponse,
+    AddResponse, SenderAndReceiver,
 };
 
+/// A struct that contains a thread pool that needs to be mocked should hold a trait of
+/// SenderAndReceiver as show
+/// This allows for the mocking of the interactions at the thread boundary as shown below
 struct Complex<T>
 where
-    T: ThreadPoolSenderAndReceiver<Randoms>,
+    T: SenderAndReceiver<Randoms>,
 {
     contained_ids: Vec<usize>,
     contained_thread_pool: T,
@@ -14,13 +16,14 @@ where
 
 impl<T> Complex<T>
 where
-    T: ThreadPoolSenderAndReceiver<Randoms>,
+    T: SenderAndReceiver<Randoms>,
 {
     fn new(contained_thread_pool: T, ids: impl Iterator<Item = usize>) -> Self {
         let ids: Vec<_> = ids.collect();
 
-        let _: Box<dyn Iterator<Item = AddResponse>> =
-            contained_thread_pool.send_and_receive(ids.iter().map(|id| RandomsAddRequest(*id)));
+        let _: Box<dyn Iterator<Item = AddResponse>> = contained_thread_pool
+            .send_and_receive(ids.iter().map(|id| RandomsAddRequest(*id)))
+            .expect("contained thread pool to be available");
 
         Self {
             contained_ids: ids,
@@ -34,6 +37,7 @@ where
         let result: u128 = self
             .contained_thread_pool
             .send_and_receive(self.contained_ids.iter().map(|id| MeanRequest(*id)))
+            .expect("contained thread pool to be available")
             .map(|res: MeanResponse| res.mean)
             .sum();
 
@@ -44,9 +48,7 @@ where
 mod tests {
     use messaging_thread_pool::{
         samples::{MeanRequest, MeanResponse, Randoms, RandomsAddRequest},
-        thread_pool_sender_and_receiver::ThreadPoolMock,
-        thread_request_response::{AddResponse, ThreadRequestResponse},
-        ThreadPool,
+        AddResponse, SenderAndReceiverMock, ThreadPool, ThreadRequestResponse,
     };
 
     use crate::Complex;
@@ -60,15 +62,15 @@ mod tests {
             MeanRequest(2).into(),
         ];
         let responses: Vec<ThreadRequestResponse<Randoms>> = vec![
-            AddResponse::new(1, true, None).into(),
-            AddResponse::new(2, true, None).into(),
+            AddResponse::new(1, Ok(1)).into(),
+            AddResponse::new(2, Ok(2)).into(),
             MeanResponse { id: 1, mean: 3 }.into(),
             MeanResponse { id: 2, mean: 5 }.into(),
         ];
 
         // create a mock thread pool
         // this defines the expected requests and a vec of responses to return
-        let mock = ThreadPoolMock::new_with_expected_requests(expected_requests, responses);
+        let mock = SenderAndReceiverMock::new_with_expected_requests(expected_requests, responses);
 
         // create the complex type with the mock thread pool
         let target = Complex::new(mock, [1, 2].into_iter());

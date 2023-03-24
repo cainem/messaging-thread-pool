@@ -8,10 +8,22 @@
 
 `messaging_thread_pool` provides a set traits and structs that allows the construction of a simple typed thread pool.
 
+It is useful when the type that needs to be distributed has complex state that is not send/sync.\
+If the state is send and sync then it is probably better to use a more conventional thread pool such as rayon.\
+Instances of the type are distributed across the threads of the thread pool and are tied to their allocated thread for their entire lifetime.\
+Hence instances <b>do not need to be send nor sync</b> (although the messages used to communicate with them do). \
+
+The library infrastructure then allows the routing of messages to specific instances based on a key.\
+Any work required to respond to a message is executed on that instances assigned thread pool thread.\
+Response messages are then routed back to the caller via the infrastructure.
+
+It provides simple call schematics, easy to reason about lifetimes and predictable pool behaviour. \
+
+
 The type needs to define an enum of message types and provide implementations of a few simple traits to enable it to be
 hosted within the thread pool.
 
-So, for example, a simple type such holding a collection of random numbers such as this
+So, for example, a simple type holding a collection of random numbers such as this
 
 ```rust
 // define what a pool item looks like
@@ -24,28 +36,31 @@ pub struct Randoms {
 ```
 
 Can be hosted in a thread pool and communicated with via a defined set of messages by providing implementations 
-for the `PoolItem` trait. 
+for the `PoolItem` trait.\
 This approximately equates to providing a constructor for the pool items, a set of messages and a message processor 
 
 ```rust
 // defining the api with which to communicate with the pool item
 pub enum RandomsApi {
-    Mean(RequestResponse<MEAN, MeanRequest, MeanResponse>),
-    Sum(RequestResponse<SUM, SumRequest, SumResponse>),
+    Mean(RequestResponse<Randoms, MeanRequest>),
+    Sum(RequestResponse<Randoms, SumRequest>),
 }
 
 // a request needs to contain the id of the targeted pool item
 pub struct MeanRequest(pub usize);
+
+// implementing this trait binds together a request and response
+// it tells the pool infrastructure what response is expected
+// from a given request
+impl RequestWithResponse<Randoms> for MeanRequest {
+    type Response = MeanResponse;
+}
 
 // a response contains the results of the operation
 pub struct MeanResponse {
     pub id: usize,
     pub mean: u128,
 }
-
-// requests and responses are associated at compile time by a 
-// common constant
-pub const SUM: usize = 1;
 
 // this function (from the PoolItem trait) defines what to do 
 // on receipt of a request and how to respond to it
@@ -84,7 +99,6 @@ fn new_pool_item(request: &Self::Init)
 With this infrastructure in place a pool item can then use the library provided structs 
 to host instances of the pool items in a fixed sized thread pool. 
 
-This provides simple call schematics, easy to reason about lifetimes and predictable pool behaviour.
 
 ```rust
 use std::iter;
@@ -108,11 +122,12 @@ use messaging_thread_pool::{samples::*,
     // itself is dropped.
     thread_pool
         .send_and_receive((0..1000usize)
+        .expect("thread pool to be available")
         .map(|i| RandomsAddRequest(i)))
         .for_each(|response: AddResponse| 
             assert!(response.success()));
 
-    // now create 1000 messages asking them for the sum of
+    // now create 1000 messages asking each of them for the sum of
     // the Randoms objects contained random numbers
     // The message will be routed to the thread to where
     // the targeted object resides
@@ -120,34 +135,39 @@ use messaging_thread_pool::{samples::*,
     // the responses returned
     let sums: Vec<SumResponse> = thread_pool
         .send_and_receive((0..1000usize)
+        .expect("thread pool to be available")
         .map(|i| SumRequest(i)))
         .collect();
     assert_eq!(1000, sums.len());
 
-    // get the mean of the randoms for object with id 0, this 
+    // now get the mean of the randoms for object with id 0, this 
     // will execute on thread 0.
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
         .send_and_receive(iter::once(MeanRequest(0)))
+        .expect("thread pool to be available")
         .nth(0)
         .unwrap();
     println!("{}", mean_response_0.mean());
 
     // remove object with id 1
     // it will be dropped from the thread where it was residing
+    // freeing up any memory it was using
     thread_pool
         .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+        .expect("thread pool to be available")
         .for_each(|response: RemovePoolItemResponse| 
             assert!(response.success()));
 
     // add a new object with id 1000
     thread_pool
         .send_and_receive(iter::once(RandomsAddRequest(1000)))
+        .expect("thread pool to be available")
         .for_each(|response: AddResponse| 
             assert!(response.success()));
 
-    // all objects are dropped when the basic thread pool 
-    // batcher is dropped, the threads are shutdown and
+    // all objects are dropped when the thread pool is
+    // dropped, the worker threads are shutdown and
     // joined back the the main thread
     drop(thread_pool);
 

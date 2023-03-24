@@ -1,15 +1,12 @@
 use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
+    request_with_response::RequestWithResponse,
 };
 
-use super::{ThreadRequestResponse, REMOVE_POOL_ITEM};
+use super::{RemovePoolItemResponse, ThreadRequestResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemRequest(pub usize);
-
-impl RequestResponseMessage<REMOVE_POOL_ITEM, true> for RemovePoolItemRequest {}
 
 impl IdTargeted for RemovePoolItemRequest {
     fn id(&self) -> usize {
@@ -17,12 +14,21 @@ impl IdTargeted for RemovePoolItemRequest {
     }
 }
 
+impl<P> RequestWithResponse<P> for RemovePoolItemRequest
+where
+    P: PoolItem,
+{
+    type Response = RemovePoolItemResponse;
+}
+
 impl<P> From<RemovePoolItemRequest> for ThreadRequestResponse<P>
 where
     P: PoolItem,
 {
     fn from(request: RemovePoolItemRequest) -> Self {
-        ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request))
+        ThreadRequestResponse::RemovePoolItem(RequestResponse::<P, RemovePoolItemRequest>::Request(
+            request,
+        ))
     }
 }
 

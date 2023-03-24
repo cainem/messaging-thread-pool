@@ -1,8 +1,10 @@
-use tracing::{event, Level};
+use std::collections::btree_map::Entry;
+
+use tracing::{event, instrument, Level};
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
-    thread_request_response::*,
+    sender_couplet::SenderCouplet, thread_request_response::*,
 };
 
 use super::PoolThread;
@@ -17,36 +19,106 @@ where
     /// This function will be running in the context of its own dedicated thread
     ///
     /// Messages split logically into 2 types, pool item requests and thread requests
-    /// Pool requests are forwarded to the appropriate pool item (that is contained in a hashmap)
+    /// Pool requests are forwarded to the appropriate pool item (that is contained in a btree)
     /// The message can be targeted by virtue of the fact they all contain a key of the target that
     /// the message is intended for.
     ///
     /// Thread requests are handled within this loop and are used to control the thread pool
     ///
     /// ThreadShutdown and ThreadAbort messages cause the message loop to exit and as a result end the thread.
+    #[instrument(skip(self), fields(id=self.thread_id, name=P::name()))]
     pub fn message_loop(&mut self) {
         // will loop until the queue is empty and the sender is dropped
         while let Ok(sender_couplet) = self.pool_thread_receiver.recv() {
             event!(
                 Level::TRACE,
-                "thread {:?} receiving request for {:?}",
-                self.thread_id,
+                "receiving request {:?}",
                 sender_couplet.request(),
             );
 
-            let response = match sender_couplet.request() {
-                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
+            let SenderCouplet { return_to, request } = sender_couplet;
+
+            let response = match request {
+                ThreadRequestResponse::MessagePoolItem(request) => {
+                    let id = request.id();
+
+                    // find the pool item that needs to process the request
+                    let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
+                        // give the opportunity to add pool item tracing
+                        let guards = P::add_pool_item_tracing(targeted);
+                        // process the message
+                        let response = targeted.process_message(request);
+
+                        drop(guards);
+                        response
+                    } else {
+                        P::id_not_found(&request)
+                    };
+
+                    response
+                }
+                ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
+                    let id = request.id();
+
+                    match P::new_pool_item(request) {
+                        Ok(new_pool_item) => {
+                            event!(
+                                Level::DEBUG,
+                                "Inserting a new {:?} into the threads map, id={:?}",
+                                P::name(),
+                                id
+                            );
+
+                            // try and add the new item
+                            match self.pool_item_map.entry(id) {
+                                Entry::Vacant(v) => {
+                                    v.insert(new_pool_item);
+                                    AddResponse::new(id, Ok(id))
+                                }
+                                Entry::Occupied(_) => AddResponse::new(
+                                    id,
+                                    Err("failed to add; pool item already exists".to_string()),
+                                ),
+                            }
+                        }
+                        Err(new_pool_item_error) => {
+                            AddResponse::new(id, Err(new_pool_item_error.error_message))
+                        }
+                    }
+                    .into()
+                }
+                ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
+                    let id = request.id();
+
+                    let success = self.pool_item_map.remove(&id).is_some();
+
+                    event!(
+                        Level::DEBUG,
+                        "Trying to remove a {:?} from the threads map, id={:?}, success={:?}",
+                        P::name(),
+                        id,
+                        success
+                    );
+
+                    RemovePoolItemResponse::new(id, success).into()
+                }
+                ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
                     let id = request.id();
                     debug_assert_eq!(
                         self.thread_id, id,
                         "this messages should have targeted this thread"
                     );
-
-                    sender_couplet
-                        .return_to()
-                        .send(ThreadAbortResponse(id).into())
+                    // this call to shutdown the child threads and consequently empty the internal map
+                    // is how thread shutdown differs from thread abort. Abort just exist the loop and leaves the
+                    // state in place
+                    let children = self.shutdown_child_pool();
+                    return_to
+                        .send(ThreadShutdownResponse::new(id, children).into())
                         .expect("the send should always succeed");
-
+                    debug_assert!(
+                        self.pool_item_map.is_empty(),
+                        "ThreadShutdown should drain all elements"
+                    );
                     // return breaking out of the message loop and thus ending the thread.
                     return;
                 }
@@ -58,72 +130,26 @@ where
                     )
                     .into()
                 }
-                ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
-                    let new_pool_item = P::new_pool_item(request);
-                    let id = request.id();
-
-                    // element did exist therefore it can only be a request to create a new pool item
-                    match new_pool_item {
-                        Ok(new_pool_item) => {
-                            event!(
-                                Level::DEBUG,
-                                "Inserting a new {:?} into the threads hash map",
-                                new_pool_item.name()
-                            );
-                            self.pool_item_hash_map.insert(id, new_pool_item);
-                            AddResponse::new(id, true, None)
-                        }
-                        Err(new_pool_item_error) => AddResponse::new(
-                            id,
-                            false,
-                            Some(new_pool_item_error.take_error_message()),
-                        ),
-                    }
-                    .into()
-                }
-                ThreadRequestResponse::MessagePoolItem(request) => {
-                    let id = request.id();
-
-                    // find the pool item that needs to process the request
-                    let response = if let Some(targeted) = self.pool_item_hash_map.get_mut(&id) {
-                        targeted.process_message(request)
-                    } else {
-                        P::id_not_found(request)
-                    };
-
-                    response
-                }
-                ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
-                    let id = request.id();
-                    let success = self.pool_item_hash_map.remove(&id).is_some();
-                    RemovePoolItemResponse::new(id, success).into()
-                }
-                ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
+                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
                     let id = request.id();
                     debug_assert_eq!(
                         self.thread_id, id,
                         "this messages should have targeted this thread"
                     );
-                    // this call to shutdown the child threads and consequently empty the internal hash map
-                    // is how thread shutdown differs from thread abort. Abort just exist the loop and leaves the
-                    // state in place
-                    let children = self.shutdown_child_pool();
-                    sender_couplet
-                        .return_to()
-                        .send(ThreadShutdownResponse::new(id, children).into())
+
+                    return_to
+                        .send(ThreadAbortResponse(id).into())
                         .expect("the send should always succeed");
-                    debug_assert!(
-                        self.pool_item_hash_map.is_empty(),
-                        "ThreadShutdown should drain all elements"
-                    );
+
                     // return breaking out of the message loop and thus ending the thread.
                     return;
                 }
+
                 _ => panic!("unrecognised thread thread request"),
             };
-            event!(Level::TRACE, ?response, message = "sending response");
+            event!(Level::TRACE, ?response);
 
-            match sender_couplet.return_to().send(response) {
+            match return_to.send(response) {
                 Ok(_) => (),
                 Err(err) => {
                     // The channel that is supposed to be receiving the response cannot receive it
@@ -152,7 +178,52 @@ mod tests {
     };
 
     #[test]
-    fn send_remove_element_with_id_12_expected_element_removed_from_hash_set() {
+    fn send_init_id_2_twice_returns_response_indicating_second_request_was_ignored() {
+        let id = 2;
+        let init_request = RandomsAddRequest(id);
+
+        let (response_send, response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let mut target = PoolThread::new(3, request_receive);
+
+        // send the init request twice
+        request_send
+            .send(SenderCouplet::new(
+                response_send.clone(),
+                init_request.clone(),
+            ))
+            .unwrap();
+
+        request_send
+            .send(SenderCouplet::new(response_send.clone(), init_request))
+            .unwrap();
+
+        // send the shutdown message so that the message loop exits
+        request_send
+            .send(SenderCouplet::new(response_send, ThreadAbortRequest(3)))
+            .unwrap();
+
+        target.message_loop();
+
+        let response_0: AddResponse = response_receive.recv().unwrap().into();
+        let response_1: AddResponse = response_receive.recv().unwrap().into();
+
+        assert_eq!(2, response_0.id());
+        assert!(response_0.result().is_ok());
+        assert_eq!(1, target.pool_item_map.len());
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
+
+        assert_eq!(2, response_1.id());
+        assert!(response_1.result().is_err());
+        assert_eq!(
+            "failed to add; pool item already exists",
+            response_1.result().err().unwrap()
+        )
+    }
+
+    #[test]
+    fn send_remove_element_with_id_12_expected_element_removed_from_map_set() {
         let id = 12;
         let init_request = RandomsAddRequest(id);
 
@@ -178,10 +249,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -194,11 +262,11 @@ mod tests {
             response_receive.recv().unwrap().into();
 
         assert_eq!(id, remove_pool_item_response.id());
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
-    fn send_remove_element_with_id_2_expected_element_removed_from_hash_set() {
+    fn send_remove_element_with_id_2_expected_element_removed_from_map_set() {
         let id = 2;
         let init_request = RandomsAddRequest(id);
 
@@ -224,10 +292,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -241,7 +306,7 @@ mod tests {
 
         assert_eq!(id, remove_pool_item_response.id());
 
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
@@ -264,10 +329,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(15),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(15)))
             .unwrap();
 
         target.message_loop();
@@ -281,7 +343,7 @@ mod tests {
 
         // there should be one thread shutdown
         // Randoms pool item "pretends" that it has shutdown a thread pool and returns its id
-        // as there are 2 element is is non-deterministic which one will get called
+        // as there are 2 pool items is is non-deterministic which one will get called
         assert!(
             thread_shutdown_payload
                 == ThreadShutdownResponse::new(15, vec![ThreadShutdownResponse::new(1, vec![])])
@@ -291,7 +353,7 @@ mod tests {
                         vec![ThreadShutdownResponse::new(2, vec![])]
                     )
         );
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
@@ -314,10 +376,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(5),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(5)))
             .unwrap();
 
         target.message_loop();
@@ -329,7 +388,7 @@ mod tests {
         // there should be one thread shutdown
         let thread_shutdown_response: ThreadShutdownResponse =
             response_receive.recv().unwrap().into();
-        // Randoms element "pretends" that it has shutdown a thread pool with an id equal to its id
+        // Randoms pool item "pretends" that it has shutdown a thread pool with an id equal to its id
         // as there are 2 pool items it is not deterministic which one will have shutdown called
         assert!(
             thread_shutdown_response
@@ -340,7 +399,7 @@ mod tests {
                         vec![ThreadShutdownResponse::new(102, vec![])]
                     )
         );
-        assert!(target.pool_item_hash_map.is_empty());
+        assert!(target.pool_item_map.is_empty());
     }
 
     #[test]
@@ -366,10 +425,7 @@ mod tests {
 
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -384,7 +440,7 @@ mod tests {
     }
 
     #[test]
-    fn send_init_id_2_expected_element_added_to_hash_set() {
+    fn send_init_id_2_expected_element_added_to_map_set() {
         let id = 2;
         let init_request = RandomsAddRequest(id);
 
@@ -399,10 +455,7 @@ mod tests {
             .unwrap();
         // send the shutdown message so that the message loop exits
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadAbortRequest(3),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadAbortRequest(3)))
             .unwrap();
 
         target.message_loop();
@@ -410,12 +463,12 @@ mod tests {
         let response: AddResponse = response_receive.recv().unwrap().into();
 
         assert_eq!(2, response.id());
-        assert_eq!(1, target.pool_item_hash_map.len());
-        assert_eq!(2, target.pool_item_hash_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_map.len());
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
     }
 
     #[test]
-    fn send_init_id_1_expected_element_added_to_hash_set() {
+    fn send_init_id_1_expected_element_added_to_map() {
         let id = 1;
         let init_request = RandomsAddRequest(id);
 
@@ -430,10 +483,7 @@ mod tests {
             .unwrap();
         // send the abort message so that the message loop exits and keeps the state
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadAbortRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadAbortRequest(1)))
             .unwrap();
 
         target.message_loop();
@@ -441,8 +491,8 @@ mod tests {
         let response: AddResponse = response_receive.recv().unwrap().into();
 
         assert_eq!(1, response.id());
-        assert_eq!(1, target.pool_item_hash_map.len());
-        assert_eq!(1, target.pool_item_hash_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_map.len());
+        assert_eq!(1, target.pool_item_map.get(&id).unwrap().id);
     }
 
     #[test]
@@ -460,10 +510,7 @@ mod tests {
             ))
             .unwrap();
         request_send
-            .send(SenderCouplet::new(
-                response_send.clone(),
-                ThreadShutdownRequest(1),
-            ))
+            .send(SenderCouplet::new(response_send, ThreadShutdownRequest(1)))
             .unwrap();
 
         target.message_loop();

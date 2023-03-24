@@ -4,7 +4,7 @@ use std::fmt::Debug;
 /// and by the corresponding responses coming back from said pool item.\
 /// This trait is used internally by the thread pool to route requests to the appropriate
 /// thread in the thread pool.
-pub trait IdTargeted: Send + Debug {
+pub trait IdTargeted: Debug {
     fn id(&self) -> usize;
 }
 

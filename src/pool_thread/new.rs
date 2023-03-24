@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crossbeam_channel::Receiver;
 
@@ -21,11 +21,11 @@ where
     ///
     /// The PoolThread spins around its message_loop function processing messages until a request is
     /// received to shutdown.
-    pub fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<P>>) -> Self {
+    pub(crate) fn new(id: usize, pool_thread_receiver: Receiver<SenderCouplet<P>>) -> Self {
         Self {
             thread_id: id,
             pool_thread_receiver,
-            pool_item_hash_map: HashMap::default(),
+            pool_item_map: BTreeMap::default(),
         }
     }
 }

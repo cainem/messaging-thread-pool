@@ -1,10 +1,9 @@
 use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
+    request_with_response::RequestWithResponse,
 };
 
-use super::{ThreadRequestResponse, THREAD_ECHO};
+use super::{ThreadEchoResponse, ThreadRequestResponse};
 
 /// For debug purposes only send a message to a thread within the thread pool
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,7 +12,12 @@ pub struct ThreadEchoRequest {
     message: String,
 }
 
-impl RequestResponseMessage<THREAD_ECHO, true> for ThreadEchoRequest {}
+impl<P> RequestWithResponse<P> for ThreadEchoRequest
+where
+    P: PoolItem,
+{
+    type Response = ThreadEchoResponse;
+}
 
 impl IdTargeted for ThreadEchoRequest {
     fn id(&self) -> usize {
@@ -40,7 +44,7 @@ where
     P: PoolItem,
 {
     fn from(request: ThreadEchoRequest) -> Self {
-        ThreadRequestResponse::ThreadEcho(RequestResponse::Request(request))
+        ThreadRequestResponse::ThreadEcho(RequestResponse::<P, ThreadEchoRequest>::Request(request))
     }
 }
 

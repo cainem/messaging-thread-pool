@@ -23,7 +23,7 @@
 //! # Example
 //! ```
 //! use std::iter;
-//! use messaging_thread_pool::{samples::*, thread_request_response::*, ThreadPool};
+//! use messaging_thread_pool::{*, samples::*};
 //!
 //!    // creates a thread pool with 4 threads.
 //!    // The lifetime of the elements created (the Randoms in this case) will be tied to the
@@ -38,7 +38,8 @@
 //!    // thread pool itself is dropped.
 //!    thread_pool
 //!        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
-//!        .for_each(|response: AddResponse| assert!(response.success()));
+//!        .expect("thread pool to be available")
+//!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 //!
 //!    // now create 1000 messages asking them for the sum of the Randoms objects contained
 //!    // random numbers.
@@ -46,6 +47,7 @@
 //!    // This call will block until all of the work is done and the responses returned
 //!    let sums: Vec<SumResponse> = thread_pool
 //!        .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
+//!        .expect("thread pool to be available")
 //!        .collect();
 //!    assert_eq!(1000, sums.len());
 //!
@@ -53,6 +55,7 @@
 //!    // this call will block until complete
 //!    let mean_response_0: MeanResponse = thread_pool
 //!        .send_and_receive(iter::once(MeanRequest(0)))
+//!        .expect("thread pool to be available")
 //!        .nth(0)
 //!        .unwrap();
 //!    println!("{}", mean_response_0.mean());
@@ -61,29 +64,19 @@
 //!    // it will be dropped from the thread where it was residing
 //!    thread_pool
 //!        .send_and_receive(iter::once(RemovePoolItemRequest(1)))
-//!        .for_each(|response: RemovePoolItemResponse| assert!(response.success()));
+//!        .expect("thread pool to be available")
+//!        .for_each(|response: RemovePoolItemResponse| assert!(response.item_existed()));
 //!
 //!    // add a new object with id 1000
 //!    thread_pool
 //!        .send_and_receive(iter::once(RandomsAddRequest(1000)))
-//!        .for_each(|response: AddResponse| assert!(response.success()));
+//!        .expect("thread pool to be available")
+//!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 //!
 //!    // all objects are dropped when the basic thread pool batcher is dropped
 //!    // the threads are shutdown and joined back the the main thread
 //!    drop(thread_pool);
 //! ```
-//!
-//! # Panics
-//!
-//! There are several reasons currently why the thread pool will panic.\
-//!
-//! The list of reasons includes the following:-
-//!
-//! * If a request is made to create an instance whose id already exists.
-//! * If a request is made to shutdown or abort a thread with a given id does not exist.
-//!
-//! Also if any of the internal instances themselves panic there is no protection provided against this
-//! and the thread panic, which in turn causes the thread pool to eventually panic.
 //!
 //! # Limitations
 //!
@@ -99,28 +92,35 @@
 //!
 use std::sync::RwLock;
 
-use pool_item::PoolItem;
 use thread_endpoint::ThreadEndpoint;
 
 pub mod global_test_scope;
 pub mod id_provider;
-pub mod id_targeted;
-pub mod pool_item;
-pub mod request_response;
 pub mod samples;
-pub mod thread_pool_sender_and_receiver;
-pub mod thread_request_response;
+pub mod sender_couplet;
 
 mod drop;
+mod id_targeted;
 mod new;
+mod pool_item;
 mod pool_thread;
-mod pool_thread_old;
 mod receive;
+mod request_response;
+mod request_with_response;
 mod send;
 mod send_and_receive;
-mod sender_couplet;
+mod sender_and_receiver;
 mod shutdown;
 mod thread_endpoint;
+mod thread_request_response;
+
+pub use id_targeted::IdTargeted;
+pub use pool_item::*;
+pub use request_response::RequestResponse;
+pub use request_with_response::RequestWithResponse;
+pub use sender_and_receiver::*;
+pub use sender_couplet::*;
+pub use thread_request_response::*;
 
 /// This struct represents a pool of threads that can target a particular type of
 /// resource (a resource being a struct that implements [`PoolItem`])
@@ -157,7 +157,7 @@ mod tests {
         let result = ThreadPool::<Randoms>::new(2);
 
         // one thread created
-        assert_eq!(2, usize::from(result.thread_count()));
+        assert_eq!(2, result.thread_count());
 
         // shutdown the thread pool
         result.shutdown();
@@ -168,7 +168,7 @@ mod tests {
         let result = ThreadPool::<Randoms>::new(1);
 
         // one thread created
-        assert_eq!(1, usize::from(result.thread_count()));
+        assert_eq!(1, result.thread_count());
 
         // shutdown the thread pool
         result.shutdown();

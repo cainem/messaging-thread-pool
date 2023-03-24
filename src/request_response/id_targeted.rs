@@ -1,40 +1,51 @@
-use crate::id_targeted::IdTargeted;
+use crate::{
+    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
+};
 
-use super::{request_response_message::RequestResponseMessage, RequestResponse};
+use super::RequestResponse;
 
-impl<const N: usize, Req, Res> IdTargeted for RequestResponse<N, Req, Res>
+impl<P, T> IdTargeted for RequestResponse<P, T>
 where
-    Req: RequestResponseMessage<N, true> + IdTargeted,
-    Res: RequestResponseMessage<N, false>,
+    T: RequestWithResponse<P> + IdTargeted,
+    P: PoolItem,
 {
     fn id(&self) -> usize {
-        match self {
-            RequestResponse::Request(request) => request.id(),
-            RequestResponse::Response(_response) => {
-                panic!("id targeting is not required for responses")
-            }
-        }
+        let RequestResponse::Request(request) = self else {
+            panic!("not expected; only requests are required to support IdTargeted");
+        };
+        request.id()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        id_targeted::IdTargeted, request_response::RequestResponse,
-        thread_request_response::ID_ONLY,
+        id_targeted::IdTargeted,
+        request_response::RequestResponse,
+        samples::{Randoms, RandomsAddRequest},
+        thread_request_response::AddResponse,
     };
 
     #[test]
-    fn request_response_contains_request_of_id_2_returns_2() {
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(2);
+    #[should_panic(expected = "not expected; only requests are required to support IdTargeted")]
+    fn request_response_contains_response_request_panics() {
+        let target =
+            RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(0, Ok(0)));
 
-        assert_eq!(2, target.id());
+        target.id();
     }
 
     #[test]
-    fn request_response_contains_request_of_id_1_returns_1() {
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(1);
+    fn request_response_contains_request_id_1_returns_1() {
+        let target = RequestResponse::Request(RandomsAddRequest(1));
 
         assert_eq!(1, target.id());
+    }
+
+    #[test]
+    fn request_response_contains_request_id_0_returns_0() {
+        let target = RequestResponse::Request(RandomsAddRequest(0));
+
+        assert_eq!(0, target.id());
     }
 }

@@ -1,13 +1,14 @@
+pub mod guard_drop;
 pub mod new_pool_item_error;
 
-use tracing::{event, subscriber::DefaultGuard, Level};
-use tracing_appender::non_blocking::WorkerGuard;
+use tracing::{event, Level};
 
 use crate::{
-    id_targeted::IdTargeted, request_response::RequestResponseMessage, thread_request_response::*,
+    id_targeted::IdTargeted, request_with_response::RequestWithResponse, thread_request_response::*,
 };
 use std::fmt::Debug;
 
+pub use self::guard_drop::GuardDrop;
 pub use self::new_pool_item_error::NewPoolItemError;
 
 /// This is the trait that needs to be implemented by a struct in order that it can be
@@ -15,7 +16,7 @@ pub use self::new_pool_item_error::NewPoolItemError;
 pub trait PoolItem: Debug
 where
     Self: Sized,
-    Self::Init: RequestResponseMessage<ADD_POOL_ITEM, true> + IdTargeted,
+    Self::Init: Send + IdTargeted + RequestWithResponse<Self, Response = AddResponse>,
     Self::Api: Debug + Send + IdTargeted,
 {
     /// This is a struct that defines the message that will initiate a new instance
@@ -31,7 +32,7 @@ where
     /// it receives.
     /// It will typically consist of a match statement that will discriminate amongst
     /// the various messages type defined in the Api
-    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self>;
+    fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self>;
 
     /// The function called if an item with the specified is not found
     /// The default behaviour is to panic
@@ -42,14 +43,14 @@ where
     }
 
     /// used for debug only; allows logging to output the name of the type
-    fn name(&self) -> &str {
+    fn name() -> &'static str {
         std::any::type_name::<Self>()
     }
 
     /// This function defines how a new struct will be created when it receives
     /// The Init message.
     /// It returns the created new instance of the struct
-    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError>;
+    fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError>;
 
     /// This function is a hook that is called when the pool is shutting down.
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
@@ -59,15 +60,17 @@ where
     /// This method is called to optionally add tracing before each message is processed.
     /// The tracing is removed once the message is processed.
     /// If the tracing is being written to a file it is important that the file is not truncated
-    #[allow(unused_variables)]
-    fn add_element_request_tracing(id: usize) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
+    /// The implementation needs to return a vec of guards of any subscribers added.
+    fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+        // by default no pool item tracing
         None
     }
 
     /// This method provides any required tracing in the pool items thread pool threads
     /// This tracing is added when the thread is spawned and remains in place until the thread dies
     #[allow(unused_variables)]
-    fn add_pool_thread_tracing(id: usize) -> Option<(DefaultGuard, Vec<WorkerGuard>)> {
+    fn add_pool_thread_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
+        // by default no pool thread tracing
         None
     }
 }

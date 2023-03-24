@@ -1,9 +1,6 @@
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
-use super::{ThreadRequestResponse, THREAD_ABORT};
+use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadAbortResponse(pub usize);
@@ -13,8 +10,6 @@ impl ThreadAbortResponse {
         self.0
     }
 }
-
-impl RequestResponseMessage<THREAD_ABORT, false> for ThreadAbortResponse {}
 
 impl<T> From<ThreadAbortResponse> for ThreadRequestResponse<T>
 where

@@ -1,10 +1,6 @@
-use crate::{
-    request_response::{RequestResponse, RequestResponseMessage},
-    samples::{randoms::randoms_api::RandomsApi, Randoms},
-    thread_request_response::ThreadRequestResponse,
-};
+use crate::{samples::Randoms, *};
 
-use super::SUM;
+use super::RandomsApi;
 
 /// This is the response from a request to calculate the sum of the contained random numbers
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,8 +14,6 @@ impl SumResponse {
         self.sum
     }
 }
-
-impl RequestResponseMessage<SUM, false> for SumResponse {}
 
 impl From<SumResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: SumResponse) -> Self {

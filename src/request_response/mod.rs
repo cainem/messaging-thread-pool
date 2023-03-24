@@ -1,58 +1,81 @@
 mod id_targeted;
-mod request_message;
-mod request_response_message;
-mod response_message;
 
-pub use request_message::RequestMessage;
-pub use request_response_message::RequestResponseMessage;
-pub use response_message::ResponseMessage;
+use crate::{pool_item::PoolItem, request_with_response::RequestWithResponse};
+use std::fmt::Debug;
 
-/// This enum is used for defining request/response pairs \
-/// The protocol insists that every request has a corresponding response \
-/// This enum defines the 2 types that are used
-#[derive(Debug, PartialEq, Eq)]
-pub enum RequestResponse<const N: usize, Req, Res>
+/// This enum holds either a request or it's associated response
+#[derive(Debug)]
+pub enum RequestResponse<P, T>
 where
-    Req: RequestResponseMessage<N, true>,
-    Res: RequestResponseMessage<N, false>,
+    T: RequestWithResponse<P>,
+    P: PoolItem,
 {
-    Request(Req),
-    Response(Res),
+    Request(T),
+    Response(T::Response),
 }
 
-impl<const N: usize, Req, Res> RequestResponse<N, Req, Res>
+impl<P, T> RequestResponse<P, T>
 where
-    Req: RequestResponseMessage<N, true>,
-    Res: RequestResponseMessage<N, false>,
+    T: RequestWithResponse<P>,
+    P: PoolItem,
 {
-    pub fn request(&self) -> &Req {
-        let RequestResponse::Request(result) = self else {
-            panic!("not a request");
+    /// Creates a new request from a type that implements RequestWithResponse
+    /// i.e. it is known to be a request
+    pub fn new(request_with_response: T) -> Self {
+        RequestResponse::Request(request_with_response)
+    }
+}
+
+impl<P, T> PartialEq for RequestResponse<P, T>
+where
+    T: RequestWithResponse<P> + PartialEq,
+    T::Response: PartialEq,
+    P: PoolItem,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Request(l0), Self::Request(r0)) => l0 == r0,
+            (Self::Response(l0), Self::Response(r0)) => l0 == r0,
+            _ => false,
+        }
+    }
+}
+
+impl<P, T> RequestResponse<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    pub fn request(&self) -> &T {
+        let RequestResponse::Request(request) = self else {
+            panic!("not expected");
         };
-        result
+        request
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::thread_request_response::ID_ONLY;
+    use crate::{
+        samples::{Randoms, RandomsAddRequest},
+        thread_request_response::AddResponse,
+    };
 
     use super::RequestResponse;
 
     #[test]
-    #[should_panic(expected = "not a request")]
-    fn request_response_contains_a_response_request_panics() {
-        let response = 1;
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Response(response);
+    #[should_panic(expected = "not expected")]
+    fn request_response_contains_response_request_panics() {
+        let target =
+            RequestResponse::<Randoms, RandomsAddRequest>::Response(AddResponse::new(0, Ok(0)));
 
-        let _ = target.request();
+        target.request();
     }
 
     #[test]
-    fn request_response_contains_a_request_request_unwraps_request() {
-        let request = 1;
-        let target = RequestResponse::<ID_ONLY, usize, usize>::Request(request);
+    fn request_response_contains_request_request_returns_request() {
+        let target = RequestResponse::Request(RandomsAddRequest(0));
 
-        assert_eq!(&request, target.request());
+        assert_eq!(&RandomsAddRequest(0), target.request());
     }
 }

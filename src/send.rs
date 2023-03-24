@@ -1,9 +1,9 @@
-use crossbeam_channel::Sender;
+use crossbeam_channel::{SendError, Sender};
 use tracing::{event, instrument, Level};
 
 use crate::{
-    pool_item::PoolItem, request_response::RequestMessage,
-    thread_request_response::ThreadRequestResponse, ThreadPool,
+    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
+    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse, ThreadPool,
 };
 
 impl<P> ThreadPool<P>
@@ -17,14 +17,14 @@ where
     /// The work is distributed within the thread pool and returned as a vec of responses
     ///
     /// The work will be distributed based on the mod of the id of the requests target
-    #[instrument(skip(self, send_back_to, requests))]
-    pub(super) fn send<const N: usize, T>(
+    #[instrument(skip(self, send_back_to, requests), fields(name=P::name()))]
+    pub(super) fn send<T>(
         &self,
         send_back_to: Sender<ThreadRequestResponse<P>>,
         requests: impl Iterator<Item = T>,
-    ) -> usize
+    ) -> Result<usize, SendError<SenderCouplet<P>>>
     where
-        T: RequestMessage<N, P>,
+        T: RequestWithResponse<P> + IdTargeted,
     {
         let thread_count = self
             .thread_endpoints
@@ -37,14 +37,20 @@ where
         let mut request_count = 0;
         for request in requests {
             // route to correct thread; share the load based on id and the mod of the thread count
-            let targeted = request.id() as usize % thread_count;
-            event!(Level::DEBUG, "Sending to target {}", request.id());
+            let targeted = request.id() % thread_count;
+            event!(
+                Level::DEBUG,
+                "Sending to target=[{}], id=[{}], message type=[{}]",
+                P::name(),
+                request.id(),
+                std::any::type_name::<T>()
+            );
             event!(Level::TRACE, ?request);
-            guard[targeted].send(&send_back_to.clone(), request);
+            guard[targeted].send(&send_back_to.clone(), request)?;
             request_count += 1;
         }
 
-        request_count
+        Ok(request_count)
     }
 }
 
@@ -62,7 +68,7 @@ mod tests {
 
         let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-        target.send(send_back_to, requests);
+        target.send(send_back_to, requests).unwrap();
 
         let mut responses = Vec::<ThreadEchoResponse>::new();
 
@@ -83,7 +89,7 @@ mod tests {
 
         let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
 
-        target.send(send_back_to, requests);
+        target.send(send_back_to, requests).unwrap();
 
         let mut responses = Vec::<ThreadEchoResponse>::new();
 
@@ -103,7 +109,7 @@ mod tests {
 
         let requests = (0..1usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
-        target.send(send_back_to, requests);
+        target.send(send_back_to, requests).unwrap();
 
         let thread_echo_response: ThreadEchoResponse = receive_from_thread.recv().unwrap().into();
 

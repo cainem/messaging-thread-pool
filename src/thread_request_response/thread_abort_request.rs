@@ -1,20 +1,24 @@
 use crate::{
-    id_targeted::IdTargeted,
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
+    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
+    request_with_response::RequestWithResponse,
 };
 
-use super::{ThreadRequestResponse, THREAD_ABORT};
+use super::{ThreadAbortResponse, ThreadRequestResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadAbortRequest(pub usize);
-
-impl RequestResponseMessage<THREAD_ABORT, true> for ThreadAbortRequest {}
 
 impl IdTargeted for ThreadAbortRequest {
     fn id(&self) -> usize {
         self.0
     }
+}
+
+impl<P> RequestWithResponse<P> for ThreadAbortRequest
+where
+    P: PoolItem,
+{
+    type Response = ThreadAbortResponse;
 }
 
 impl<P> From<ThreadAbortRequest> for ThreadRequestResponse<P>

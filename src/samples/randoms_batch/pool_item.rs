@@ -1,26 +1,31 @@
-use crate::{
-    id_targeted::IdTargeted,
-    pool_item::{new_pool_item_error::NewPoolItemError, PoolItem},
-    thread_request_response::*,
-};
+use crate::{samples::Randoms, *};
+use std::fmt::Debug;
 
 use super::{randoms_batch_api::*, RandomsBatch};
 
-impl PoolItem for RandomsBatch {
-    type Init = RandomsBatchAddRequest;
-    type Api = RandomsBatchApi;
+impl<P> PoolItem for RandomsBatch<P>
+where
+    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
+{
+    type Init = RandomsBatchAddRequest<P>;
+    type Api = RandomsBatchApi<P>;
 
-    fn process_message(&mut self, request: &Self::Api) -> ThreadRequestResponse<Self> {
+    fn name() -> &'static str {
+        "RandomsBatch"
+    }
+
+    fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
-            RandomsBatchApi::SumOfSums(request) => {
+            RandomsBatchApi::SumOfSums(RequestResponse::Request(request)) => {
                 let id = request.id();
                 let sum_of_sums = self.sum_of_sums();
                 SumOfSumsResponse { id, sum_of_sums }.into()
             }
+            _ => panic!("unexpected"),
         }
     }
 
-    fn new_pool_item(request: &Self::Init) -> Result<Self, NewPoolItemError> {
+    fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(RandomsBatch::new(request))
     }
 

@@ -1,10 +1,8 @@
-use crossbeam_channel::Receiver;
-use tracing::{event, instrument, Level};
-
 use crate::{
-    pool_item::PoolItem, request_response::ResponseMessage,
+    pool_item::PoolItem, request_with_response::RequestWithResponse,
     thread_request_response::ThreadRequestResponse, ThreadPool,
 };
+use crossbeam_channel::Receiver;
 
 impl<P> ThreadPool<P>
 where
@@ -15,18 +13,14 @@ where
     /// The request is received as a vec and the responses are received back in a vec
     /// The idea here is that size of these vecs is restricted to a single compartments
     /// worth of requests
-    #[instrument(skip(self, receive_from_worker))]
-    pub(super) fn receive<const N: usize, T>(
+    pub(super) fn receive<T>(
         &self,
         receive_from_worker: Receiver<ThreadRequestResponse<P>>,
-    ) -> impl Iterator<Item = T>
+    ) -> impl Iterator<Item = T::Response>
     where
-        T: ResponseMessage<N, P>,
+        T: RequestWithResponse<P>,
     {
-        receive_from_worker.into_iter().map(|r| {
-            event!(Level::TRACE, "receiving message {:?}", r);
-            r.into()
-        })
+        receive_from_worker.into_iter().map(|r| r.into())
     }
 }
 
@@ -42,11 +36,13 @@ mod tests {
 
         let (send_to_pool, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests = (0..3usize).map(|id| ThreadEchoRequest::new(id, format!("ping {}", id)));
+        let requests = (0..3usize).map(|id| ThreadEchoRequest::new(id, format!("ping {id}")));
 
-        target.send(send_to_pool, requests);
+        target.send(send_to_pool, requests).unwrap();
 
-        let results: Vec<ThreadEchoResponse> = target.receive(receive_from_thread).collect();
+        let results: Vec<ThreadEchoResponse> = target
+            .receive::<ThreadEchoRequest>(receive_from_thread)
+            .collect();
 
         assert_eq!(3, results.len());
 
@@ -61,11 +57,13 @@ mod tests {
 
         let (send_to_pool, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests: Vec<_> = (0..1).map(|id| RandomsAddRequest(id)).collect();
+        let requests: Vec<_> = (0..1).map(RandomsAddRequest).collect();
 
-        target.send(send_to_pool, requests.into_iter());
+        target.send(send_to_pool, requests.into_iter()).unwrap();
 
-        let result: Vec<AddResponse> = target.receive(receive_from_thread).collect();
+        let result: Vec<AddResponse> = target
+            .receive::<RandomsAddRequest>(receive_from_thread)
+            .collect();
 
         assert_eq!(1, result.len());
         assert_eq!(0, result[0].id());

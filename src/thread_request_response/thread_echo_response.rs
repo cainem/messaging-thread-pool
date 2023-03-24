@@ -1,9 +1,6 @@
-use crate::{
-    pool_item::PoolItem,
-    request_response::{RequestResponse, RequestResponseMessage},
-};
+use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
-use super::{ThreadRequestResponse, THREAD_ECHO};
+use super::ThreadRequestResponse;
 
 /// For debug purposes only; a message for responding to an echo request targeting a specific thread
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,8 +9,6 @@ pub struct ThreadEchoResponse {
     message: String,
     responding_thread_id: usize,
 }
-
-impl RequestResponseMessage<THREAD_ECHO, false> for ThreadEchoResponse {}
 
 impl ThreadEchoResponse {
     pub fn new(thread_id: usize, message: String, responding_thread_id: usize) -> Self {
