@@ -40,8 +40,9 @@ where
             let targeted = request.id() % thread_count;
             event!(
                 Level::DEBUG,
-                "Sending to target=[{}], id=[{}], message type=[{}]",
+                "Sending to target=[{}-{}], id=[{}], message type=[{}]",
                 P::name(),
+                targeted,
                 request.id(),
                 std::any::type_name::<T>()
             );
