@@ -73,4 +73,12 @@ where
         // by default no pool thread tracing
         None
     }
+
+    /// This method defines the algorithm to be used for routing a given pool item id
+    /// to a given pool item thread.
+    /// Usually just modding with the thread count is sufficient assuming that ids
+    /// are assigned linearly
+    fn id_thread_router(id: usize, thread_count: usize) -> usize {
+        id % thread_count
+    }
 }

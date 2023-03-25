@@ -44,4 +44,7 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Change add_pool_item_tracing to take a reference to the pool item, not just its id
 - tidy up add_pool_thread_tracing
 - add more logging
+## [3.2.0]
+- All a PoolItem to provide custom id to thread mapping rather that relying on a simple mod
+
 
