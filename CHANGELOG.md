@@ -46,5 +46,6 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - add more logging
 ## [3.2.0]
 - All a PoolItem to provide custom id to thread mapping rather that relying on a simple mod
+- Add assert_is_complete to SenderAndReceiverMock
 
 
