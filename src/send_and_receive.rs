@@ -21,7 +21,8 @@ where
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
-        let (return_back_to, receive_from_worker) = bounded::<ThreadRequestResponse<P>>(5);
+        let (return_back_to, receive_from_worker) =
+            bounded::<ThreadRequestResponse<P>>(self.thread_count());
         self.send(return_back_to, requests)?;
         Ok(self.receive::<T>(receive_from_worker))
     }
