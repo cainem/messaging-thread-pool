@@ -1,4 +1,4 @@
-use crossbeam_channel::{unbounded, SendError};
+use crossbeam_channel::{bounded, SendError};
 use tracing::instrument;
 
 use crate::{
@@ -21,7 +21,7 @@ where
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
-        let (return_back_to, receive_from_worker) = unbounded::<ThreadRequestResponse<P>>();
+        let (return_back_to, receive_from_worker) = bounded::<ThreadRequestResponse<P>>(5);
         self.send(return_back_to, requests)?;
         Ok(self.receive::<T>(receive_from_worker))
     }
