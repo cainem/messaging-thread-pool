@@ -45,7 +45,8 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - tidy up add_pool_thread_tracing
 - add more logging
 ## [3.2.0]
-- All a PoolItem to provide custom id to thread mapping rather that relying on a simple mod
+- Add a PoolItem function to provide custom id to thread mapping rather that relying on a simple mod
 - Add assert_is_complete to SenderAndReceiverMock
+- Add Send + Sync constraint on GuardDrop so that it can be used in async functions
 
 
