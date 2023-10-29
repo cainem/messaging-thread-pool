@@ -16,7 +16,10 @@ impl From<PanicResponse> for ThreadRequestResponse<Randoms> {
 
 impl From<ThreadRequestResponse<Randoms>> for PanicResponse {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Panic(RequestResponse::Response(result))) = response else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Panic(RequestResponse::Response(
+            result,
+        ))) = response
+        else {
             panic!("not expected")
         };
         result

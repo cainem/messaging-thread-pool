@@ -43,7 +43,9 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::ThreadShutdown(RequestResponse::Response(response)) = response else {
+        let ThreadRequestResponse::<P>::ThreadShutdown(RequestResponse::Response(response)) =
+            response
+        else {
             panic!("unexpected")
         };
         response

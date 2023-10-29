@@ -1,4 +1,5 @@
 mod add_response;
+mod id;
 mod remove_pool_item_request;
 mod remove_pool_item_response;
 mod thread_abort_request;

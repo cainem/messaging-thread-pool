@@ -36,7 +36,8 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(response)) = response else {
+        let ThreadRequestResponse::RemovePoolItem(RequestResponse::Response(response)) = response
+        else {
             panic!("not expected");
         };
         response

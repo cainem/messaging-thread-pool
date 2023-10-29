@@ -41,7 +41,10 @@ where
     P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
 {
     fn from(request: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(RequestResponse::Request(result))) = request else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
+            RequestResponse::Request(result),
+        )) = request
+        else {
             panic!("not expected")
         };
         result

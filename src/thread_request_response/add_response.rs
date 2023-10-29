@@ -42,7 +42,10 @@ where
     P: PoolItem,
 {
     fn from(response: ThreadRequestResponse<P>) -> Self {
-        let ThreadRequestResponse::<P>::AddPoolItem(RequestResponse::<P, P::Init>::Response(response)) = response else {
+        let ThreadRequestResponse::<P>::AddPoolItem(RequestResponse::<P, P::Init>::Response(
+            response,
+        )) = response
+        else {
             panic!("unexpected")
         };
         response
