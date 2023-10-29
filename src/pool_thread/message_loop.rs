@@ -45,6 +45,7 @@ where
                     // find the pool item that needs to process the request
                     let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
                         // give the opportunity to add pool item tracing
+                        // this will override the default tracing; the original tracing will NOT be restored as it is currently implemented
                         let guards = P::add_pool_item_tracing(targeted);
                         // process the message
                         let response = targeted.process_message(request);

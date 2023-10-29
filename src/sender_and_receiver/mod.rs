@@ -38,11 +38,12 @@ where
     where
         T: RequestWithResponse<P> + IdTargeted + 'a,
     {
+        let id = request.id();
         let mut responses = self.send_and_receive(iter::once(request))?;
 
         let Some(response) = responses.next() else {
-            // not sure that this is even possible; surely the send_and_receive blocks until something is received
-            panic!("response not received");
+            // panics if there has been a down stream panic
+            panic!("response not received for request id {:?}", id);
         };
 
         assert!(

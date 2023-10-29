@@ -1,4 +1,4 @@
-use crossbeam_channel::{bounded, unbounded, SendError};
+use crossbeam_channel::{unbounded, SendError};
 use tracing::instrument;
 
 use crate::{

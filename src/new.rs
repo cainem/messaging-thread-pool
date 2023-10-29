@@ -38,6 +38,7 @@ where
             let join_handle = thread_builder
                 .spawn(move || {
                     // set default tracing subscribers for thread
+                    // NOTE: this will be over-ridden if the PoolItem sets the tracing
                     let tracing_guards = P::add_pool_thread_tracing(i);
 
                     // start a new thread with id i
