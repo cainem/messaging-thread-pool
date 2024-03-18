@@ -15,7 +15,7 @@ use tracing::metadata::LevelFilter;
 ///
 #[test]
 pub fn example_random_batches_() {
-    global_test_scope(LevelFilter::INFO);
+    global_test_scope(LevelFilter::OFF);
 
     // Create a thread pool for RandomsBatch
     // It is the lifetime of this struct that controls the lifetime of all of the pool items that are added
