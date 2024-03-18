@@ -48,5 +48,6 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add a PoolItem function to provide custom id to thread mapping rather that relying on a simple mod
 - Add assert_is_complete to SenderAndReceiverMock
 - Add Send + Sync constraint on GuardDrop so that it can be used in async functions
+- Allow id currently being processed to be accessed with new id_being_processed() function
 
 
