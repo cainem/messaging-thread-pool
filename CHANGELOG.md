@@ -49,5 +49,6 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Add assert_is_complete to SenderAndReceiverMock
 - Add Send + Sync constraint on GuardDrop so that it can be used in async functions
 - Allow id currently being processed to be accessed with new id_being_processed() function
+- Add mimalloc bench mark to show the benefits of changing the default allocator (only tried on windows)
 
 
