@@ -4,7 +4,7 @@ use tracing::{event, instrument, Level};
 
 use crate::{
     id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
-    sender_couplet::SenderCouplet, thread_request_response::*,
+    sender_couplet::SenderCouplet, thread_request_response::*, ID_BEING_PROCESSED,
 };
 
 use super::PoolThread;
@@ -38,6 +38,10 @@ where
 
             let SenderCouplet { return_to, request } = sender_couplet;
 
+            // store the id being processed in thread local storage
+            ID_BEING_PROCESSED
+                .with(|id_being_processed| id_being_processed.replace(Some(request.id())));
+
             let response = match request {
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
@@ -45,6 +49,7 @@ where
                     // find the pool item that needs to process the request
                     let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
                         // give the opportunity to add pool item tracing
+                        // this will override the default tracing; the original tracing will NOT be restored as it is currently implemented
                         let guards = P::add_pool_item_tracing(targeted);
                         // process the message
                         let response = targeted.process_message(request);
@@ -157,8 +162,10 @@ where
                     // discard the response message and continue
                     event!(Level::WARN, "Cannot return results, other end of channel has most likely been dropped. Err = {}", &err);
                 }
-            }
+            };
 
+            // reset the thread local storage to indicate that no id is currently being processed
+            ID_BEING_PROCESSED.with(|id_being_processed| id_being_processed.replace(None));
             // loop will only exit here if the "main" thread has exited; this is not expected
         }
 

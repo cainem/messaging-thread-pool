@@ -25,7 +25,10 @@ impl From<MeanResponse> for ThreadRequestResponse<Randoms> {
 
 impl From<ThreadRequestResponse<Randoms>> for MeanResponse {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(result))) = response else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Response(
+            result,
+        ))) = response
+        else {
             panic!("not expected")
         };
         result

@@ -41,8 +41,8 @@ impl IdTargeted for RandomsApi {
 impl From<ThreadRequestResponse<Randoms>> for RandomsApi {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
         let ThreadRequestResponse::MessagePoolItem(result) = response else {
-                panic!("must be a response to a call to the pool item")
-            };
+            panic!("must be a response to a call to the pool item")
+        };
         result
     }
 }

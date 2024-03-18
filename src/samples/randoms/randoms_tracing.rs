@@ -10,6 +10,8 @@ impl Randoms {
     ///
     /// In this case the pool item 950 will output tracing (at DEBUG and above) to the console
     pub(crate) fn randoms_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
+        // this is an example of how the logging can be added for a specific pool item
+        // (in this case the pool item with id 950)
         if id == 950 {
             let mut guards: Vec<Box<dyn GuardDrop>> = vec![];
             let subscriber = FmtSubscriber::builder()

@@ -37,8 +37,8 @@ where
 {
     fn from(response: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
         let ThreadRequestResponse::MessagePoolItem(result) = response else {
-                panic!("must be a response to a call to the pool item")
-            };
+            panic!("must be a response to a call to the pool item")
+        };
         result
     }
 }

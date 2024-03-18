@@ -1,4 +1,4 @@
-use std::{sync::RwLock, thread::spawn};
+use std::{sync::RwLock, thread::Builder};
 
 use crossbeam_channel::unbounded;
 use tracing::{event, Level};
@@ -32,24 +32,30 @@ where
         for i in 0..thread_pool_size {
             let (send_to_thread, receive_from_pool) = unbounded::<SenderCouplet<P>>();
 
-            let join_handle = spawn(move || {
-                // set default tracing subscribers for thread
-                let tracing_guards = P::add_pool_thread_tracing(i);
+            event!(Level::INFO, "Creating thread {}-{}", P::name(), i);
 
-                // start a new thread with id i
-                let mut pool_thread = PoolThread::<P>::new(i, receive_from_pool);
+            let thread_builder = Builder::new().name(format!("{}-{}", P::name(), i));
+            let join_handle = thread_builder
+                .spawn(move || {
+                    // set default tracing subscribers for thread
+                    // NOTE: this will be over-ridden if the PoolItem sets the tracing
+                    let tracing_guards = P::add_pool_thread_tracing(i);
 
-                event!(Level::INFO, "starting message loop");
+                    // start a new thread with id i
+                    let mut pool_thread = PoolThread::<P>::new(i, receive_from_pool);
 
-                // enter the "infinite" message loop where messages will be received
-                pool_thread.message_loop();
+                    event!(Level::INFO, "starting message loop");
 
-                // drop the threads tracing subscriber
-                drop(tracing_guards);
+                    // enter the "infinite" message loop where messages will be received
+                    pool_thread.message_loop();
 
-                // return the pool thread id in the join handle
-                i
-            });
+                    // drop the threads tracing subscriber
+                    drop(tracing_guards);
+
+                    // return the pool thread id in the join handle
+                    i
+                })
+                .expect("thread to spawn");
 
             building.push(ThreadEndpoint::new(send_to_thread, join_handle));
         }

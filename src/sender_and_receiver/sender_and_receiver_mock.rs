@@ -76,6 +76,20 @@ where
             .expect("that the lock will never fail")
             .is_empty()
     }
+
+    /// Assert that all of the responses have been returned; provides
+    pub fn assert_is_complete(&self) {
+        let unreturned_responses = self
+            .returned_responses
+            .lock()
+            .expect("that the lock will never fail")
+            .len();
+        assert!(
+            unreturned_responses == 0,
+            "expected all responses to have been consumed, {} remaining",
+            unreturned_responses
+        );
+    }
 }
 
 impl<P, T1> SenderAndReceiver<P> for SenderAndReceiverMock<P, T1>

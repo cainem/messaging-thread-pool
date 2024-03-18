@@ -37,11 +37,12 @@ where
         let mut request_count = 0;
         for request in requests {
             // route to correct thread; share the load based on id and the mod of the thread count
-            let targeted = request.id() % thread_count;
+            let targeted = P::id_thread_router(request.id(), thread_count);
             event!(
                 Level::DEBUG,
-                "Sending to target=[{}], id=[{}], message type=[{}]",
+                "Sending to target=[{}-{}], id=[{}], message type=[{}]",
                 P::name(),
+                targeted,
                 request.id(),
                 std::any::type_name::<T>()
             );

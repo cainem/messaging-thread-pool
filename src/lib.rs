@@ -90,11 +90,12 @@
 //!
 //! It was not really intended for anything other than long-lived CPU bound elements.
 //!
-use std::sync::RwLock;
+use std::{cell::RefCell, sync::RwLock};
 
 use thread_endpoint::ThreadEndpoint;
 
 pub mod global_test_scope;
+pub mod id_being_processed;
 pub mod id_provider;
 pub mod samples;
 pub mod sender_couplet;
@@ -114,6 +115,7 @@ mod shutdown;
 mod thread_endpoint;
 mod thread_request_response;
 
+pub use id_being_processed::*;
 pub use id_targeted::IdTargeted;
 pub use pool_item::*;
 pub use request_response::RequestResponse;
@@ -121,6 +123,10 @@ pub use request_with_response::RequestWithResponse;
 pub use sender_and_receiver::*;
 pub use sender_couplet::*;
 pub use thread_request_response::*;
+
+thread_local! {
+    static ID_BEING_PROCESSED: RefCell<Option<usize>> = RefCell::new(None);
+}
 
 /// This struct represents a pool of threads that can target a particular type of
 /// resource (a resource being a struct that implements [`PoolItem`])

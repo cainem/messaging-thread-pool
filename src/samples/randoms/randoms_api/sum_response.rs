@@ -23,7 +23,10 @@ impl From<SumResponse> for ThreadRequestResponse<Randoms> {
 
 impl From<ThreadRequestResponse<Randoms>> for SumResponse {
     fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Response(response))) = response else {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Response(
+            response,
+        ))) = response
+        else {
             panic!("unexpected")
         };
         response

@@ -1,3 +1,5 @@
+use tracing::{event, Level};
+
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
     guard_drop::GuardDrop,
@@ -16,14 +18,28 @@ impl PoolItem for Randoms {
 
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
-            RandomsApi::Mean(request) => MeanResponse {
-                id: request.id(),
-                mean: self.mean(),
+            RandomsApi::Mean(request) => {
+                event!(
+                    Level::INFO,
+                    "processing mean request for id {:?}",
+                    id_being_processed()
+                );
+                MeanResponse {
+                    id: request.id(),
+                    mean: self.mean(),
+                }
             }
             .into(),
-            RandomsApi::Sum(request) => SumResponse {
-                id: request.id(),
-                sum: self.sum(),
+            RandomsApi::Sum(request) => {
+                event!(
+                    Level::INFO,
+                    "processing sum request for id {:?}",
+                    id_being_processed()
+                );
+                SumResponse {
+                    id: request.id(),
+                    sum: self.sum(),
+                }
             }
             .into(),
             RandomsApi::Panic(_request) => panic!("request to panic received"),
