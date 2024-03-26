@@ -60,7 +60,8 @@ where
 
     /// This function optionally returns a tracing subscriber that should be used for the
     /// thread pool
-    fn thread_subscriber() -> Option<Box<dyn Subscriber + Send + Sync>> {
+    #[allow(unused_variables)]
+    fn thread_subscriber(thread_id: usize) -> Option<Box<dyn Subscriber + Send + Sync>> {
         None
     }
 

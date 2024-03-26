@@ -41,7 +41,7 @@ where
                     // NOTE: this will be over-ridden if the PoolItem sets the tracing
 
                     let mut tracing_guard: Option<DefaultGuard> = None;
-                    if let Some(subscriber) = P::thread_subscriber() {
+                    if let Some(subscriber) = P::thread_subscriber(i) {
                         tracing_guard.replace(tracing::subscriber::set_default(subscriber));
                     }
 
