@@ -1,7 +1,7 @@
 use std::{sync::RwLock, thread::Builder};
 
 use crossbeam_channel::unbounded;
-use tracing::{event, Level};
+use tracing::{event, subscriber::DefaultGuard, Level};
 
 use crate::{
     pool_item::PoolItem, pool_thread::PoolThread, sender_couplet::SenderCouplet,
@@ -39,7 +39,11 @@ where
                 .spawn(move || {
                     // set default tracing subscribers for thread
                     // NOTE: this will be over-ridden if the PoolItem sets the tracing
-                    let tracing_guards = P::add_pool_thread_tracing(i);
+
+                    let mut tracing_guard: Option<DefaultGuard> = None;
+                    if let Some(subscriber) = P::thread_subscriber() {
+                        tracing_guard.replace(tracing::subscriber::set_default(subscriber));
+                    }
 
                     // start a new thread with id i
                     let mut pool_thread = PoolThread::<P>::new(i, receive_from_pool);
@@ -50,7 +54,7 @@ where
                     pool_thread.message_loop();
 
                     // drop the threads tracing subscriber
-                    drop(tracing_guards);
+                    drop(tracing_guard);
 
                     // return the pool thread id in the join handle
                     i

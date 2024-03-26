@@ -1,12 +1,13 @@
 pub mod guard_drop;
 pub mod new_pool_item_error;
 
-use tracing::{event, Level};
+use tracing::{event, Level, Subscriber};
 
 use crate::{
     id_targeted::IdTargeted, request_with_response::RequestWithResponse, thread_request_response::*,
 };
 use std::fmt::Debug;
+use std::sync::Arc;
 
 pub use self::guard_drop::GuardDrop;
 pub use self::new_pool_item_error::NewPoolItemError;
@@ -57,22 +58,35 @@ where
         Vec::<ThreadShutdownResponse>::default()
     }
 
-    /// This method is called to optionally add tracing before each message is processed.
-    /// The tracing is removed once the message is processed.
-    /// If the tracing is being written to a file it is important that the file is not truncated
-    /// The implementation needs to return a vec of guards of any subscribers added.
-    fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
-        // by default no pool item tracing
+    /// This function optionally returns a tracing subscriber that should be used for the
+    /// thread pool
+    fn thread_subscriber() -> Option<Box<dyn Subscriber + Send + Sync>> {
         None
     }
 
-    /// This method provides any required tracing in the pool items thread pool threads
-    /// This tracing is added when the thread is spawned and remains in place until the thread dies
-    #[allow(unused_variables)]
-    fn add_pool_thread_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
-        // by default no pool thread tracing
+    /// This function (optionally) returns a tracing subscriber that should be used solely for tracing a
+    /// given pool item
+    /// If None then the thread subscriber will be used
+    fn pool_item_subscriber(&self) -> Option<Arc<dyn Subscriber + Send + Sync>> {
         None
     }
+
+    // /// This method is called to optionally add tracing before each message is processed.
+    // /// The tracing is removed once the message is processed.
+    // /// If the tracing is being written to a file it is important that the file is not truncated
+    // /// The implementation needs to return a vec of guards of any subscribers added.
+    // fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+    //     // by default no pool item tracing
+    //     None
+    // }
+
+    // /// This method provides any required tracing in the pool items thread pool threads
+    // /// This tracing is added when the thread is spawned and remains in place until the thread dies
+    // #[allow(unused_variables)]
+    // fn add_pool_thread_tracing(id: usize) -> Option<Vec<Box<dyn GuardDrop>>> {
+    //     // by default no pool thread tracing
+    //     None
+    // }
 
     /// This method defines the algorithm to be used for routing a given pool item id
     /// to a given pool item thread.

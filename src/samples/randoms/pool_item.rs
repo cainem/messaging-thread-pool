@@ -1,8 +1,9 @@
-use tracing::{event, Level};
+use std::sync::Arc;
+
+use tracing::{event, Level, Subscriber};
 
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
-    guard_drop::GuardDrop,
     samples::{MeanResponse, RandomsAddRequest, SumResponse},
     *,
 };
@@ -46,9 +47,16 @@ impl PoolItem for Randoms {
         }
     }
 
-    fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+    /// This function (optionally) returns a tracing subscriber that should be used solely for tracing a
+    /// given pool item
+    /// If None then the thread subscriber will be used
+    fn pool_item_subscriber(&self) -> Option<Arc<dyn Subscriber + Send + Sync>> {
         Self::randoms_tracing(self.id())
     }
+
+    // fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
+    //     Self::randoms_tracing(self.id())
+    // }
 
     fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(Randoms::new(request.0))
