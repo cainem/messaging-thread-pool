@@ -1,4 +1,4 @@
-use std::collections::btree_map::Entry;
+use std::{collections::btree_map::Entry, sync::Arc};
 
 use tracing::{event, instrument, Level};
 
@@ -47,15 +47,31 @@ where
                     let id = request.id();
 
                     // find the pool item that needs to process the request
-                    let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
-                        // give the opportunity to add pool item tracing
-                        // this will override the default tracing; the original tracing will NOT be restored as it is currently implemented
-                        let guards = P::add_pool_item_tracing(targeted);
-                        // process the message
-                        let response = targeted.process_message(request);
+                    let response = if let Some((targeted, item_tracing_subscriber_holder)) =
+                        self.pool_item_map.get_mut(&id)
+                    {
+                        // the item was stored along with a tracing subscriber.
+                        // the existing subscriber is swapped with the one that was stored with the pool item
+                        if item_tracing_subscriber_holder.is_some() {
+                            // get the subscriber out of the option
+                            let item_tracing_subscriber = item_tracing_subscriber_holder
+                                .take()
+                                .expect("already checked");
 
-                        drop(guards);
-                        response
+                            // the subscriber is in an arc so can perform a low cost clone
+                            let response = tracing::subscriber::with_default(
+                                Arc::clone(&item_tracing_subscriber),
+                                || targeted.process_message(request),
+                            );
+
+                            // put the subscriber back in the option
+
+                            item_tracing_subscriber_holder.replace(item_tracing_subscriber);
+
+                            response
+                        } else {
+                            targeted.process_message(request)
+                        }
                     } else {
                         P::id_not_found(&request)
                     };
@@ -77,7 +93,11 @@ where
                             // try and add the new item
                             match self.pool_item_map.entry(id) {
                                 Entry::Vacant(v) => {
-                                    v.insert(new_pool_item);
+                                    // give the pool item the opportunity to create its own tracing subscriber
+                                    let tracing_subscriber = new_pool_item.pool_item_subscriber();
+
+                                    v.insert((new_pool_item, tracing_subscriber));
+
                                     AddResponse::new(id, Ok(id))
                                 }
                                 Entry::Occupied(_) => AddResponse::new(
@@ -219,7 +239,7 @@ mod tests {
         assert_eq!(2, response_0.id());
         assert!(response_0.result().is_ok());
         assert_eq!(1, target.pool_item_map.len());
-        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().0.id);
 
         assert_eq!(2, response_1.id());
         assert!(response_1.result().is_err());
@@ -471,7 +491,7 @@ mod tests {
 
         assert_eq!(2, response.id());
         assert_eq!(1, target.pool_item_map.len());
-        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().0.id);
     }
 
     #[test]
@@ -499,7 +519,7 @@ mod tests {
 
         assert_eq!(1, response.id());
         assert_eq!(1, target.pool_item_map.len());
-        assert_eq!(1, target.pool_item_map.get(&id).unwrap().id);
+        assert_eq!(1, target.pool_item_map.get(&id).unwrap().0.id);
     }
 
     #[test]
