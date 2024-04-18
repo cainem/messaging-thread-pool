@@ -1,4 +1,4 @@
-use std::{collections::btree_map::Entry, sync::Arc};
+use std::collections::btree_map::Entry;
 
 use tracing::{event, instrument, Level};
 
@@ -29,6 +29,12 @@ where
     #[instrument(skip(self), fields(id=self.thread_id, name=P::name()))]
     pub fn message_loop(&mut self) {
         // will loop until the queue is empty and the sender is dropped
+
+        // the thread start info could be anything but it is expected to provide some
+        // sort of access to the tracing subscriber
+        // in simple cases it may just, for example hold the default guard for the subscriber
+        let mut thread_start_info = P::thread_start();
+
         while let Ok(sender_couplet) = self.pool_thread_receiver.recv() {
             event!(
                 Level::TRACE,
@@ -39,39 +45,21 @@ where
             let SenderCouplet { return_to, request } = sender_couplet;
 
             // store the id being processed in thread local storage
-            ID_BEING_PROCESSED
-                .with(|id_being_processed| id_being_processed.replace(Some(request.id())));
+            ID_BEING_PROCESSED.replace(Some(request.id()));
 
             let response = match request {
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     let id = request.id();
 
                     // find the pool item that needs to process the request
-                    let response = if let Some((targeted, item_tracing_subscriber_holder)) =
-                        self.pool_item_map.get_mut(&id)
-                    {
+                    let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
                         // the item was stored along with a tracing subscriber.
                         // the existing subscriber is swapped with the one that was stored with the pool item
-                        if item_tracing_subscriber_holder.is_some() {
-                            // get the subscriber out of the option
-                            let item_tracing_subscriber = item_tracing_subscriber_holder
-                                .take()
-                                .expect("already checked");
-
-                            // the subscriber is in an arc so can perform a low cost clone
-                            let response = tracing::subscriber::with_default(
-                                Arc::clone(&item_tracing_subscriber),
-                                || targeted.process_message(request),
-                            );
-
-                            // put the subscriber back in the option
-
-                            item_tracing_subscriber_holder.replace(item_tracing_subscriber);
-
-                            response
-                        } else {
-                            targeted.process_message(request)
+                        if let Some(thread_start_info) = &mut thread_start_info {
+                            targeted.loading_pool_item(id, thread_start_info);
                         }
+
+                        targeted.process_message(request)
                     } else {
                         P::id_not_found(&request)
                     };
@@ -94,9 +82,9 @@ where
                             match self.pool_item_map.entry(id) {
                                 Entry::Vacant(v) => {
                                     // give the pool item the opportunity to create its own tracing subscriber
-                                    let tracing_subscriber = new_pool_item.pool_item_subscriber();
+                                    // let tracing_subscriber = new_pool_item.pool_item_subscriber();
 
-                                    v.insert((new_pool_item, tracing_subscriber));
+                                    v.insert(new_pool_item);
 
                                     AddResponse::new(id, Ok(id))
                                 }
@@ -133,7 +121,7 @@ where
                         self.thread_id, id,
                         "this messages should have targeted this thread"
                     );
-                    // this call to shutdown the child threads and consequently empty the internal map
+                    // this call to shut down the child threads and consequently empty the internal map
                     // is how thread shutdown differs from thread abort. Abort just exist the loop and leaves the
                     // state in place
                     let children = self.shutdown_child_pool();
@@ -177,17 +165,19 @@ where
             match return_to.send(response) {
                 Ok(_) => (),
                 Err(err) => {
-                    // The channel that is supposed to be receiving the response cannot receive it
-                    // It has probably been dropped
+                    // The channel that is supposed to be receiving the response cannot receive it,
+                    // it has probably been dropped,
                     // discard the response message and continue
                     event!(Level::WARN, "Cannot return results, other end of channel has most likely been dropped. Err = {}", &err);
                 }
             };
 
             // reset the thread local storage to indicate that no id is currently being processed
-            ID_BEING_PROCESSED.with(|id_being_processed| id_being_processed.replace(None));
+            ID_BEING_PROCESSED.replace(None);
             // loop will only exit here if the "main" thread has exited; this is not expected
         }
+
+        // drop(guard);
 
         // to get here the "send end" of the channel must have been dropped which
         // suggest that the main thread has ended.
@@ -239,7 +229,7 @@ mod tests {
         assert_eq!(2, response_0.id());
         assert!(response_0.result().is_ok());
         assert_eq!(1, target.pool_item_map.len());
-        assert_eq!(2, target.pool_item_map.get(&id).unwrap().0.id);
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
 
         assert_eq!(2, response_1.id());
         assert!(response_1.result().is_err());
@@ -491,7 +481,7 @@ mod tests {
 
         assert_eq!(2, response.id());
         assert_eq!(1, target.pool_item_map.len());
-        assert_eq!(2, target.pool_item_map.get(&id).unwrap().0.id);
+        assert_eq!(2, target.pool_item_map.get(&id).unwrap().id);
     }
 
     #[test]
@@ -519,7 +509,7 @@ mod tests {
 
         assert_eq!(1, response.id());
         assert_eq!(1, target.pool_item_map.len());
-        assert_eq!(1, target.pool_item_map.get(&id).unwrap().0.id);
+        assert_eq!(1, target.pool_item_map.get(&id).unwrap().id);
     }
 
     #[test]

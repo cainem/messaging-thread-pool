@@ -1,21 +1,17 @@
-use std::sync::Arc;
-
-use tracing::{event, Level, Subscriber};
-
+use self::tracing_switcher::selective_tracer::SwitcherHolder;
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
     samples::{MeanResponse, RandomsAddRequest, SumResponse},
     *,
 };
+use tracing::event;
+use tracing_core::{Level, LevelFilter};
 
 /// The implementation of this trait allows the Randoms struct to be used in the thread pool infrastructure
 impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
-
-    fn name() -> &'static str {
-        "Randoms"
-    }
+    type ThreadStartInfo = SwitcherHolder;
 
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
@@ -47,16 +43,33 @@ impl PoolItem for Randoms {
         }
     }
 
-    /// This function (optionally) returns a tracing subscriber that should be used solely for tracing a
-    /// given pool item
-    /// If None then the thread subscriber will be used
-    fn pool_item_subscriber(&self) -> Option<Arc<dyn Subscriber + Send + Sync>> {
-        Self::randoms_tracing(self.id())
+    fn name() -> &'static str {
+        "Randoms"
     }
 
-    // fn add_pool_item_tracing(&self) -> Option<Vec<Box<dyn GuardDrop>>> {
-    //     Self::randoms_tracing(self.id())
-    // }
+    fn thread_start() -> Option<Self::ThreadStartInfo> {
+        Some(SwitcherHolder::new("file"))
+    }
+
+    fn loading_pool_item(
+        &self,
+        pool_item_id: usize,
+        thread_start_info: &mut Self::ThreadStartInfo,
+    ) {
+        match pool_item_id % 2 {
+            0 => {
+                thread_start_info
+                    .set_level(LevelFilter::DEBUG, pool_item_id)
+                    .expect("set level to work");
+            }
+            1 => {
+                thread_start_info
+                    .set_level(LevelFilter::OFF, pool_item_id)
+                    .expect("set level to work");
+            }
+            _ => unreachable!(),
+        }
+    }
 
     fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
         Ok(Randoms::new(request.0))

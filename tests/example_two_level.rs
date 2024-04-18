@@ -18,13 +18,13 @@ pub fn example_random_batches_() {
     global_test_scope(LevelFilter::OFF);
 
     // Create a thread pool for RandomsBatch
-    // It is the lifetime of this struct that controls the lifetime of all of the pool items that are added
-    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(2);
+    // It is the lifetime of this struct that controls the lifetime of all the pool items that are added
+    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(1);
 
     // Create another thread pool to be used by the children of the RandomsBatches (which are Randoms)
-    // The arrangement here is to have this thread shared by all of the Randoms regardless of which RandomsBatch
+    // The arrangement here is to have this thread shared by all the Randoms regardless of which RandomsBatch
     // is their parent. For this reason this thread pool is wrapped in an Arc.
-    let randoms_thread_pool = Arc::new(ThreadPool::<Randoms>::new(4));
+    let randoms_thread_pool = Arc::new(ThreadPool::<Randoms>::new(2));
 
     // as a shared thread pool will be used for all Randoms it is important that the RandomsBatches share an id provider
     // (the Randoms ids need to be unique across all RandomBatches )

@@ -17,25 +17,31 @@ tracing = { version = "0.1.40", features = [
     "max_level_trace",
     "release_max_level_trace",
 ] }
-tracing-subscriber = { version = "0.3.18", features = ["fmt", "std", "json"] }
+tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter"] }
+tracing-core = { version = "0.1" }
 tracing-attributes = "0.1.27"
 tracing-appender = "0.2.3"
 crossbeam-channel = "0.5.12"
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
 once_cell = "1.19.0"
+rolling-file = "0.2.0"
+chrono = "0.4.37"
 
 [dev-dependencies]
 criterion = "0.5.1"
 mimalloc = { version = "0.1" }
 
+#[[bench]]
+#name = "element_creation"
+#harness = false
+#[[bench]]
+#name = "element_creation_with_mimalloc"
+#harness = false
 [[bench]]
-name = "element_creation"
+name = "example_random_batches"
 harness = false
 
-[[bench]]
-name = "element_creation_with_mimalloc"
-harness = false
 
 [profile.release]
 debug = true # Include debug symbols

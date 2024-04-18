@@ -1,14 +1,12 @@
+pub mod drop_guard;
 pub mod new_pool_item_error;
 
-use tracing::{event, Level, Subscriber};
-
+pub use self::new_pool_item_error::NewPoolItemError;
 use crate::{
     id_targeted::IdTargeted, request_with_response::RequestWithResponse, thread_request_response::*,
 };
 use std::fmt::Debug;
-use std::sync::Arc;
-
-pub use self::new_pool_item_error::NewPoolItemError;
+use tracing::{event, Level};
 
 /// This is the trait that needs to be implemented by a struct in order that it can be
 /// managed by the thread pool infrastructure
@@ -26,6 +24,7 @@ where
     /// It will be an enum where each variant will define a request/response pair
     /// of structs
     type Api;
+    type ThreadStartInfo;
 
     /// This is the function that will define how the struct processes the messages that
     /// it receives.
@@ -56,18 +55,26 @@ where
         Vec::<ThreadShutdownResponse>::default()
     }
 
-    /// This function optionally returns a tracing subscriber that should be used for the
-    /// thread pool
-    #[allow(unused_variables)]
-    fn thread_subscriber(thread_id: usize) -> Option<Box<dyn Subscriber + Send + Sync>> {
+    /// This function is called once when the message loop to the thread starts up
+    /// It gives the implementer the opportunity to set up some shared state
+    /// of type `Self::ThreadContext`
+    /// The primary reason for adding this hook was to give the implementer the
+    /// opportunity to configure tracing/logging for the thread
+    fn thread_start() -> Option<Self::ThreadStartInfo> {
         None
     }
 
-    /// This function (optionally) returns a tracing subscriber that should be used solely for tracing a
-    /// given pool item
-    /// If None then the thread subscriber will be used
-    fn pool_item_subscriber(&self) -> Option<Arc<dyn Subscriber + Send + Sync>> {
-        None
+    /// This function is called each time that a pool item is loaded into the thread
+    /// and is about to start processing a message.
+    /// The primary motive here was to provide access to the tracing subscriber in some way
+    /// such that tracing can be selectively turned on and off for different pool items
+    #[allow(unused_variables)]
+    fn loading_pool_item(
+        &self,
+        pool_item_id: usize,
+        thread_start_info: &mut Self::ThreadStartInfo,
+    ) {
+        // do nothing by default
     }
 
     /// This method defines the algorithm to be used for routing a given pool item id

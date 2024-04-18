@@ -83,7 +83,7 @@
 //! The thread pool cannot be dynamically sized.\
 //! It is fixed at creation.\
 //! As there is a ThreadShutdown request it could be implied that therefore there should be a ThreadCreation request.
-//! This is not the case and it is not intended that individual threads will be shutdown in isolation and in fact
+//! This is not the case, and it is not intended that individual threads will be shutdown in isolation and in fact
 //! this will lead to the thread pool panicking.\
 //! The shutdown request is intended to be called only when the whole thread pool is finished with and in fact it
 //! is probably best to avoid using it and to just drop the thread pool (which internally sends out all the required shutdown messages).\
@@ -112,8 +112,10 @@ mod send;
 mod send_and_receive;
 mod sender_and_receiver;
 mod shutdown;
+mod subscriber_and_guard;
 mod thread_endpoint;
 mod thread_request_response;
+mod tracing_switcher;
 
 pub use id_being_processed::*;
 pub use id_targeted::IdTargeted;
@@ -125,7 +127,7 @@ pub use sender_couplet::*;
 pub use thread_request_response::*;
 
 thread_local! {
-    static ID_BEING_PROCESSED: RefCell<Option<usize>> = RefCell::new(None);
+    pub static ID_BEING_PROCESSED: RefCell<Option<usize>> = RefCell::new(None);
 }
 
 /// This struct represents a pool of threads that can target a particular type of

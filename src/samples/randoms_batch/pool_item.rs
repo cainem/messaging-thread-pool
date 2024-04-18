@@ -9,6 +9,7 @@ where
 {
     type Init = RandomsBatchAddRequest<P>;
     type Api = RandomsBatchApi<P>;
+    type ThreadStartInfo = ();
 
     fn name() -> &'static str {
         "RandomsBatch"
