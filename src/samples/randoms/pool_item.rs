@@ -1,4 +1,5 @@
-use self::tracing_switcher::selective_tracer::SwitcherHolder;
+use self::id_based_blocking::IdBasedBlocking;
+
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
     samples::{MeanResponse, RandomsAddRequest, SumResponse},
@@ -11,7 +12,7 @@ use tracing_core::{Level, LevelFilter};
 impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
-    type ThreadStartInfo = SwitcherHolder;
+    type ThreadStartInfo = IdBasedBlocking;
 
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
@@ -48,7 +49,7 @@ impl PoolItem for Randoms {
     }
 
     fn thread_start() -> Option<Self::ThreadStartInfo> {
-        Some(SwitcherHolder::new("file"))
+        Some(IdBasedBlocking::new("file"))
     }
 
     fn loading_pool_item(
@@ -59,12 +60,12 @@ impl PoolItem for Randoms {
         match pool_item_id % 2 {
             0 => {
                 thread_start_info
-                    .set_level(LevelFilter::DEBUG, pool_item_id)
+                    .set_level_and_id(LevelFilter::DEBUG, pool_item_id)
                     .expect("set level to work");
             }
             1 => {
                 thread_start_info
-                    .set_level(LevelFilter::OFF, pool_item_id)
+                    .set_level_and_id(LevelFilter::OFF, pool_item_id)
                     .expect("set level to work");
             }
             _ => unreachable!(),

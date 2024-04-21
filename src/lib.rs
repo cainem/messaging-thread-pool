@@ -115,7 +115,7 @@ mod shutdown;
 mod subscriber_and_guard;
 mod thread_endpoint;
 mod thread_request_response;
-mod tracing_switcher;
+mod id_based_blocking;
 
 pub use id_being_processed::*;
 pub use id_targeted::IdTargeted;

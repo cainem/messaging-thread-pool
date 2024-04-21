@@ -10,37 +10,37 @@ use std::path::Path;
 /// The filename is determined by the base filename and the pool item id.
 /// Switching is done by calling `switch` with the current pool item id.
 #[derive(Debug)]
-pub struct Switcher {
+pub struct IdBasedWriter {
     base_filename: String,
-    pool_item_id: Option<usize>,
+    last_set_pool_item_id: Option<usize>,
+    last_written_pool_item_id: Option<usize>,
     writer_opt: Option<BufWriter<File>>,
 }
 
-impl Switcher {
+impl IdBasedWriter {
     pub fn new<P>(base_filename: P) -> Self
     where
         P: AsRef<Path>,
     {
-        Switcher {
+        IdBasedWriter {
             base_filename: base_filename.as_ref().to_string_lossy().to_string(),
             writer_opt: None,
-            pool_item_id: None,
+            last_set_pool_item_id: None,
+            last_written_pool_item_id: None,
         }
     }
 
     pub fn set_pool_item(&mut self, pool_item_id: usize) {
-        todo!();
-        // todo set the intended item id
-        // the actual item id will be set lazily on write
+        self.last_set_pool_item_id = Some(pool_item_id);
     }
 
-    fn switch(&mut self, thread_id: usize) -> io::Result<()> {
-        let pool_id_opt = self.pool_item_id;
-        match pool_id_opt {
-            Some(t) if t == thread_id => Ok(()),
+    fn switch(&mut self, pool_item_id: usize) -> io::Result<()> {
+        let pool_item_id_opt = self.last_written_pool_item_id;
+        match pool_item_id_opt {
+            Some(t) if t == pool_item_id => Ok(()),
             _ => {
                 // else we need to switch output files
-                self.pool_item_id = Some(thread_id);
+                self.last_set_pool_item_id = Some(pool_item_id);
                 self.close_old_open_new()
             }
         }
@@ -62,7 +62,7 @@ impl Switcher {
 
         let p = Self::filename_for(
             &self.base_filename,
-            self.pool_item_id.expect("id to be set"),
+            self.last_set_pool_item_id.expect("id to be set"),
         );
         let f = OpenOptions::new().append(true).create(true).open(&p)?;
         self.writer_opt = Some(BufWriter::new(f));
@@ -70,9 +70,18 @@ impl Switcher {
     }
 }
 
-impl Write for Switcher {
+impl Write for IdBasedWriter {
     // forward writes and flushes to the internal writer
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        if self.last_set_pool_item_id.is_none() {
+            return Ok(0);
+        }
+
+        if self.last_written_pool_item_id != self.last_set_pool_item_id {
+            self.switch(self.last_set_pool_item_id.expect("id to be set"))?;
+            self.last_written_pool_item_id = self.last_set_pool_item_id;
+        }
+
         // is last_write_thread_id == current_thread_id
         // yes just write
         // no flush and close current file if there is one; open a new one
@@ -83,6 +92,10 @@ impl Write for Switcher {
     }
 
     fn flush(&mut self) -> io::Result<()> {
+        if self.last_set_pool_item_id.is_none() {
+            return Ok(());
+        }
+
         self.writer_opt
             .as_mut()
             .expect("writer to be set in order to get here")
@@ -92,30 +105,34 @@ impl Write for Switcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::tracing_switcher::switcher::Switcher;
     use std::fs;
     use std::io::Write;
+
+    use crate::id_based_blocking::id_based_writer::IdBasedWriter;
 
     const TEST_PATH: &str = "target\\tmp\\switcher_test";
 
     #[test]
     fn sanity_check() {
-        let _ = fs::remove_file(Switcher::filename_for(TEST_PATH, 1));
-        let _ = fs::remove_file(Switcher::filename_for(TEST_PATH, 2));
+        let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 1));
+        let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 2));
 
-        let mut switcher = Switcher::new(TEST_PATH);
+        let mut switcher = IdBasedWriter::new(TEST_PATH);
 
-        switcher.switch(1).unwrap();
+        switcher.set_pool_item(1);
+        switcher.set_pool_item(1);
         switcher.write_all(b"test1").unwrap();
-        switcher.switch(2).unwrap();
+        switcher.set_pool_item(1);
+        switcher.write_all(b"test1").unwrap();
+        switcher.set_pool_item(2);
         switcher.write_all(b"test2").unwrap();
 
         drop(switcher);
 
-        let result1 = fs::read_to_string(Switcher::filename_for(TEST_PATH, 1)).unwrap();
-        let result2 = fs::read_to_string(Switcher::filename_for(TEST_PATH, 2)).unwrap();
+        let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1)).unwrap();
+        let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2)).unwrap();
 
-        assert_eq!(result1, "test1");
+        assert_eq!(result1, "test1test1");
         assert_eq!(result2, "test2");
     }
 }
