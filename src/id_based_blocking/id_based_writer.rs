@@ -48,7 +48,7 @@ impl IdBasedWriter {
 
     /// Determines the full filename based on the base filename and the pool item id.
     pub fn filename_for(base_filename: &str, pool_item_id: usize) -> OsString {
-        OsString::from(format!("{}.{}.ansi", base_filename, pool_item_id))
+        OsString::from(format!("{}_{}.txt", base_filename, pool_item_id))
     }
 
     /// Opens a writer for the current file.
@@ -64,7 +64,7 @@ impl IdBasedWriter {
             &self.base_filename,
             self.last_set_pool_item_id.expect("id to be set"),
         );
-        let f = OpenOptions::new().append(true).create(true).open(&p)?;
+        let f = OpenOptions::new().append(true).create(true).open(p)?;
         self.writer_opt = Some(BufWriter::new(f));
         Ok(())
     }
@@ -110,7 +110,7 @@ mod tests {
 
     use crate::id_based_blocking::id_based_writer::IdBasedWriter;
 
-    const TEST_PATH: &str = "target\\tmp\\switcher_test";
+    const TEST_PATH: &str = "target\\tmp\\switcher_test1";
 
     #[test]
     fn sanity_check() {

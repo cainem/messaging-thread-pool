@@ -1,7 +1,6 @@
 pub mod randoms_api;
 
 mod pool_item;
-mod randoms_tracing;
 
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;

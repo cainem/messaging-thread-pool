@@ -8,7 +8,7 @@ use super::id_based_writer::IdBasedWriter;
 /// The writer needs to be implement clone and be thread safe.
 /// This is only intended to be used in a single threaded environment.
 /// the mutex is only there to make it compile, it should not be used in
-/// a multi-threaded environment and therefore should never block.
+/// a multithreaded environment and therefore should never block.
 #[derive(Debug, Clone)]
 pub struct CloneableIdBasedWriter {
     switcher: Arc<Mutex<IdBasedWriter>>,

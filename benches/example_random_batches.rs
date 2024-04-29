@@ -6,6 +6,9 @@ use messaging_thread_pool::samples::{
 use messaging_thread_pool::{AddResponse, ThreadPool};
 use std::sync::Arc;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("sample-size-example");
     // Configure Criterion.rs to detect smaller differences and increase sample size to improve

@@ -101,6 +101,7 @@ pub mod samples;
 pub mod sender_couplet;
 
 mod drop;
+mod id_based_blocking;
 mod id_targeted;
 mod new;
 mod pool_item;
@@ -115,7 +116,6 @@ mod shutdown;
 mod subscriber_and_guard;
 mod thread_endpoint;
 mod thread_request_response;
-mod id_based_blocking;
 
 pub use id_being_processed::*;
 pub use id_targeted::IdTargeted;

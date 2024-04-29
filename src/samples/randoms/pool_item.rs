@@ -1,5 +1,4 @@
 use self::id_based_blocking::IdBasedBlocking;
-
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
     samples::{MeanResponse, RandomsAddRequest, SumResponse},
@@ -49,7 +48,7 @@ impl PoolItem for Randoms {
     }
 
     fn thread_start() -> Option<Self::ThreadStartInfo> {
-        Some(IdBasedBlocking::new("file"))
+        Some(IdBasedBlocking::new("d:\\temp\\logs\\random\\random"))
     }
 
     fn loading_pool_item(
@@ -57,18 +56,15 @@ impl PoolItem for Randoms {
         pool_item_id: usize,
         thread_start_info: &mut Self::ThreadStartInfo,
     ) {
-        match pool_item_id % 2 {
-            0 => {
-                thread_start_info
-                    .set_level_and_id(LevelFilter::DEBUG, pool_item_id)
-                    .expect("set level to work");
-            }
-            1 => {
-                thread_start_info
-                    .set_level_and_id(LevelFilter::OFF, pool_item_id)
-                    .expect("set level to work");
-            }
-            _ => unreachable!(),
+        // only log debug messages for the random with id 950
+        if pool_item_id == 950 {
+            thread_start_info
+                .set_level_and_id(LevelFilter::DEBUG, pool_item_id)
+                .expect("set level to work");
+        } else {
+            thread_start_info
+                .set_level_and_id(LevelFilter::OFF, pool_item_id)
+                .expect("set level to work");
         }
     }
 
