@@ -117,6 +117,7 @@ mod subscriber_and_guard;
 mod thread_endpoint;
 mod thread_request_response;
 
+pub use id_based_blocking::*;
 pub use id_being_processed::*;
 pub use id_targeted::IdTargeted;
 pub use pool_item::*;
