@@ -1,10 +1,6 @@
 use std::sync::Arc;
 
-use messaging_thread_pool::{
-    global_test_scope::global_test_scope, id_provider::id_provider_mutex::IdProviderMutex,
-    samples::*, *,
-};
-use tracing::metadata::LevelFilter;
+use messaging_thread_pool::{id_provider::id_provider_mutex::IdProviderMutex, samples::*, *};
 
 /// This example shows a 2 level thread pool example
 ///
@@ -15,8 +11,6 @@ use tracing::metadata::LevelFilter;
 ///
 #[test]
 pub fn example_random_batches_() {
-    global_test_scope(LevelFilter::OFF);
-
     // Create a thread pool for RandomsBatch
     // It is the lifetime of this struct that controls the lifetime of all the pool items that are added
     let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(1);

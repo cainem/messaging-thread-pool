@@ -87,7 +87,7 @@ mod tests {
     use tracing_core::LevelFilter;
 
     use crate::{
-        global_test_scope::global_test_scope,
+        global_test_scope::test_scope,
         id_based_blocking::{id_based_writer::IdBasedWriter, IdBasedBlocking},
     };
 
@@ -98,8 +98,7 @@ mod tests {
         let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 1));
         let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 2));
 
-        global_test_scope(LevelFilter::INFO);
-        {
+        test_scope(LevelFilter::INFO, || {
             info!("this should be logged to the console (1)");
 
             let mut target = IdBasedBlocking::new(TEST_PATH);
@@ -120,14 +119,14 @@ mod tests {
             target.set_level_and_id(LevelFilter::INFO, 1).unwrap();
 
             drop(target);
-        };
+
+            info!("this should be logged to the console (2)");
+        });
 
         let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1)).unwrap();
         let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2)).unwrap();
 
         assert_eq!(result1, " INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 1\n");
         assert_eq!(result2, " INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 2\n");
-
-        info!("this should be logged to the console (2)");
     }
 }

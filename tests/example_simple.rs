@@ -1,12 +1,8 @@
-use messaging_thread_pool::global_test_scope::global_test_scope;
 use messaging_thread_pool::{samples::*, *};
 use std::iter;
-use tracing::level_filters::LevelFilter;
 
 #[test]
 pub fn example_simple_one_level_thread_pool() {
-    global_test_scope(LevelFilter::OFF);
-
     // creates a thread pool with 4 threads and a mechanism by which to communicate with the threads in the pool.
     // The lifetime of the elements created (the Randoms) will be tied to the life of this struct
     let thread_pool = ThreadPool::<Randoms>::new(10);

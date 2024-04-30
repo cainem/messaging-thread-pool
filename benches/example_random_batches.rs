@@ -17,8 +17,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     group.bench_function("run multiple level example", |b| {
         b.iter(|| {
-            //global_test_scope(LevelFilter::OFF);
-
             // Create a thread pool for RandomsBatch
             // It is the lifetime of this struct that controls the lifetime of all the pool items that are added
             let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(4);

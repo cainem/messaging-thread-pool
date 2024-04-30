@@ -127,7 +127,7 @@ pub use sender_couplet::*;
 pub use thread_request_response::*;
 
 thread_local! {
-    pub static ID_BEING_PROCESSED: RefCell<Option<usize>> = RefCell::new(None);
+    pub static ID_BEING_PROCESSED: RefCell<Option<usize>> = const { RefCell::new(None) };
 }
 
 /// This struct represents a pool of threads that can target a particular type of
