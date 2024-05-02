@@ -53,8 +53,7 @@ where
 
                     // find the pool item that needs to process the request
                     let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
-                        // the item was stored along with a tracing subscriber.
-                        // the existing subscriber is swapped with the one that was stored with the pool item
+                        // The item is informed that it is being loaded
                         if let Some(thread_start_info) = &mut thread_start_info {
                             targeted.loading_pool_item(id, thread_start_info);
                         }

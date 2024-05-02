@@ -3,6 +3,7 @@ mod id_based_writer;
 
 use tracing::subscriber::{self, DefaultGuard};
 use tracing_core::LevelFilter;
+use tracing_subscriber::filter::Targets;
 use tracing_subscriber::fmt::Layer;
 use tracing_subscriber::{
     filter,
@@ -48,11 +49,34 @@ impl IdBasedBlocking {
         let (filter, reload_handle) = reload::Layer::new(filter);
 
         let layer = Layer::new();
+        let subscriber = tracing_subscriber::registry()
+            .with(filter)
+            .with(layer.with_writer(move || cloned_id_based_writer.clone()));
+
+        // set-up tracing for this thread
+        let default_guard = subscriber::set_default(subscriber);
+
+        Self {
+            switcher: id_based_writer,
+            reload_handle,
+            last_level: None,
+            _default_guard: default_guard,
+        }
+    }
+
+    pub fn new_with_targets(base_filename: &str, targets: Targets) -> Self {
+        // Add trait bounds
+        let id_based_writer = CloneableIdBasedWriter::new(IdBasedWriter::new(base_filename));
+        let cloned_id_based_writer = id_based_writer.clone();
+        let filter = filter::LevelFilter::OFF;
+        let (filter, reload_handle) = reload::Layer::new(filter);
+
+        let layer = Layer::new();
         let subscriber = tracing_subscriber::registry().with(filter).with(
-            layer
-                .with_ansi(false)
-                .without_time()
-                .with_writer(move || cloned_id_based_writer.clone()),
+            tracing_subscriber::Layer::with_filter(
+                layer.with_writer(move || cloned_id_based_writer.clone()),
+                targets,
+            ),
         );
 
         // set-up tracing for this thread
