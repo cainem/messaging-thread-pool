@@ -1,7 +1,7 @@
 use tracing_core::LevelFilter;
 
 use crate::{samples::Randoms, *};
-use std::fmt::Debug;
+use std::{fmt::Debug, fs};
 
 use self::id_based_blocking::IdBasedBlocking;
 
@@ -20,8 +20,10 @@ where
     }
 
     fn thread_start() -> Option<Self::ThreadStartInfo> {
+        let _ = fs::create_dir_all("target\\tmp\\logs\\random_batch");
+
         Some(IdBasedBlocking::new(
-            "d:\\temp\\logs\\random_batch\\random_batch",
+            "target\\tmp\\logs\\random_batch\\trace",
         ))
     }
 
@@ -30,6 +32,10 @@ where
         pool_item_id: usize,
         thread_start_info: &mut Self::ThreadStartInfo,
     ) {
+        // we are using an Id based blocking logger
+        // this logs to a file with the id of the pool item
+        // this logger is intended for single threaded environments
+        // which is ok because in essence that's what we have here (with the thread pool)
         thread_start_info
             .set_level_and_id(LevelFilter::DEBUG, pool_item_id)
             .expect("set level to work");

@@ -13,6 +13,21 @@ use tracing_subscriber::{
 
 use self::{cloneable_id_based_writer::CloneableIdBasedWriter, id_based_writer::IdBasedWriter};
 
+/// This struct is used to encapsulate the functionality of the IdBasedBlocking struct
+///
+/// The purpose of this struct is to encapsulate functionality to
+/// a) to allow the tracing level to be changed via a filter reload handle
+/// b) output to a different (buffered) templated file name based on the pool item id.
+///
+/// It takes a base_filename as a parameter which it will use internally to base all trace file names on
+/// If creates a tracing subscriber and holds on the the default guard to that subscriber, so the
+/// subscriber will be dropped when the IdBasedBlocking struct is dropped
+///
+/// Internally it hold a reload handle which allows it to change the log level of the tracing subscriber if required.
+/// It holds a copy of the last level set so that it can avoid unnecessary reloads.
+///
+/// The "blocking" in the name refers to the fact that the writes will block the calling thread until they have completed.
+/// (although they are of course buffered)
 #[derive(Debug)]
 pub struct IdBasedBlocking {
     switcher: CloneableIdBasedWriter,
@@ -25,16 +40,6 @@ pub struct IdBasedBlocking {
 impl IdBasedBlocking {
     /// This function creates a new instance of the IdBasedBlocking struct
     ///
-    /// The purpose of this struct is to encapsulate functionality to
-    /// a) to allow the tracing level to be changed via a filter reload handle
-    /// b) output to a different (buffered) templated file name based on the pool item id.
-    ///
-    /// It takes a base_filename as a parameter which it will use internally to base all trace file names on
-    /// If creates a tracing subscriber and holds on the the default guard to that subscriber, so the
-    /// subscriber will be dropped when the IdBasedBlocking struct is dropped
-    ///
-    /// Internally it hold a reload handle which allows it to change the log level of the tracing subscriber if required.
-    /// It holds a copy of the last level set so that it can avoid unnecessary reloads.
     pub fn new(base_filename: &str) -> Self {
         // Add trait bounds
         let id_based_writer = CloneableIdBasedWriter::new(IdBasedWriter::new(base_filename));
@@ -83,6 +88,7 @@ impl IdBasedBlocking {
 mod tests {
     use std::fs;
 
+    use const_format::concatcp;
     use tracing::{debug, info, warn};
     use tracing_core::LevelFilter;
 
@@ -91,10 +97,13 @@ mod tests {
         id_based_blocking::{id_based_writer::IdBasedWriter, IdBasedBlocking},
     };
 
-    const TEST_PATH: &str = "target\\tmp\\switcher_test2";
+    const TEST_DIR: &str = "target\\tmp";
+    const TEST_PATH: &str = concatcp!(TEST_DIR, "\\switcher_test2");
 
     #[test]
     fn sanity_check() {
+        let _ = fs::create_dir_all(TEST_DIR);
+
         let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 1));
         let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 2));
 

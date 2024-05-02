@@ -34,16 +34,16 @@ impl IdBasedWriter {
         self.last_set_pool_item_id = Some(pool_item_id);
     }
 
-    fn switch(&mut self, pool_item_id: usize) -> io::Result<()> {
+    fn switch(&mut self, pool_item_id: usize) {
         let pool_item_id_opt = self.last_written_pool_item_id;
         match pool_item_id_opt {
-            Some(t) if t == pool_item_id => Ok(()),
+            Some(t) if t == pool_item_id => {}
             _ => {
                 // else we need to switch output files
                 self.last_set_pool_item_id = Some(pool_item_id);
-                self.close_old_open_new()
+                self.close_old_open_new();
             }
-        }
+        };
     }
 
     /// Determines the full filename based on the base filename and the pool item id.
@@ -52,21 +52,33 @@ impl IdBasedWriter {
     }
 
     /// Opens a writer for the current file.
-    fn close_old_open_new(&mut self) -> io::Result<()> {
+    fn close_old_open_new(&mut self) {
         if let Some(mut writer) = self.writer_opt.take() {
             // we have an existing writer we need to flush and close
             // before opening a new one
-            writer.flush()?;
+            // any failure is ignored here as there is very little that can be done
+            let _ = writer.flush();
             drop(writer);
         }
 
-        let p = Self::filename_for(
+        let log_file = Self::filename_for(
             &self.base_filename,
             self.last_set_pool_item_id.expect("id to be set"),
         );
-        let f = OpenOptions::new().append(true).create(true).open(p)?;
-        self.writer_opt = Some(BufWriter::new(f));
-        Ok(())
+        match OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(log_file.clone())
+        {
+            Ok(file) => {
+                self.writer_opt = Some(BufWriter::new(file));
+            }
+            Err(e) => panic!(
+                "could not open file {} because of error: {}",
+                log_file.to_string_lossy(),
+                e
+            ),
+        };
     }
 }
 
@@ -78,7 +90,7 @@ impl Write for IdBasedWriter {
         }
 
         if self.last_written_pool_item_id != self.last_set_pool_item_id {
-            self.switch(self.last_set_pool_item_id.expect("id to be set"))?;
+            self.switch(self.last_set_pool_item_id.expect("id to be set"));
             self.last_written_pool_item_id = self.last_set_pool_item_id;
         }
 
@@ -108,12 +120,17 @@ mod tests {
     use std::fs;
     use std::io::Write;
 
+    use const_format::concatcp;
+
     use crate::id_based_blocking::id_based_writer::IdBasedWriter;
 
-    const TEST_PATH: &str = "target\\tmp\\switcher_test1";
+    const TEST_DIR: &str = "target\\tmp";
+    const TEST_PATH: &str = concatcp!(TEST_DIR, "\\switcher_test");
 
     #[test]
     fn sanity_check() {
+        let _ = fs::create_dir_all(TEST_DIR);
+
         let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 1));
         let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 2));
 

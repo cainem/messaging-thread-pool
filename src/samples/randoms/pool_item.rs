@@ -1,3 +1,5 @@
+use std::fs;
+
 use self::id_based_blocking::IdBasedBlocking;
 use super::{randoms_api::RandomsApi, Randoms};
 use crate::{
@@ -48,7 +50,9 @@ impl PoolItem for Randoms {
     }
 
     fn thread_start() -> Option<Self::ThreadStartInfo> {
-        Some(IdBasedBlocking::new("d:\\temp\\logs\\random\\random"))
+        let _ = fs::create_dir_all("target\\tmp\\logs\\random");
+
+        Some(IdBasedBlocking::new("target\\tmp\\logs\\random\\trace"))
     }
 
     fn loading_pool_item(

@@ -5,10 +5,9 @@ use std::{
 
 use super::id_based_writer::IdBasedWriter;
 
-/// The writer needs to be implement clone and be thread safe.
+/// The writer needs to implement clone and be thread safe.
 /// This is only intended to be used in a single threaded environment.
-/// the mutex is only there to make it compile, it should not be used in
-/// a multithreaded environment and therefore should never block.
+/// (as it will block badly in multi-threaded environments)
 #[derive(Debug, Clone)]
 pub struct CloneableIdBasedWriter {
     switcher: Arc<Mutex<IdBasedWriter>>,
@@ -23,24 +22,18 @@ impl CloneableIdBasedWriter {
 
     pub fn switch(&self, pool_item_id: usize) {
         self.switcher
-            .try_lock()
-            .expect("only to be used in a single threaded environment")
+            .lock()
+            .expect("no poisoned locks")
             .set_pool_item(pool_item_id)
     }
 }
 
 impl Write for CloneableIdBasedWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.switcher
-            .try_lock()
-            .expect("only to be used in a single threaded environment")
-            .write(buf)
+        self.switcher.lock().expect("no poisoned lockes").write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.switcher
-            .try_lock()
-            .expect("only to be used in a single threaded environment")
-            .flush()
+        self.switcher.lock().expect("no poisoned locks").flush()
     }
 }
