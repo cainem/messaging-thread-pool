@@ -29,6 +29,8 @@ use self::{cloneable_id_based_writer::CloneableIdBasedWriter, id_based_writer::I
 ///
 /// The "blocking" in the name refers to the fact that the writes will block the calling thread until they have completed.
 /// (although they are of course buffered)
+///
+/// The layer used with the writer is currently not configurable. This needs to be addressed at some point
 #[derive(Debug)]
 pub struct IdBasedBlocking {
     switcher: CloneableIdBasedWriter,
@@ -49,9 +51,11 @@ impl IdBasedBlocking {
         let (filter, reload_handle) = reload::Layer::new(filter);
 
         let layer = Layer::new();
-        let subscriber = tracing_subscriber::registry()
-            .with(filter)
-            .with(layer.with_writer(move || cloned_id_based_writer.clone()));
+        let subscriber = tracing_subscriber::registry().with(filter).with(
+            layer
+                .with_ansi(false)
+                .with_writer(move || cloned_id_based_writer.clone()),
+        );
 
         // set-up tracing for this thread
         let default_guard = subscriber::set_default(subscriber);

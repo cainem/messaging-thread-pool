@@ -91,7 +91,6 @@
 //! It was not really intended for anything other than long-lived CPU bound elements.
 //!
 use std::{cell::RefCell, sync::RwLock};
-
 use thread_endpoint::ThreadEndpoint;
 
 pub mod global_test_scope;

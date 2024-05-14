@@ -24,6 +24,12 @@ where
     /// It will be an enum where each variant will define a request/response pair
     /// of structs
     type Api;
+    /// This is the type that is optionally created when a thread within the thread pool
+    /// is started (see thread_start function)
+    /// A writeable reference to this is them passed to a pool item each time it is loaded
+    /// to "run" (see loading_pool_item function)
+    /// The primary motivation behind this is for the implementation of tracing
+    /// If this functionality is not required then this can be set to the unit type ()
     type ThreadStartInfo;
 
     /// This is the function that will define how the struct processes the messages that

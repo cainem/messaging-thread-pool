@@ -30,7 +30,7 @@ impl CloneableIdBasedWriter {
 
 impl Write for CloneableIdBasedWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.switcher.lock().expect("no poisoned lockes").write(buf)
+        self.switcher.lock().expect("no poisoned locks").write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
