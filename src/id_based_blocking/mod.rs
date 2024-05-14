@@ -42,30 +42,11 @@ pub struct IdBasedBlocking {
 
 impl IdBasedBlocking {
     /// This function creates a new instance of the IdBasedBlocking struct
-    ///
     pub fn new(base_filename: &str) -> Self {
-        // Add trait bounds
-        let id_based_writer = CloneableIdBasedWriter::new(IdBasedWriter::new(base_filename));
-        let cloned_id_based_writer = id_based_writer.clone();
-        let filter = filter::LevelFilter::OFF;
-        let (filter, reload_handle) = reload::Layer::new(filter);
-
-        let layer = Layer::new();
-        let subscriber = tracing_subscriber::registry().with(filter).with(
-            layer
-                .with_ansi(false)
-                .with_writer(move || cloned_id_based_writer.clone()),
-        );
-
-        // set-up tracing for this thread
-        let default_guard = subscriber::set_default(subscriber);
-
-        Self {
-            switcher: id_based_writer,
-            reload_handle,
-            last_level: None,
-            _default_guard: default_guard,
-        }
+        Self::new_with_targets(
+            base_filename,
+            Targets::new().with_default(LevelFilter::TRACE),
+        )
     }
 
     pub fn new_with_targets(base_filename: &str, targets: Targets) -> Self {
@@ -78,7 +59,9 @@ impl IdBasedBlocking {
         let layer = Layer::new();
         let subscriber = tracing_subscriber::registry().with(filter).with(
             tracing_subscriber::Layer::with_filter(
-                layer.with_writer(move || cloned_id_based_writer.clone()),
+                layer
+                    .with_ansi(false)
+                    .with_writer(move || cloned_id_based_writer.clone()),
                 targets,
             ),
         );
@@ -163,7 +146,13 @@ mod tests {
         let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1)).unwrap();
         let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2)).unwrap();
 
-        assert_eq!(result1, " INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 1\n");
-        assert_eq!(result2, " INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 2\n");
+        assert_eq!(
+            result1.chars().skip(29).collect::<String>(),
+            "INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 1\n"
+        );
+        assert_eq!(
+            result2.chars().skip(29).collect::<String>(),
+            "INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 2\n"
+        );
     }
 }
