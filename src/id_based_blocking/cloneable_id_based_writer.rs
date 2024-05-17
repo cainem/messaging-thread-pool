@@ -1,45 +1,41 @@
 use std::{
+    cell::UnsafeCell,
     io::{self, Write},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 use super::id_based_writer::IdBasedWriter;
 
-/// The writer needs to implement clone and be thread safe.
-/// This is only intended to be used in a single threaded environment.
-/// (as it will block badly in multi-threaded environments)
+// Mark as Send and Sync
+unsafe impl Send for CloneableIdBasedWriter {}
+unsafe impl Sync for CloneableIdBasedWriter {}
+
 #[derive(Debug, Clone)]
 pub struct CloneableIdBasedWriter {
-    switcher: Arc<Mutex<IdBasedWriter>>,
+    writer: Arc<UnsafeCell<IdBasedWriter>>, // UnsafeCell for interior mutability
 }
 
 impl CloneableIdBasedWriter {
-    pub fn new(switcher: IdBasedWriter) -> Self {
+    pub fn new(writer: IdBasedWriter) -> Self {
         Self {
-            switcher: Arc::new(Mutex::new(switcher)),
+            writer: Arc::new(UnsafeCell::new(writer)),
         }
     }
 
     pub fn switch(&self, pool_item_id: usize) {
-        self.switcher
-            .try_lock()
-            .expect("not intended to be used where contention is possible")
-            .set_pool_item(pool_item_id)
+        let writer = unsafe { &mut *self.writer.get() };
+        writer.set_pool_item(pool_item_id);
     }
 }
 
 impl Write for CloneableIdBasedWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.switcher
-            .try_lock()
-            .expect("not intended to be used where contention is possible")
-            .write(buf)
+        let writer = unsafe { &mut *self.writer.get() };
+        writer.write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.switcher
-            .try_lock()
-            .expect("not intended to be used where contention is possible")
-            .flush()
+        let writer = unsafe { &mut *self.writer.get() };
+        writer.flush()
     }
 }
