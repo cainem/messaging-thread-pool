@@ -22,18 +22,24 @@ impl CloneableIdBasedWriter {
 
     pub fn switch(&self, pool_item_id: usize) {
         self.switcher
-            .lock()
-            .expect("no poisoned locks")
+            .try_lock()
+            .expect("not intended to be used where contention is possible")
             .set_pool_item(pool_item_id)
     }
 }
 
 impl Write for CloneableIdBasedWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.switcher.lock().expect("no poisoned locks").write(buf)
+        self.switcher
+            .try_lock()
+            .expect("not intended to be used where contention is possible")
+            .write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.switcher.lock().expect("no poisoned locks").flush()
+        self.switcher
+            .try_lock()
+            .expect("not intended to be used where contention is possible")
+            .flush()
     }
 }
