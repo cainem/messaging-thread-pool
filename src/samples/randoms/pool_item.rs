@@ -7,13 +7,13 @@ use crate::{
     *,
 };
 use tracing::event;
-use tracing_core::{Level, LevelFilter};
+use tracing_core::Level;
 
 /// The implementation of this trait allows the Randoms struct to be used in the thread pool infrastructure
 impl PoolItem for Randoms {
     type Init = RandomsAddRequest;
     type Api = RandomsApi;
-    type ThreadStartInfo = IdBasedBlocking;
+    type ThreadStartInfo = Option<IdBasedBlocking>;
 
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
         match request {
@@ -51,8 +51,7 @@ impl PoolItem for Randoms {
 
     fn thread_start() -> Option<Self::ThreadStartInfo> {
         let _ = fs::create_dir_all("target\\tmp\\logs\\random");
-
-        Some(IdBasedBlocking::new("target\\tmp\\logs\\random\\trace"))
+        Some(None)
     }
 
     fn loading_pool_item(
@@ -62,13 +61,11 @@ impl PoolItem for Randoms {
     ) {
         // only log debug messages for the random with id 950
         if pool_item_id == 950 {
-            thread_start_info
-                .set_level_and_id(LevelFilter::DEBUG, pool_item_id)
-                .expect("set level to work");
+            // add IdBasedBlocking tracer
+            thread_start_info.replace(IdBasedBlocking::new("target\\tmp\\logs\\random\\trace"));
         } else {
-            thread_start_info
-                .set_level_and_id(LevelFilter::OFF, pool_item_id)
-                .expect("set level to work");
+            // drop the existing tracing
+            let _drop_guard = thread_start_info.take();
         }
     }
 

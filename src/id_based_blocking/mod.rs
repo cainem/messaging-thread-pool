@@ -5,27 +5,20 @@ use tracing::subscriber::{self, DefaultGuard};
 use tracing_core::LevelFilter;
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::fmt::Layer;
-use tracing_subscriber::{
-    filter,
-    layer::SubscriberExt,
-    reload::{self, Error, Handle},
-    Registry,
-};
+use tracing_subscriber::layer::SubscriberExt;
 
 use self::{cloneable_id_based_writer::CloneableIdBasedWriter, id_based_writer::IdBasedWriter};
 
 /// This struct is used to encapsulate the functionality of the IdBasedBlocking struct
 ///
 /// The purpose of this struct is to encapsulate functionality to
-/// a) to allow the tracing level to be changed via a filter reload handle
-/// b) output to a different (buffered) templated file name based on the pool item id.
+/// output to a different (buffered) templated file name based on the pool item id.
 ///
 /// It takes a base_filename as a parameter which it will use internally to base all trace file names on
 /// If creates a tracing subscriber and holds on the the default guard to that subscriber, so the
 /// subscriber will be dropped when the IdBasedBlocking struct is dropped
 ///
-/// Internally it hold a reload handle which allows it to change the log level of the tracing subscriber if required.
-/// It holds a copy of the last level set so that it can avoid unnecessary reloads.
+/// Internally it holds a copy of the last level set so that it can avoid unnecessary reloads.
 ///
 /// The "blocking" in the name refers to the fact that the writes will block the calling thread until they have completed.
 /// (although they are of course buffered)
@@ -34,8 +27,6 @@ use self::{cloneable_id_based_writer::CloneableIdBasedWriter, id_based_writer::I
 #[derive(Debug)]
 pub struct IdBasedBlocking {
     switcher: CloneableIdBasedWriter,
-    reload_handle: Handle<LevelFilter, Registry>,
-    last_level: Option<LevelFilter>,
     // needs to be held to be kept alive
     _default_guard: DefaultGuard,
 }
@@ -53,45 +44,27 @@ impl IdBasedBlocking {
         // Add trait bounds
         let id_based_writer = CloneableIdBasedWriter::new(IdBasedWriter::new(base_filename));
         let cloned_id_based_writer = id_based_writer.clone();
-        let filter = filter::LevelFilter::OFF;
-        let (filter, reload_handle) = reload::Layer::new(filter);
 
         let layer = Layer::new();
-        let subscriber = tracing_subscriber::registry().with(filter).with(
-            tracing_subscriber::Layer::with_filter(
+        let subscriber =
+            tracing_subscriber::registry().with(tracing_subscriber::Layer::with_filter(
                 layer
                     .with_ansi(false)
                     .with_writer(move || cloned_id_based_writer.clone()),
                 targets,
-            ),
-        );
+            ));
 
         // set-up tracing for this thread
         let default_guard = subscriber::set_default(subscriber);
 
         Self {
             switcher: id_based_writer,
-            reload_handle,
-            last_level: None,
             _default_guard: default_guard,
         }
     }
 
-    pub fn set_level_and_id(
-        &mut self,
-        level: LevelFilter,
-        pool_item_id: usize,
-    ) -> Result<(), Error> {
+    pub fn set_id(&mut self, pool_item_id: usize) {
         self.switcher.switch(pool_item_id);
-
-        if let Some(last_level) = self.last_level {
-            if last_level == level {
-                return Ok(());
-            }
-        }
-
-        self.last_level = Some(level);
-        self.reload_handle.reload(level)
     }
 }
 
@@ -102,6 +75,7 @@ mod tests {
     use const_format::concatcp;
     use tracing::{debug, info, warn};
     use tracing_core::LevelFilter;
+    use tracing_subscriber::filter::Targets;
 
     use crate::{
         global_test_scope::test_scope,
@@ -121,22 +95,25 @@ mod tests {
         test_scope(LevelFilter::INFO, || {
             info!("this should be logged to the console (1)");
 
-            let mut target = IdBasedBlocking::new(TEST_PATH);
+            let mut target = IdBasedBlocking::new_with_targets(
+                TEST_PATH,
+                Targets::new().with_default(LevelFilter::INFO),
+            );
 
-            warn!("this warning should not be seen");
+            warn!("this warning should not be seen, no id set");
 
-            target.set_level_and_id(LevelFilter::INFO, 1).unwrap();
+            target.set_id(1);
 
             info!("this info should be seen in 1");
             debug!("this debug should not be seen");
 
-            target.set_level_and_id(LevelFilter::INFO, 2).unwrap();
+            target.set_id(2);
             info!("this info should be seen in 2");
 
-            target.set_level_and_id(LevelFilter::OFF, 2).unwrap();
-            info!("this info should not be seen in 2");
+            target.set_id(2);
+            debug!("this info should not be seen in 2");
 
-            target.set_level_and_id(LevelFilter::INFO, 1).unwrap();
+            target.set_id(1);
 
             drop(target);
 

@@ -1,7 +1,7 @@
 use std::{
     cell::UnsafeCell,
     io::{self, Write},
-    sync::Arc,
+    rc::Rc,
 };
 
 use super::id_based_writer::IdBasedWriter;
@@ -12,13 +12,13 @@ unsafe impl Sync for CloneableIdBasedWriter {}
 
 #[derive(Debug, Clone)]
 pub struct CloneableIdBasedWriter {
-    writer: Arc<UnsafeCell<IdBasedWriter>>, // UnsafeCell for interior mutability
+    writer: Rc<UnsafeCell<IdBasedWriter>>, // UnsafeCell for interior mutability
 }
 
 impl CloneableIdBasedWriter {
     pub fn new(writer: IdBasedWriter) -> Self {
         Self {
-            writer: Arc::new(UnsafeCell::new(writer)),
+            writer: Rc::new(UnsafeCell::new(writer)),
         }
     }
 

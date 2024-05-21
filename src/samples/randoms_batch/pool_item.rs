@@ -1,5 +1,3 @@
-use tracing_core::LevelFilter;
-
 use crate::{samples::Randoms, *};
 use std::{fmt::Debug, fs};
 
@@ -36,9 +34,7 @@ where
         // this logs to a file with the id of the pool item
         // this logger is intended for single threaded environments
         // which is ok because in essence that's what we have here (with the thread pool)
-        thread_start_info
-            .set_level_and_id(LevelFilter::DEBUG, pool_item_id)
-            .expect("set level to work");
+        thread_start_info.set_id(pool_item_id)
     }
 
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self> {
