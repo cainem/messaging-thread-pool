@@ -13,12 +13,12 @@ use messaging_thread_pool::{id_provider::id_provider_mutex::IdProviderMutex, sam
 pub fn example_random_batches_() {
     // Create a thread pool for RandomsBatch
     // It is the lifetime of this struct that controls the lifetime of all the pool items that are added
-    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(1);
+    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(3);
 
     // Create another thread pool to be used by the children of the RandomsBatches (which are Randoms)
     // The arrangement here is to have this thread shared by all the Randoms regardless of which RandomsBatch
     // is their parent. For this reason this thread pool is wrapped in an Arc.
-    let randoms_thread_pool = Arc::new(ThreadPool::<Randoms>::new(2));
+    let randoms_thread_pool = Arc::new(ThreadPool::<Randoms>::new(6));
 
     // as a shared thread pool will be used for all Randoms it is important that the RandomsBatches share an id provider
     // (the Randoms ids need to be unique across all RandomBatches )

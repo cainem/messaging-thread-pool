@@ -62,7 +62,9 @@ impl PoolItem for Randoms {
         // only log debug messages for the random with id 950
         if pool_item_id == 950 {
             // add IdBasedBlocking tracer
-            thread_start_info.replace(IdBasedBlocking::new("target\\tmp\\logs\\random\\trace"));
+            let mut tracer = IdBasedBlocking::new("target\\tmp\\logs\\random\\trace");
+            tracer.set_id(pool_item_id);
+            thread_start_info.replace(tracer);
         } else {
             // drop the existing tracing
             let _drop_guard = thread_start_info.take();

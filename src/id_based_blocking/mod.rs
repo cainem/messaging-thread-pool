@@ -50,6 +50,7 @@ impl IdBasedBlocking {
             tracing_subscriber::registry().with(tracing_subscriber::Layer::with_filter(
                 layer
                     .with_ansi(false)
+                    .with_thread_ids(true)
                     .with_writer(move || cloned_id_based_writer.clone()),
                 targets,
             ));
@@ -70,9 +71,8 @@ impl IdBasedBlocking {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-
     use const_format::concatcp;
+    use std::fs;
     use tracing::{debug, info, warn};
     use tracing_core::LevelFilter;
     use tracing_subscriber::filter::Targets;
@@ -120,16 +120,37 @@ mod tests {
             info!("this should be logged to the console (2)");
         });
 
-        let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1)).unwrap();
-        let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2)).unwrap();
+        let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1))
+            .unwrap()
+            .chars()
+            .collect::<Vec<char>>();
+        let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2))
+            .unwrap()
+            .chars()
+            .collect::<Vec<char>>();
 
+        let expected_0 =
+            "messaging_thread_pool::id_based_blocking::tests: this info should be seen in 1\n";
         assert_eq!(
-            result1.chars().skip(29).collect::<String>(),
-            "INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 1\n"
+            result1
+                .into_iter()
+                .rev()
+                .take(expected_0.len())
+                .rev()
+                .collect::<String>(),
+            expected_0
         );
+
+        let expected_1 =
+            "messaging_thread_pool::id_based_blocking::tests: this info should be seen in 2\n";
         assert_eq!(
-            result2.chars().skip(29).collect::<String>(),
-            "INFO messaging_thread_pool::id_based_blocking::tests: this info should be seen in 2\n"
+            result2
+                .into_iter()
+                .rev()
+                .take(expected_1.len())
+                .rev()
+                .collect::<String>(),
+            expected_1
         );
     }
 }
