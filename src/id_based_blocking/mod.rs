@@ -1,6 +1,7 @@
 mod cloneable_id_based_writer;
 mod id_based_writer;
 
+use tracing::debug;
 use tracing::subscriber::{self, DefaultGuard};
 use tracing_core::LevelFilter;
 use tracing_subscriber::filter::Targets;
@@ -66,6 +67,12 @@ impl IdBasedBlocking {
 
     pub fn set_id(&mut self, pool_item_id: usize) {
         self.switcher.switch(pool_item_id);
+    }
+}
+
+impl Drop for IdBasedBlocking {
+    fn drop(&mut self) {
+        debug!("dropping IdBasedBlocking");
     }
 }
 
