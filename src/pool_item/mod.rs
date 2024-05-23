@@ -75,11 +75,14 @@ where
     /// The primary motive here was to provide access to the tracing subscriber in some way
     /// such that tracing can be selectively turned on and off for different pool items
     #[allow(unused_variables)]
-    fn loading_pool_item(
-        &self,
-        pool_item_id: usize,
-        thread_start_info: &mut Self::ThreadStartInfo,
-    ) {
+    fn pool_item_pre_process(pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
+        // do nothing by default
+    }
+
+    /// This function is called immediately after a pool item has processed a message
+    /// The primary motive here was to provide a hook to unload any conditional tracing
+    #[allow(unused_variables)]
+    fn pool_item_post_process(pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
         // do nothing by default
     }
 

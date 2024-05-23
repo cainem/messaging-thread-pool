@@ -3,8 +3,8 @@ use std::collections::btree_map::Entry;
 use tracing::{event, instrument, Level};
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_response::RequestResponse,
-    sender_couplet::SenderCouplet, thread_request_response::*, ID_BEING_PROCESSED,
+    pool_item::PoolItem, request_response::RequestResponse, sender_couplet::SenderCouplet,
+    thread_request_response::*, ID_BEING_PROCESSED,
 };
 
 use super::PoolThread;
@@ -44,20 +44,18 @@ where
 
             let SenderCouplet { return_to, request } = sender_couplet;
 
+            let id = request.id();
             // store the id being processed in thread local storage
-            ID_BEING_PROCESSED.replace(Some(request.id()));
+            ID_BEING_PROCESSED.replace(Some(id));
+            // provide hook to perform actions on pool item load (tracing for example)
+            if let Some(thread_start_info) = &mut thread_start_info {
+                P::pool_item_pre_process(id, thread_start_info);
+            }
 
             let response = match request {
                 ThreadRequestResponse::MessagePoolItem(request) => {
-                    let id = request.id();
-
                     // find the pool item that needs to process the request
                     let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
-                        // The item is informed that it is being loaded
-                        if let Some(thread_start_info) = &mut thread_start_info {
-                            targeted.loading_pool_item(id, thread_start_info);
-                        }
-
                         targeted.process_message(request)
                     } else {
                         P::id_not_found(&request)
@@ -66,8 +64,6 @@ where
                     response
                 }
                 ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
-                    let id = request.id();
-
                     match P::new_pool_item(request) {
                         Ok(new_pool_item) => {
                             event!(
@@ -99,9 +95,7 @@ where
                     }
                     .into()
                 }
-                ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(request)) => {
-                    let id = request.id();
-
+                ThreadRequestResponse::RemovePoolItem(RequestResponse::Request(_request)) => {
                     let success = self.pool_item_map.remove(&id).is_some();
 
                     event!(
@@ -114,8 +108,7 @@ where
 
                     RemovePoolItemResponse::new(id, success).into()
                 }
-                ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(request)) => {
-                    let id = request.id();
+                ThreadRequestResponse::ThreadShutdown(RequestResponse::Request(_request)) => {
                     debug_assert_eq!(
                         self.thread_id, id,
                         "this messages should have targeted this thread"
@@ -135,15 +128,10 @@ where
                     return;
                 }
                 ThreadRequestResponse::ThreadEcho(RequestResponse::Request(request)) => {
-                    ThreadEchoResponse::new(
-                        request.id(),
-                        request.message().to_string(),
-                        self.thread_id,
-                    )
-                    .into()
+                    ThreadEchoResponse::new(id, request.message().to_string(), self.thread_id)
+                        .into()
                 }
-                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(request)) => {
-                    let id = request.id();
+                ThreadRequestResponse::ThreadAbort(RequestResponse::Request(_request)) => {
                     debug_assert_eq!(
                         self.thread_id, id,
                         "this messages should have targeted this thread"
@@ -173,10 +161,13 @@ where
 
             // reset the thread local storage to indicate that no id is currently being processed
             ID_BEING_PROCESSED.replace(None);
+            // provide hook for post item processing (removing tracing for example)
+            if let Some(thread_start_info) = &mut thread_start_info {
+                P::pool_item_post_process(id, thread_start_info);
+            }
+
             // loop will only exit here if the "main" thread has exited; this is not expected
         }
-
-        // drop(guard);
 
         // to get here the "send end" of the channel must have been dropped which
         // suggest that the main thread has ended.

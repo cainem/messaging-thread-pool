@@ -1,22 +1,30 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] 
-### Changes
-- Ditch Element trait in favour of PoolItem trait.\
-The PoolItem trait provides a cleaner and hopefully more intuitive interface with which to communicate with items in the pool.
+## [1.0.0]
 
-## [2.0.0] 
+### Changes
+
+- Ditch Element trait in favour of PoolItem trait.\
+  The PoolItem trait provides a cleaner and hopefully more intuitive interface with which to communicate with items in
+  the pool.
+
+## [2.0.0]
+
 - Add ThreadPoolSenderAndReceiver trait to allow for mocking of the thread pool
 - Flatten some namespaces
 
 ## [2.0.1]
+
 - Add Default to ThreadPoolMock
 
 ## [2.0.2]
+
 - Add Default to AddResponse
 
 ## [3.1.0]
+
 - Change PoolItem trait to take ownership of requests rather than references to the request.
 - Rename ThreadPoolMock to SenderAndReceiverMock
 - Rename ThreadPoolSenderAndReceiver to SenderAndReceiver
@@ -44,11 +52,13 @@ The PoolItem trait provides a cleaner and hopefully more intuitive interface wit
 - Change add_pool_item_tracing to take a reference to the pool item, not just its id
 - tidy up add_pool_thread_tracing
 - add more logging
+
 ## [3.2.0]
+
 - Add a PoolItem function to provide custom id to thread mapping rather that relying on a simple mod
 - Add assert_is_complete to SenderAndReceiverMock
 - Add Send + Sync constraint on GuardDrop so that it can be used in async functions
 - Allow id currently being processed to be accessed with new id_being_processed() function
-- Add mimalloc bench mark to show the benefits of changing the default allocator (only tried on windows)
+- Add mimalloc benchmark to show the benefits of changing the default allocator (only tried on windows)
 
 

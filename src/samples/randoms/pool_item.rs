@@ -54,21 +54,19 @@ impl PoolItem for Randoms {
         Some(None)
     }
 
-    fn loading_pool_item(
-        &self,
-        pool_item_id: usize,
-        thread_start_info: &mut Self::ThreadStartInfo,
-    ) {
+    fn pool_item_pre_process(pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
         // only log debug messages for the random with id 950
         if pool_item_id == 950 {
             // add IdBasedBlocking tracer
             let mut tracer = IdBasedBlocking::new("target\\tmp\\logs\\random\\trace");
             tracer.set_id(pool_item_id);
             thread_start_info.replace(tracer);
-        } else {
-            // drop the existing tracing
-            let _drop_guard = thread_start_info.take();
         }
+    }
+
+    fn pool_item_post_process(_pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
+        // drop any
+        let _take_to_drop = thread_start_info.take();
     }
 
     fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {

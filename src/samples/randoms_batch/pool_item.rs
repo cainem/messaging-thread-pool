@@ -25,15 +25,11 @@ where
         ))
     }
 
-    fn loading_pool_item(
-        &self,
-        pool_item_id: usize,
-        thread_start_info: &mut Self::ThreadStartInfo,
-    ) {
-        // we are using an Id based blocking logger
+    fn pool_item_pre_process(pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
+        // we are using an ID based blocking logger
         // this logs to a file with the id of the pool item
         // this logger is intended for single threaded environments
-        // which is ok because in essence that's what we have here (with the thread pool)
+        // which is ok because in essence that's what we have here (within the thread pool)
         thread_start_info.set_id(pool_item_id)
     }
 

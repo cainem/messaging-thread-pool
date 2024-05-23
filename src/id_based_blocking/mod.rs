@@ -51,7 +51,7 @@ impl IdBasedBlocking {
             tracing_subscriber::registry().with(tracing_subscriber::Layer::with_filter(
                 layer
                     .with_ansi(false)
-                    .with_thread_ids(true)
+                    .with_thread_ids(false)
                     .with_writer(move || cloned_id_based_writer.clone()),
                 targets,
             ));
