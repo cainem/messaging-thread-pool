@@ -1,6 +1,7 @@
 mod cloneable_id_based_writer;
 mod id_based_writer;
 
+use std::ffi::OsString;
 use tracing::debug;
 use tracing::subscriber::{self, DefaultGuard};
 use tracing_core::LevelFilter;
@@ -38,12 +39,18 @@ impl IdBasedBlocking {
         Self::new_with_targets(
             base_filename,
             Targets::new().with_default(LevelFilter::TRACE),
+            IdBasedWriter::default_filename_formatter,
         )
     }
 
-    pub fn new_with_targets(base_filename: &str, targets: Targets) -> Self {
+    pub fn new_with_targets(
+        base_filename: &str,
+        targets: Targets,
+        filename_formatter: fn(&str, usize) -> OsString,
+    ) -> Self {
         // Add trait bounds
-        let id_based_writer = CloneableIdBasedWriter::new(IdBasedWriter::new(base_filename));
+        let id_based_writer =
+            CloneableIdBasedWriter::new(IdBasedWriter::new(base_filename, filename_formatter));
         let cloned_id_based_writer = id_based_writer.clone();
 
         let layer = Layer::new();
@@ -96,8 +103,8 @@ mod tests {
     fn sanity_check() {
         let _ = fs::create_dir_all(TEST_DIR);
 
-        let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 1));
-        let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 2));
+        let _ = fs::remove_file(IdBasedWriter::default_filename_formatter(TEST_PATH, 1));
+        let _ = fs::remove_file(IdBasedWriter::default_filename_formatter(TEST_PATH, 2));
 
         test_scope(LevelFilter::INFO, || {
             info!("this should be logged to the console (1)");
@@ -105,6 +112,7 @@ mod tests {
             let mut target = IdBasedBlocking::new_with_targets(
                 TEST_PATH,
                 Targets::new().with_default(LevelFilter::INFO),
+                IdBasedWriter::default_filename_formatter,
             );
 
             warn!("this warning should not be seen, no id set");
@@ -127,11 +135,11 @@ mod tests {
             info!("this should be logged to the console (2)");
         });
 
-        let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1))
+        let result1 = fs::read_to_string(IdBasedWriter::default_filename_formatter(TEST_PATH, 1))
             .unwrap()
             .chars()
             .collect::<Vec<char>>();
-        let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2))
+        let result2 = fs::read_to_string(IdBasedWriter::default_filename_formatter(TEST_PATH, 2))
             .unwrap()
             .chars()
             .collect::<Vec<char>>();

@@ -15,10 +15,11 @@ pub struct IdBasedWriter {
     last_set_pool_item_id: Option<usize>,
     last_written_pool_item_id: Option<usize>,
     writer_opt: Option<BufWriter<File>>,
+    filename_formatter: fn(&str, usize) -> OsString,
 }
 
 impl IdBasedWriter {
-    pub fn new<P>(base_filename: P) -> Self
+    pub fn new<P>(base_filename: P, filename_formatter: fn(&str, usize) -> OsString) -> Self
     where
         P: AsRef<Path>,
     {
@@ -27,6 +28,7 @@ impl IdBasedWriter {
             writer_opt: None,
             last_set_pool_item_id: None,
             last_written_pool_item_id: None,
+            filename_formatter,
         }
     }
 
@@ -47,7 +49,7 @@ impl IdBasedWriter {
     }
 
     /// Determines the full filename based on the base filename and the pool item id.
-    pub fn filename_for(base_filename: &str, pool_item_id: usize) -> OsString {
+    pub fn default_filename_formatter(base_filename: &str, pool_item_id: usize) -> OsString {
         OsString::from(format!("{}_{}.txt", base_filename, pool_item_id))
     }
 
@@ -61,7 +63,7 @@ impl IdBasedWriter {
             drop(writer);
         }
 
-        let log_file = Self::filename_for(
+        let log_file = (self.filename_formatter)(
             &self.base_filename,
             self.last_set_pool_item_id.expect("id to be set"),
         );
@@ -131,10 +133,10 @@ mod tests {
     fn sanity_check() {
         let _ = fs::create_dir_all(TEST_DIR);
 
-        let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 1));
-        let _ = fs::remove_file(IdBasedWriter::filename_for(TEST_PATH, 2));
+        let _ = fs::remove_file(IdBasedWriter::default_filename_formatter(TEST_PATH, 1));
+        let _ = fs::remove_file(IdBasedWriter::default_filename_formatter(TEST_PATH, 2));
 
-        let mut switcher = IdBasedWriter::new(TEST_PATH);
+        let mut switcher = IdBasedWriter::new(TEST_PATH, IdBasedWriter::default_filename_formatter);
 
         switcher.set_pool_item(1);
         switcher.set_pool_item(1);
@@ -146,8 +148,10 @@ mod tests {
 
         drop(switcher);
 
-        let result1 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 1)).unwrap();
-        let result2 = fs::read_to_string(IdBasedWriter::filename_for(TEST_PATH, 2)).unwrap();
+        let result1 =
+            fs::read_to_string(IdBasedWriter::default_filename_formatter(TEST_PATH, 1)).unwrap();
+        let result2 =
+            fs::read_to_string(IdBasedWriter::default_filename_formatter(TEST_PATH, 2)).unwrap();
 
         assert_eq!(result1, "test1test1");
         assert_eq!(result2, "test2");
