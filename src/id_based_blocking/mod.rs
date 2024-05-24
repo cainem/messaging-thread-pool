@@ -1,5 +1,5 @@
+pub mod id_based_writer;
 mod cloneable_id_based_writer;
-mod id_based_writer;
 
 use std::ffi::OsString;
 use tracing::debug;
