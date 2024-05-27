@@ -10,7 +10,7 @@ struct Complex<T>
 where
     T: SenderAndReceiver<Randoms>,
 {
-    contained_ids: Vec<usize>,
+    contained_ids: Vec<u64>,
     contained_thread_pool: T,
 }
 
@@ -18,7 +18,7 @@ impl<T> Complex<T>
 where
     T: SenderAndReceiver<Randoms>,
 {
-    fn new(contained_thread_pool: T, ids: impl Iterator<Item = usize>) -> Self {
+    fn new(contained_thread_pool: T, ids: impl Iterator<Item = u64>) -> Self {
         let ids: Vec<_> = ids.collect();
 
         let _: Box<dyn Iterator<Item = AddResponse>> = contained_thread_pool

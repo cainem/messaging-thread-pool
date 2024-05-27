@@ -2,10 +2,10 @@ use super::{RandomsApi, SumResponse};
 use crate::{samples::Randoms, *};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SumRequest(pub usize);
+pub struct SumRequest(pub u64);
 
 impl IdTargeted for SumRequest {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.0
     }
 }

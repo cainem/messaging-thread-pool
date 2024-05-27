@@ -14,7 +14,7 @@ pub fn example_simple_one_level_thread_pool() {
     // They will not be dropped until they are either requested to be dropped or until the thread pool itself
     // is dropped.
     thread_pool
-        .send_and_receive((0..1000usize).map(RandomsAddRequest))
+        .send_and_receive((0..1000u64).map(RandomsAddRequest))
         .expect("thread pool to be available")
         .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 
@@ -22,7 +22,7 @@ pub fn example_simple_one_level_thread_pool() {
     // The message will be routed to the thread to where the targeted object resides
     // This call will block until all of the work is done and the responses returned
     let sums: Vec<SumResponse> = thread_pool
-        .send_and_receive((0..1000usize).map(SumRequest))
+        .send_and_receive((0..1000u64).map(SumRequest))
         .expect("thread pool to be available")
         .collect();
     assert_eq!(1000, sums.len());
@@ -50,7 +50,7 @@ pub fn example_simple_one_level_thread_pool() {
         .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 
     thread_pool
-        .send_and_receive((2..1000usize).map(RemovePoolItemRequest))
+        .send_and_receive((2..1000u64).map(RemovePoolItemRequest))
         .expect("thread pool to be available")
         .for_each(|response: RemovePoolItemResponse| assert!(response.item_existed()));
 

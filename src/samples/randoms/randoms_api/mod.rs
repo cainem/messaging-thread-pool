@@ -29,7 +29,7 @@ pub enum RandomsApi {
 }
 
 impl IdTargeted for RandomsApi {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         match self {
             RandomsApi::Mean(payload) => payload.request().id(),
             RandomsApi::Sum(payload) => payload.request().id(),

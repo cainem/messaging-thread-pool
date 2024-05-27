@@ -8,7 +8,7 @@ use super::{ThreadEchoResponse, ThreadRequestResponse};
 /// For debug purposes only send a message to a thread within the thread pool
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadEchoRequest {
-    thread_id: usize,
+    thread_id: u64,
     message: String,
 }
 
@@ -20,17 +20,17 @@ where
 }
 
 impl IdTargeted for ThreadEchoRequest {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.thread_id
     }
 }
 
 impl ThreadEchoRequest {
-    pub fn new(thread_id: usize, message: String) -> Self {
+    pub fn new(thread_id: u64, message: String) -> Self {
         Self { thread_id, message }
     }
 
-    pub fn thread_id(&self) -> usize {
+    pub fn thread_id(&self) -> u64 {
         self.thread_id
     }
 

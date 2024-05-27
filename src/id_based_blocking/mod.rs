@@ -1,5 +1,5 @@
-pub mod id_based_writer;
 mod cloneable_id_based_writer;
+pub mod id_based_writer;
 
 use std::ffi::OsString;
 use tracing::debug;
@@ -46,7 +46,7 @@ impl IdBasedBlocking {
     pub fn new_with_targets(
         base_filename: &str,
         targets: Targets,
-        filename_formatter: fn(&str, usize) -> OsString,
+        filename_formatter: fn(&str, u64) -> OsString,
     ) -> Self {
         // Add trait bounds
         let id_based_writer =
@@ -72,7 +72,7 @@ impl IdBasedBlocking {
         }
     }
 
-    pub fn set_id(&mut self, pool_item_id: usize) {
+    pub fn set_id(&mut self, pool_item_id: u64) {
         self.switcher.switch(pool_item_id);
     }
 }

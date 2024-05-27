@@ -12,14 +12,14 @@ use std::path::Path;
 #[derive(Debug)]
 pub struct IdBasedWriter {
     base_filename: String,
-    last_set_pool_item_id: Option<usize>,
-    last_written_pool_item_id: Option<usize>,
+    last_set_pool_item_id: Option<u64>,
+    last_written_pool_item_id: Option<u64>,
     writer_opt: Option<BufWriter<File>>,
-    filename_formatter: fn(&str, usize) -> OsString,
+    filename_formatter: fn(&str, u64) -> OsString,
 }
 
 impl IdBasedWriter {
-    pub fn new<P>(base_filename: P, filename_formatter: fn(&str, usize) -> OsString) -> Self
+    pub fn new<P>(base_filename: P, filename_formatter: fn(&str, u64) -> OsString) -> Self
     where
         P: AsRef<Path>,
     {
@@ -32,11 +32,11 @@ impl IdBasedWriter {
         }
     }
 
-    pub fn set_pool_item(&mut self, pool_item_id: usize) {
+    pub fn set_pool_item(&mut self, pool_item_id: u64) {
         self.last_set_pool_item_id = Some(pool_item_id);
     }
 
-    fn switch(&mut self, pool_item_id: usize) {
+    fn switch(&mut self, pool_item_id: u64) {
         let pool_item_id_opt = self.last_written_pool_item_id;
         match pool_item_id_opt {
             Some(t) if t == pool_item_id => {}
@@ -49,7 +49,7 @@ impl IdBasedWriter {
     }
 
     /// Determines the full filename based on the base filename and the pool item id.
-    pub fn default_filename_formatter(base_filename: &str, pool_item_id: usize) -> OsString {
+    pub fn default_filename_formatter(base_filename: &str, pool_item_id: u64) -> OsString {
         OsString::from(format!("{}_{}.txt", base_filename, pool_item_id))
     }
 

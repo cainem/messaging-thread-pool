@@ -5,11 +5,11 @@ use std::fmt::Debug;
 /// This trait is used internally by the thread pool to route requests to the appropriate
 /// thread in the thread pool.
 pub trait IdTargeted: Debug {
-    fn id(&self) -> usize;
+    fn id(&self) -> u64;
 }
 
-impl IdTargeted for usize {
-    fn id(&self) -> usize {
+impl IdTargeted for u64 {
+    fn id(&self) -> u64 {
         *self
     }
 }

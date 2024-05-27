@@ -47,7 +47,7 @@ where
                 std::any::type_name::<T>()
             );
             event!(Level::TRACE, ?request);
-            guard[targeted].send(&send_back_to.clone(), request)?;
+            guard[targeted as usize].send(&send_back_to.clone(), request)?;
             request_count += 1;
         }
 
@@ -67,7 +67,7 @@ mod tests {
 
         let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
+        let requests = (0..2u64).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
         target.send(send_back_to, requests).unwrap();
 
@@ -88,7 +88,7 @@ mod tests {
 
         let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests = (0..2usize).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
+        let requests = (0..2u64).map(|i| ThreadEchoRequest::new(i, "ping2".to_string()));
 
         target.send(send_back_to, requests).unwrap();
 
@@ -108,7 +108,7 @@ mod tests {
 
         let (send_back_to, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests = (0..1usize).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
+        let requests = (0..1u64).map(|i| ThreadEchoRequest::new(i, "ping".to_string()));
 
         target.send(send_back_to, requests).unwrap();
 

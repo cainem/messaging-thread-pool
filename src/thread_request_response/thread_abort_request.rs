@@ -6,10 +6,10 @@ use crate::{
 use super::{ThreadAbortResponse, ThreadRequestResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ThreadAbortRequest(pub usize);
+pub struct ThreadAbortRequest(pub u64);
 
 impl IdTargeted for ThreadAbortRequest {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.0
     }
 }

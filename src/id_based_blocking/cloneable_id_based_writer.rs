@@ -22,7 +22,7 @@ impl CloneableIdBasedWriter {
         }
     }
 
-    pub fn switch(&self, pool_item_id: usize) {
+    pub fn switch(&self, pool_item_id: u64) {
         let writer = unsafe { &mut *self.writer.get() };
         writer.set_pool_item(pool_item_id);
     }

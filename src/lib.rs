@@ -37,7 +37,7 @@
 //!    // They will not be dropped until they are either requested to be dropped or until the
 //!    // thread pool itself is dropped.
 //!    thread_pool
-//!        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
+//!        .send_and_receive((0..1000u64).map(|i| RandomsAddRequest(i)))
 //!        .expect("thread pool to be available")
 //!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 //!
@@ -46,7 +46,7 @@
 //!    // The message will be routed to the thread to where the targeted object resides
 //!    // This call will block until all of the work is done and the responses returned
 //!    let sums: Vec<SumResponse> = thread_pool
-//!        .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
+//!        .send_and_receive((0..1000u64).map(|i| SumRequest(i)))
 //!        .expect("thread pool to be available")
 //!        .collect();
 //!    assert_eq!(1000, sums.len());
@@ -127,7 +127,7 @@ pub use sender_couplet::*;
 pub use thread_request_response::*;
 
 thread_local! {
-    pub static ID_BEING_PROCESSED: RefCell<Option<usize>> = const { RefCell::new(None) };
+    pub static ID_BEING_PROCESSED: RefCell<Option<u64>> = const { RefCell::new(None) };
 }
 
 /// This struct represents a pool of threads that can target a particular type of

@@ -3,10 +3,10 @@ use crate::{pool_item::PoolItem, request_response::RequestResponse};
 use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ThreadAbortResponse(pub usize);
+pub struct ThreadAbortResponse(pub u64);
 
 impl ThreadAbortResponse {
-    pub fn thread_id(&self) -> usize {
+    pub fn thread_id(&self) -> u64 {
         self.0
     }
 }

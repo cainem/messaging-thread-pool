@@ -5,7 +5,7 @@ use super::RandomsApi;
 /// This is the response from a request to calculate the sum of the contained random numbers
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SumResponse {
-    pub id: usize,
+    pub id: u64,
     pub sum: u128,
 }
 

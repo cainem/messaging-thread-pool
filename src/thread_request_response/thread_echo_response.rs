@@ -5,13 +5,13 @@ use super::ThreadRequestResponse;
 /// For debug purposes only; a message for responding to an echo request targeting a specific thread
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadEchoResponse {
-    thread_id: usize,
+    thread_id: u64,
     message: String,
-    responding_thread_id: usize,
+    responding_thread_id: u64,
 }
 
 impl ThreadEchoResponse {
-    pub fn new(thread_id: usize, message: String, responding_thread_id: usize) -> Self {
+    pub fn new(thread_id: u64, message: String, responding_thread_id: u64) -> Self {
         Self {
             thread_id,
             message,
@@ -19,7 +19,7 @@ impl ThreadEchoResponse {
         }
     }
 
-    pub fn thread_id(&self) -> usize {
+    pub fn thread_id(&self) -> u64 {
         self.thread_id
     }
 
@@ -27,7 +27,7 @@ impl ThreadEchoResponse {
         self.message.as_ref()
     }
 
-    pub fn responding_thread_id(&self) -> usize {
+    pub fn responding_thread_id(&self) -> u64 {
         self.responding_thread_id
     }
 }

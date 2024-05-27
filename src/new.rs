@@ -21,7 +21,7 @@ where
     /// (there is one channel for each spawned thread)
     ///
     /// The number of threads is determined by the passed in thread_pool_size
-    pub fn new(thread_pool_size: usize) -> Self {
+    pub fn new(thread_pool_size: u64) -> Self {
         assert!(
             thread_pool_size > 0,
             "thread pool must have at least one thread"

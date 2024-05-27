@@ -4,7 +4,7 @@ use super::RandomsApi;
 
 /// The response from a request to calculate the mean
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PanicResponse(pub usize);
+pub struct PanicResponse(pub u64);
 
 impl From<PanicResponse> for ThreadRequestResponse<Randoms> {
     fn from(response: PanicResponse) -> Self {

@@ -54,7 +54,7 @@ impl PoolItem for Randoms {
         Some(None)
     }
 
-    fn pool_item_pre_process(pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
+    fn pool_item_pre_process(pool_item_id: u64, thread_start_info: &mut Self::ThreadStartInfo) {
         // only log debug messages for the random with id 950
         if pool_item_id == 950 {
             // add IdBasedBlocking tracer
@@ -64,7 +64,7 @@ impl PoolItem for Randoms {
         }
     }
 
-    fn pool_item_post_process(_pool_item_id: usize, thread_start_info: &mut Self::ThreadStartInfo) {
+    fn pool_item_post_process(_pool_item_id: u64, thread_start_info: &mut Self::ThreadStartInfo) {
         // drop any
         let _take_to_drop = thread_start_info.take();
     }
