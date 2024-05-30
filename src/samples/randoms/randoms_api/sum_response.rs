@@ -15,20 +15,5 @@ impl SumResponse {
     }
 }
 
-impl From<SumResponse> for ThreadRequestResponse<Randoms> {
-    fn from(response: SumResponse) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Response(response)))
-    }
-}
-
-impl From<ThreadRequestResponse<Randoms>> for SumResponse {
-    fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Sum(RequestResponse::Response(
-            response,
-        ))) = response
-        else {
-            panic!("unexpected")
-        };
-        response
-    }
-}
+// tie the response to an api call
+bind_response_to_api!(SumResponse, Randoms, RandomsApi::Sum);

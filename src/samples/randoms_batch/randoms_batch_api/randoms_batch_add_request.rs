@@ -43,6 +43,7 @@ where
     }
 }
 
+// The add request is not part of the api as such so currently the message mapping has to be done without the macro
 impl<P> RequestWithResponse<RandomsBatch<P>> for RandomsBatchAddRequest<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,

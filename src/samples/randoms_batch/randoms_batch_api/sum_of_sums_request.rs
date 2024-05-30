@@ -17,36 +17,10 @@ impl IdTargeted for SumOfSumsRequest {
     }
 }
 
-/// ties together the request with a response
-impl<P> RequestWithResponse<RandomsBatch<P>> for SumOfSumsRequest
-where
-    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
-{
-    type Response = SumOfSumsResponse;
-}
-
-impl<P> From<SumOfSumsRequest> for ThreadRequestResponse<RandomsBatch<P>>
-where
-    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
-{
-    fn from(request: SumOfSumsRequest) -> Self {
-        ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
-            RequestResponse::Request(request),
-        ))
-    }
-}
-
-impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for SumOfSumsRequest
-where
-    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
-{
-    fn from(request: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
-            RequestResponse::Request(result),
-        )) = request
-        else {
-            panic!("not expected")
-        };
-        result
-    }
-}
+bind_request_to_response!(
+    SumOfSumsRequest,
+    RandomsBatch<P>,
+    RandomsBatchApi::SumOfSums,
+    SumOfSumsResponse,
+    P: SenderAndReceiver<Randoms>
+);
