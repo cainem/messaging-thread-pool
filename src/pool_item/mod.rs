@@ -1,4 +1,3 @@
-pub mod drop_guard;
 pub mod new_pool_item_error;
 
 pub use self::new_pool_item_error::NewPoolItemError;

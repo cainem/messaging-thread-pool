@@ -112,7 +112,6 @@ mod send;
 mod send_and_receive;
 mod sender_and_receiver;
 mod shutdown;
-mod subscriber_and_guard;
 mod thread_endpoint;
 mod thread_request_response;
 
