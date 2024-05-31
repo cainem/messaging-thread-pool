@@ -19,9 +19,28 @@ impl SumOfSumsResponse {
     }
 }
 
-// tie the message to the pool item and api variant
-bind_response_to_api!(
-    SumOfSumsResponse,
-    RandomsBatch<P>,
-    RandomsBatchApi::SumOfSums,
-    P: SenderAndReceiver<Randoms>);
+impl<P> From<SumOfSumsResponse> for ThreadRequestResponse<RandomsBatch<P>>
+where
+    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
+{
+    fn from(response: SumOfSumsResponse) -> Self {
+        ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
+            RequestResponse::Response(response),
+        ))
+    }
+}
+
+impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for SumOfSumsResponse
+where
+    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
+{
+    fn from(response: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
+        let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
+            RequestResponse::Response(response),
+        )) = response
+        else {
+            panic!("unexpected")
+        };
+        response
+    }
+}

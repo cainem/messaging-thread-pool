@@ -12,4 +12,27 @@ impl IdTargeted for MeanRequest {
     }
 }
 
-bind_request_to_response!(MeanRequest, Randoms, RandomsApi::Mean, MeanResponse);
+/// ties together the request with a response
+impl RequestWithResponse<Randoms> for MeanRequest {
+    type Response = MeanResponse;
+}
+
+// enable the conversion of the request to the require ThreadRequestResponse
+impl From<MeanRequest> for ThreadRequestResponse<Randoms> {
+    fn from(request: MeanRequest) -> Self {
+        ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(request)))
+    }
+}
+
+// enable the conversion from the a ThreadRequestResponse
+impl From<ThreadRequestResponse<Randoms>> for MeanRequest {
+    fn from(request: ThreadRequestResponse<Randoms>) -> Self {
+        let ThreadRequestResponse::MessagePoolItem(RandomsApi::Mean(RequestResponse::Request(
+            result,
+        ))) = request
+        else {
+            panic!("not expected")
+        };
+        result
+    }
+}

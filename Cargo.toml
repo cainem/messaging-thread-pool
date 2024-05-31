@@ -21,7 +21,7 @@ tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter"] }
 tracing-core = { version = "0.1" }
 tracing-attributes = "0.1.27"
 tracing-appender = "0.2.3"
-crossbeam-channel = "0.5.13"
+crossbeam-channel = "0.5.12"
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
 

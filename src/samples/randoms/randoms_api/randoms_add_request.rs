@@ -10,7 +10,6 @@ impl IdTargeted for RandomsAddRequest {
     }
 }
 
-// The add request is not part of the api as such so currently the message mapping has to be done without the macro
 impl RequestWithResponse<Randoms> for RandomsAddRequest {
     type Response = AddResponse;
 }
