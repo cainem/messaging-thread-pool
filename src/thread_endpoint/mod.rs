@@ -15,21 +15,21 @@ where
     P: PoolItem,
 {
     sender: Sender<SenderCouplet<P>>,
-    join_handle: JoinHandle<usize>,
+    join_handle: JoinHandle<u64>,
 }
 
 impl<P> ThreadEndpoint<P>
 where
     P: PoolItem,
 {
-    pub(crate) fn new(sender: Sender<SenderCouplet<P>>, join_handle: JoinHandle<usize>) -> Self {
+    pub(crate) fn new(sender: Sender<SenderCouplet<P>>, join_handle: JoinHandle<u64>) -> Self {
         Self {
             sender,
             join_handle,
         }
     }
 
-    pub(crate) fn join_handle(self) -> JoinHandle<usize> {
+    pub(crate) fn join_handle(self) -> JoinHandle<u64> {
         self.join_handle
     }
 }

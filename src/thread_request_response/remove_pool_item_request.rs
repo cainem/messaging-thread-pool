@@ -6,10 +6,10 @@ use crate::{
 use super::{RemovePoolItemResponse, ThreadRequestResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RemovePoolItemRequest(pub usize);
+pub struct RemovePoolItemRequest(pub u64);
 
 impl IdTargeted for RemovePoolItemRequest {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.0
     }
 }

@@ -9,6 +9,6 @@ pub mod id_provider_static;
 /// It needs to implement send and sync so that it can be safely passed between threads. \
 /// It is included for use in the examples
 pub trait IdProvider: Debug + Send + Sync {
-    fn peek_next_id(&self) -> usize;
-    fn next_id(&self) -> usize;
+    fn peek_next_id(&self) -> u64;
+    fn next_id(&self) -> u64;
 }

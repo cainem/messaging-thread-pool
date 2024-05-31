@@ -1,7 +1,6 @@
 pub mod randoms_api;
 
 mod pool_item;
-mod randoms_tracing;
 
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
@@ -22,13 +21,13 @@ use crate::id_targeted::IdTargeted;
 /// Sum     calculates the sum of the contained numbers
 #[derive(Debug, PartialEq, Eq)]
 pub struct Randoms {
-    pub id: usize,
+    pub id: u64,
     pub numbers: Vec<u64>,
 }
 
 impl Randoms {
-    pub fn new(id: usize) -> Self {
-        let mut rng = Xoshiro256Plus::seed_from_u64(id as u64);
+    pub fn new(id: u64) -> Self {
+        let mut rng = Xoshiro256Plus::seed_from_u64(id);
         let numbers = (0..10000).map(|_| rng.next_u64()).collect();
         Self { id, numbers }
     }
@@ -53,7 +52,7 @@ impl Randoms {
 }
 
 impl IdTargeted for Randoms {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.id
     }
 }

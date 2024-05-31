@@ -6,7 +6,7 @@ use super::IdProvider;
 /// This is probably too slow to be of any practical use; for test only
 #[derive(Debug, Default)]
 pub struct IdProviderMutex {
-    internal_counter: Mutex<usize>,
+    internal_counter: Mutex<u64>,
 }
 
 impl PartialEq for IdProviderMutex {
@@ -16,7 +16,7 @@ impl PartialEq for IdProviderMutex {
 }
 
 impl IdProviderMutex {
-    pub fn new(internal_counter: usize) -> Self {
+    pub fn new(internal_counter: u64) -> Self {
         Self {
             internal_counter: Mutex::new(internal_counter),
         }
@@ -30,14 +30,14 @@ impl Clone for IdProviderMutex {
 }
 
 impl IdProvider for IdProviderMutex {
-    fn next_id(&self) -> usize {
+    fn next_id(&self) -> u64 {
         let mut counter = self.internal_counter.lock().unwrap();
         // copy the value before mutating
         let value = *counter;
         *counter += 1;
         value
     }
-    fn peek_next_id(&self) -> usize {
+    fn peek_next_id(&self) -> u64 {
         *self.internal_counter.lock().unwrap()
     }
 }

@@ -6,7 +6,7 @@ use crate::{
 use super::{ThreadRequestResponse, ThreadShutdownResponse};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ThreadShutdownRequest(pub usize);
+pub struct ThreadShutdownRequest(pub u64);
 
 impl<P> RequestWithResponse<P> for ThreadShutdownRequest
 where
@@ -16,7 +16,7 @@ where
 }
 
 impl IdTargeted for ThreadShutdownRequest {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.0
     }
 }

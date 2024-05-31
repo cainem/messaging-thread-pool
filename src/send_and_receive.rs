@@ -35,7 +35,7 @@ mod tests {
     fn two_threads_three_echoes_receives_expected_response() {
         let target = ThreadPool::<Randoms>::new(2);
 
-        let requests = (0..3usize).map(|i| ThreadEchoRequest::new(i, format!("ping {i}")));
+        let requests = (0..3u64).map(|i| ThreadEchoRequest::new(i, format!("ping {i}")));
 
         let results: Vec<ThreadEchoResponse> = target.send_and_receive(requests).unwrap().collect();
 

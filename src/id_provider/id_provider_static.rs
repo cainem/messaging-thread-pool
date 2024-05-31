@@ -1,8 +1,8 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::IdProvider;
 
-static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// This is an example implementation of how to implement a static id provider
 /// It is tied to the name of the static variable
@@ -11,10 +11,10 @@ static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub struct IdProviderStatic;
 
 impl IdProvider for IdProviderStatic {
-    fn next_id(&self) -> usize {
+    fn next_id(&self) -> u64 {
         ID_COUNTER.fetch_add(1, Ordering::SeqCst)
     }
-    fn peek_next_id(&self) -> usize {
+    fn peek_next_id(&self) -> u64 {
         ID_COUNTER.load(Ordering::SeqCst)
     }
 }

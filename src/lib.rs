@@ -37,7 +37,7 @@
 //!    // They will not be dropped until they are either requested to be dropped or until the
 //!    // thread pool itself is dropped.
 //!    thread_pool
-//!        .send_and_receive((0..1000usize).map(|i| RandomsAddRequest(i)))
+//!        .send_and_receive((0..1000u64).map(|i| RandomsAddRequest(i)))
 //!        .expect("thread pool to be available")
 //!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
 //!
@@ -46,7 +46,7 @@
 //!    // The message will be routed to the thread to where the targeted object resides
 //!    // This call will block until all of the work is done and the responses returned
 //!    let sums: Vec<SumResponse> = thread_pool
-//!        .send_and_receive((0..1000usize).map(|i| SumRequest(i)))
+//!        .send_and_receive((0..1000u64).map(|i| SumRequest(i)))
 //!        .expect("thread pool to be available")
 //!        .collect();
 //!    assert_eq!(1000, sums.len());
@@ -83,7 +83,7 @@
 //! The thread pool cannot be dynamically sized.\
 //! It is fixed at creation.\
 //! As there is a ThreadShutdown request it could be implied that therefore there should be a ThreadCreation request.
-//! This is not the case and it is not intended that individual threads will be shutdown in isolation and in fact
+//! This is not the case, and it is not intended that individual threads will be shutdown in isolation and in fact
 //! this will lead to the thread pool panicking.\
 //! The shutdown request is intended to be called only when the whole thread pool is finished with and in fact it
 //! is probably best to avoid using it and to just drop the thread pool (which internally sends out all the required shutdown messages).\
@@ -91,7 +91,6 @@
 //! It was not really intended for anything other than long-lived CPU bound elements.
 //!
 use std::{cell::RefCell, sync::RwLock};
-
 use thread_endpoint::ThreadEndpoint;
 
 pub mod global_test_scope;
@@ -101,6 +100,7 @@ pub mod samples;
 pub mod sender_couplet;
 
 mod drop;
+mod id_based_blocking;
 mod id_targeted;
 mod new;
 mod pool_item;
@@ -115,6 +115,7 @@ mod shutdown;
 mod thread_endpoint;
 mod thread_request_response;
 
+pub use id_based_blocking::*;
 pub use id_being_processed::*;
 pub use id_targeted::IdTargeted;
 pub use pool_item::*;
@@ -125,7 +126,7 @@ pub use sender_couplet::*;
 pub use thread_request_response::*;
 
 thread_local! {
-    static ID_BEING_PROCESSED: RefCell<Option<usize>> = RefCell::new(None);
+    pub static ID_BEING_PROCESSED: RefCell<Option<u64>> = const { RefCell::new(None) };
 }
 
 /// This struct represents a pool of threads that can target a particular type of

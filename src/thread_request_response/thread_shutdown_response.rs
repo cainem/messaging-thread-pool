@@ -4,12 +4,12 @@ use super::ThreadRequestResponse;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadShutdownResponse {
-    thread_id: usize,
+    thread_id: u64,
     children: Vec<ThreadShutdownResponse>,
 }
 
 impl ThreadShutdownResponse {
-    pub fn new(id: usize, children: Vec<ThreadShutdownResponse>) -> Self {
+    pub fn new(id: u64, children: Vec<ThreadShutdownResponse>) -> Self {
         Self {
             thread_id: id,
             children,
@@ -24,7 +24,7 @@ impl ThreadShutdownResponse {
         self.children.as_ref()
     }
 
-    pub fn thread_id(&self) -> usize {
+    pub fn thread_id(&self) -> u64 {
         self.thread_id
     }
 }

@@ -9,7 +9,7 @@ use super::RandomsBatchApi;
 /// This response is returned from a request to calculate the sum of sums of all contained Randoms
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SumOfSumsResponse {
-    pub id: usize,
+    pub id: u64,
     pub sum_of_sums: u128,
 }
 

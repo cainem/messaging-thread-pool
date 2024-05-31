@@ -23,7 +23,7 @@ impl<P> IdTargeted for RandomsBatchApi<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         let RandomsBatchApi::SumOfSums(RequestResponse::Request(sum_of_sum_request)) = self else {
             panic!("id not required to be implemented for responses")
         };

@@ -47,7 +47,7 @@ pub enum RandomsApi {
 }
 
 // a request needs to contain the id of the targeted pool item
-pub struct MeanRequest(pub usize);
+pub struct MeanRequest(pub u64);
 
 // implementing this trait binds together a request and response
 // it tells the pool infrastructure what response is expected
@@ -58,7 +58,7 @@ impl RequestWithResponse<Randoms> for MeanRequest {
 
 // a response contains the results of the operation
 pub struct MeanResponse {
-    pub id: usize,
+    pub id: u64,
     pub mean: u128,
 }
 
@@ -84,7 +84,7 @@ fn process_message(&mut self, request: &Self::Api)
 }
 
 // a request is defined defined to construct a pool item
-pub struct RandomsAddRequest(pub usize);
+pub struct RandomsAddRequest(pub u64);
 
 // ... and the implementation of this function (in the
 // PoolItem trait) defines how to use that message to
@@ -121,7 +121,7 @@ use messaging_thread_pool::{samples::*,
     // requested to be dropped or until the thread pool
     // itself is dropped.
     thread_pool
-        .send_and_receive((0..1000usize)
+        .send_and_receive((0..1000u64)
         .expect("thread pool to be available")
         .map(|i| RandomsAddRequest(i)))
         .for_each(|response: AddResponse| 
@@ -134,7 +134,7 @@ use messaging_thread_pool::{samples::*,
     // This call will block until all of the work is done and
     // the responses returned
     let sums: Vec<SumResponse> = thread_pool
-        .send_and_receive((0..1000usize)
+        .send_and_receive((0..1000u64)
         .expect("thread pool to be available")
         .map(|i| SumRequest(i)))
         .collect();

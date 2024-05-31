@@ -36,7 +36,7 @@ mod tests {
 
         let (send_to_pool, receive_from_thread) = unbounded::<ThreadRequestResponse<Randoms>>();
 
-        let requests = (0..3usize).map(|id| ThreadEchoRequest::new(id, format!("ping {id}")));
+        let requests = (0..3u64).map(|id| ThreadEchoRequest::new(id, format!("ping {id}")));
 
         target.send(send_to_pool, requests).unwrap();
 

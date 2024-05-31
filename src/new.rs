@@ -21,7 +21,7 @@ where
     /// (there is one channel for each spawned thread)
     ///
     /// The number of threads is determined by the passed in thread_pool_size
-    pub fn new(thread_pool_size: usize) -> Self {
+    pub fn new(thread_pool_size: u64) -> Self {
         assert!(
             thread_pool_size > 0,
             "thread pool must have at least one thread"
@@ -39,7 +39,6 @@ where
                 .spawn(move || {
                     // set default tracing subscribers for thread
                     // NOTE: this will be over-ridden if the PoolItem sets the tracing
-                    let tracing_guards = P::add_pool_thread_tracing(i);
 
                     // start a new thread with id i
                     let mut pool_thread = PoolThread::<P>::new(i, receive_from_pool);
@@ -48,9 +47,6 @@ where
 
                     // enter the "infinite" message loop where messages will be received
                     pool_thread.message_loop();
-
-                    // drop the threads tracing subscriber
-                    drop(tracing_guards);
 
                     // return the pool thread id in the join handle
                     i

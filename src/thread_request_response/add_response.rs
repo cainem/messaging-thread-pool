@@ -6,12 +6,12 @@ use super::ThreadRequestResponse;
 /// The success field indicates that the pool item was successfully constructed
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddResponse {
-    id: usize,
-    result: Result<usize, String>,
+    id: u64,
+    result: Result<u64, String>,
 }
 
 impl AddResponse {
-    pub fn new(id: usize, result: Result<usize, String>) -> Self {
+    pub fn new(id: u64, result: Result<u64, String>) -> Self {
         assert!(
             result.is_err() || result.clone().unwrap() == id,
             "id in the success result must match the result"
@@ -19,11 +19,11 @@ impl AddResponse {
         Self { id, result }
     }
 
-    pub fn id(&self) -> usize {
+    pub fn id(&self) -> u64 {
         self.id
     }
 
-    pub fn result(&self) -> Result<&usize, &String> {
+    pub fn result(&self) -> Result<&u64, &String> {
         self.result.as_ref()
     }
 }

@@ -30,7 +30,7 @@ where
         {
             // send straight to each of the thread endpoints
             if endpoint
-                .send(&send_to_pool, ThreadShutdownRequest(id))
+                .send(&send_to_pool, ThreadShutdownRequest(id as u64))
                 .is_ok()
             {
                 let mut child_threads = Vec::<ThreadShutdownResponse>::default();

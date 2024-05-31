@@ -9,7 +9,7 @@ where
     T: RequestWithResponse<P> + IdTargeted,
     P: PoolItem,
 {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         let RequestResponse::Request(request) = self else {
             panic!("not expected; only requests are required to support IdTargeted");
         };

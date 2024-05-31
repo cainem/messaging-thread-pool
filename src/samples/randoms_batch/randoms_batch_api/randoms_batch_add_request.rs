@@ -14,7 +14,7 @@ pub struct RandomsBatchAddRequest<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync,
 {
-    pub id: usize,
+    pub id: u64,
     pub number_of_contained_randoms: usize,
     pub id_provider: Arc<dyn IdProvider>,
     // this thread pool will be shared by all of the Randoms
@@ -29,7 +29,7 @@ where
         self.id_provider.as_ref()
     }
 
-    pub fn id(&self) -> usize {
+    pub fn id(&self) -> u64 {
         self.id
     }
 }
@@ -38,7 +38,7 @@ impl<P> IdTargeted for RandomsBatchAddRequest<P>
 where
     P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
 {
-    fn id(&self) -> usize {
+    fn id(&self) -> u64 {
         self.id
     }
 }

@@ -22,8 +22,8 @@ pub struct RandomsBatch<P>
 where
     P: SenderAndReceiver<Randoms>,
 {
-    pub id: usize,
-    pub contained_random_ids: Vec<usize>,
+    pub id: u64,
+    pub contained_random_ids: Vec<u64>,
     pub id_provider: Arc<dyn IdProvider>,
     pub randoms_thread_pool: Arc<P>,
 }
@@ -40,7 +40,7 @@ where
             randoms_thread_pool: Arc::clone(&add_request.randoms_thread_pool),
         };
 
-        let mut ids = Vec::<usize>::default();
+        let mut ids = Vec::<u64>::default();
         new.randoms_thread_pool()
             .send_and_receive(
                 (0..add_request.number_of_contained_randoms)
@@ -70,7 +70,7 @@ where
             .sum()
     }
 
-    pub fn contained_random_ids_mut(&mut self) -> &mut Vec<usize> {
+    pub fn contained_random_ids_mut(&mut self) -> &mut Vec<u64> {
         &mut self.contained_random_ids
     }
 }
