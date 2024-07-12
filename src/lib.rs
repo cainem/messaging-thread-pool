@@ -114,6 +114,7 @@ mod sender_and_receiver;
 mod shutdown;
 mod thread_endpoint;
 mod thread_request_response;
+mod type_mappings;
 
 pub use id_based_blocking::*;
 pub use id_being_processed::*;
@@ -124,6 +125,7 @@ pub use request_with_response::RequestWithResponse;
 pub use sender_and_receiver::*;
 pub use sender_couplet::*;
 pub use thread_request_response::*;
+pub use type_mappings::*;
 
 thread_local! {
     pub static ID_BEING_PROCESSED: RefCell<Option<u64>> = const { RefCell::new(None) };
