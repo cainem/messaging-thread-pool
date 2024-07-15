@@ -99,7 +99,6 @@ pub mod id_being_processed;
 pub mod id_provider;
 pub mod samples;
 pub mod sender_couplet;
-pub mod type_mappings;
 
 mod drop;
 mod id_based_blocking;

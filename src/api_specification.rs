@@ -1,4 +1,29 @@
-/// This macro generates the api enum for the provided types
+/// This macro generates an API enum and implements various traits and conversions for provided types.
+///
+/// # Parameters
+///
+/// - `pool_item`: The type of the pool item.
+/// - `api_name`: The name of the generated API enum.
+/// - `add_request`: The type for the add request.
+/// - `calls`: A list of call definitions where each call consists of:
+///     - `call_name`: The name of the call.
+///     - `request`: The type of the request for the call.
+///     - `response`: The type of the response for the call.
+/// - `trait_name` (optional): The name of a trait to be implemented by the API enum. Only required for the generic case.
+///
+/// # Example
+///
+/// ```ignore
+///    api_specification!(pool_item: Randoms, api_name: RandomsApi, add_request: RandomsAddRequest,
+///    calls: [
+///        { call_name: Mean, request: MeanRequest, response: MeanResponse },
+///        { call_name: Sum, request: SumRequest, response: SumResponse },
+///        { call_name: Panic, request: PanicRequest, response: PanicResponse },
+///        ]);
+/// ```
+///
+/// This will generate an enum `OrganismApi` with variants `GrowAndRun` and `Feed`, along with various trait implementations
+/// and conversion functions for the provided request and response types.
 #[macro_export]
 macro_rules! api_specification {
     // Match for the generic case with a trailing comma

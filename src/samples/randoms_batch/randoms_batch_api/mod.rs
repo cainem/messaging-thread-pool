@@ -11,6 +11,22 @@ use std::fmt::Debug;
 
 use super::RandomsBatch;
 
+/// Define the RandomsBatchApi which defines the a request/response
+/// pair that can be used to communicate with the RandomsBatch pool item
+///
+/// This sample has been implemented without the use of the api_specification
+/// macro to demonstrate what code needs to be written without it.
+/// A lot of this repetitive boiler plate code can be omitted if the macro is used.
+///
+/// This api could have been defined with this macro statement
+///
+/// use messaging_thread_pool::api_specification;
+/// api_specification!(pool_item: Randoms, api_name: RandomsApi, add_request: RandomsAddRequest,
+///     calls: [
+///               { call_name: Mean, request: MeanRequest, response: MeanResponse },
+///    ], trait_name);
+///
+
 #[derive(Debug)]
 pub enum RandomsBatchApi<P>
 where
