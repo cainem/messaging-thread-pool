@@ -1,4 +1,4 @@
-/// This macro generates an API enum and implements various traits and conversions for provided types.
+/// This macro generates an API enum and implements various generics and conversions for provided types.
 ///
 /// # Parameters
 ///
@@ -9,24 +9,41 @@
 ///     - `call_name`: The name of the call.
 ///     - `request`: The type of the request for the call.
 ///     - `response`: The type of the response for the call.
-/// - `trait_name` (optional): The name of a trait to be implemented by the API enum. Only required for the generic case.
+/// - `generics` (optional): The name of a generic type and its bound. Only required for the generic case.
 ///
 /// # Example
 ///
 /// ```ignore
-///    api_specification!(pool_item: Randoms, api_name: RandomsApi, add_request: RandomsAddRequest,
-///    calls: [
-///        { call_name: Mean, request: MeanRequest, response: MeanResponse },
-///        { call_name: Sum, request: SumRequest, response: SumResponse },
-///        { call_name: Panic, request: PanicRequest, response: PanicResponse },
-///        ]);
+/// // Non-generic case
+/// api_specification!(
+///     pool_item: Randoms,
+///     api_name: RandomsApi,
+///     add_request: RandomsAddRequest,
+///     calls: [
+///         { call_name: Mean, request: MeanRequest, response: MeanResponse },
+///         { call_name: Sum, request: SumRequest, response: SumResponse },
+///         { call_name: Panic, request: PanicRequest, response: PanicResponse },
+///     ]
+/// );
+///
+/// // Generic case
+/// api_specification!(
+///     pool_item: RandomsBatch<T>,
+///     api_name: RandomsBatchApi,
+///     add_request: RandomsBatchAddRequest<T>,
+///     calls: [
+///         { call_name: SumOfSums, request: SumOfSumsRequest, response: SumOfSumsResponse },
+///     ],
+///     generics: T: InnerThreadPool
+/// );
 /// ```
 ///
-/// This will generate an enum `OrganismApi` with variants `GrowAndRun` and `Feed`, along with various trait implementations
+/// This will generate an enum `RandomsApi` with variants `Mean`, `Sum`, and `Panic` for the non-generic case,
+/// and `RandomsBatchApi` with the `SumOfSums` variant for the generic case, along with various generics implementations
 /// and conversion functions for the provided request and response types.
 #[macro_export]
 macro_rules! api_specification {
-    // Match for the generic case with a trailing comma
+    // Match for the generic case with a trailing comma and a generics bound
     (
         pool_item: $pool_item:ty,
         api_name: $api:ident,
@@ -40,16 +57,16 @@ macro_rules! api_specification {
                 }
             ),* $(,)?
         ],
-        trait_name: $trait:ident
+        generics: $t:ident: $generics:ident
     ) => {
         #[derive(Debug, PartialEq)]
-        pub enum $api<LC: $trait> {
+        pub enum $api<$t: $generics> {
             $(
                 $call(RequestResponse<$pool_item, $request>),
             )*
         }
 
-        impl<LC: $trait> IdTargeted for $api<LC> {
+        impl<$t: $generics> IdTargeted for $api<$t> {
             fn id(&self) -> u64 {
                 match self {
                     $(
@@ -59,17 +76,17 @@ macro_rules! api_specification {
             }
         }
 
-        impl<LC: $trait> RequestWithResponse<$pool_item> for $add_request {
+        impl<$t: $generics> RequestWithResponse<$pool_item> for $add_request {
             type Response = AddResponse;
         }
 
-        impl<LC: $trait> From<$add_request> for ThreadRequestResponse<$pool_item> {
+        impl<$t: $generics> From<$add_request> for ThreadRequestResponse<$pool_item> {
             fn from(add_request: $add_request) -> Self {
                 ThreadRequestResponse::<$pool_item>::AddPoolItem(RequestResponse::Request(add_request))
             }
         }
 
-        impl<LC: $trait> From<ThreadRequestResponse<$pool_item>> for $add_request {
+        impl<$t: $generics> From<ThreadRequestResponse<$pool_item>> for $add_request {
             fn from(response: ThreadRequestResponse<$pool_item>) -> Self {
                 let ThreadRequestResponse::AddPoolItem(RequestResponse::Request(result)) = response else {
                     panic!("not expected")
@@ -79,11 +96,11 @@ macro_rules! api_specification {
         }
 
         $(
-            impl<LC: $trait> RequestWithResponse<$pool_item> for $request {
+            impl<$t: $generics> RequestWithResponse<$pool_item> for $request {
                 type Response = $response;
             }
 
-            impl<LC: $trait> From<$request> for ThreadRequestResponse<$pool_item> {
+            impl<$t: $generics> From<$request> for ThreadRequestResponse<$pool_item> {
                 fn from(request: $request) -> Self {
                     ThreadRequestResponse::MessagePoolItem($api::$call(RequestResponse::Request(
                         request,
@@ -91,7 +108,7 @@ macro_rules! api_specification {
                 }
             }
 
-            impl<LC: $trait> From<ThreadRequestResponse<$pool_item>> for $request {
+            impl<$t: $generics> From<ThreadRequestResponse<$pool_item>> for $request {
                 fn from(request: ThreadRequestResponse<$pool_item>) -> Self {
                     let ThreadRequestResponse::MessagePoolItem($api::$call(
                         RequestResponse::Request(result),
@@ -102,7 +119,7 @@ macro_rules! api_specification {
                 }
             }
 
-            impl<LC: $trait> From<$response> for ThreadRequestResponse<$pool_item> {
+            impl<$t: $generics> From<$response> for ThreadRequestResponse<$pool_item> {
                 fn from(response: $response) -> Self {
                     ThreadRequestResponse::MessagePoolItem($api::$call(RequestResponse::Response(
                         response,
@@ -110,7 +127,7 @@ macro_rules! api_specification {
                 }
             }
 
-            impl<LC: $trait> From<ThreadRequestResponse<$pool_item>> for $response {
+            impl<$t: $generics> From<ThreadRequestResponse<$pool_item>> for $response {
                 fn from(response: ThreadRequestResponse<$pool_item>) -> Self {
                     let ThreadRequestResponse::MessagePoolItem($api::$call(
                         RequestResponse::Response(result),
@@ -219,23 +236,3 @@ macro_rules! api_specification {
         )*
     };
 }
-
-// Example usage
-// type_mappings!(
-//     pool_item: Organism,
-//     api_name: OrganismApi,
-//     add_request: AddOrganismRequest,
-//     calls: [
-//         {
-//             call_name: GrowAndRun,
-//             request: GrowAndRunRequest,
-//             response: GrowAndRunResponse
-//         },
-//         {
-//             call_name: Feed,
-//             request: FeedRequest,
-//             response: FeedResponse
-//         }
-//     ],
-//     trait_name: SomeTrait
-// );
