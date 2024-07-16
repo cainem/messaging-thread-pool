@@ -3,8 +3,10 @@ pub mod randoms_batch_api;
 
 use std::sync::Arc;
 
+use samples::InnerThreadPool;
+
 use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
-use crate::{id_provider::IdProvider, samples::Randoms, *};
+use crate::{id_provider::IdProvider, *};
 
 /// An example of an element that contains a child thread pool
 ///
@@ -18,20 +20,14 @@ use crate::{id_provider::IdProvider, samples::Randoms, *};
 /// For this reason the RandomsBatches need to share an id_provider which provides globally unique ids
 /// (ids, must be unique across the thread pool for obvious reasons)
 #[derive(Debug)]
-pub struct RandomsBatch<P>
-where
-    P: SenderAndReceiver<Randoms>,
-{
+pub struct RandomsBatch<P: InnerThreadPool> {
     pub id: u64,
     pub contained_random_ids: Vec<u64>,
     pub id_provider: Arc<dyn IdProvider>,
-    pub randoms_thread_pool: Arc<P>,
+    pub randoms_thread_pool: Arc<P::ThreadPool>,
 }
 
-impl<P> RandomsBatch<P>
-where
-    P: SenderAndReceiver<Randoms> + Send + Sync,
-{
+impl<P: InnerThreadPool> RandomsBatch<P> {
     pub fn new(add_request: RandomsBatchAddRequest<P>) -> Self {
         let mut new = Self {
             id: add_request.id,
@@ -56,7 +52,7 @@ where
         new
     }
 
-    pub fn randoms_thread_pool(&self) -> &P {
+    pub fn randoms_thread_pool(&self) -> &P::ThreadPool {
         self.randoms_thread_pool.as_ref()
     }
 

@@ -13,7 +13,7 @@ use messaging_thread_pool::{id_provider::id_provider_mutex::IdProviderMutex, sam
 pub fn example_random_batches_() {
     // Create a thread pool for RandomsBatch
     // It is the lifetime of this struct that controls the lifetime of all the pool items that are added
-    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(3);
+    let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<RandomsThreadPool>>::new(3);
 
     // Create another thread pool to be used by the children of the RandomsBatches (which are Randoms)
     // The arrangement here is to have this thread shared by all the Randoms regardless of which RandomsBatch
@@ -72,7 +72,7 @@ pub fn example_random_batches_with_mock_thread_pool() {
         );
 
     // new create a RandomsBatch using the mock thread pool
-    let target = RandomsBatch {
+    let target: RandomsBatch<SenderAndReceiverMock<_, _>> = RandomsBatch {
         id: 1,
         contained_random_ids: vec![2, 4],
         id_provider,
