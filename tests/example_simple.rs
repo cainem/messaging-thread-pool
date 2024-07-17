@@ -1,5 +1,4 @@
 use messaging_thread_pool::{samples::*, *};
-use std::iter;
 
 #[test]
 pub fn example_simple_one_level_thread_pool() {
@@ -30,24 +29,23 @@ pub fn example_simple_one_level_thread_pool() {
     // get the mean of the randoms for pool item with id 0, this will execute on thread 0
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
-        .send_and_receive(iter::once(MeanRequest(0)))
-        .expect("thread pool to be available")
-        .next()
-        .unwrap();
+        .send_and_receive_once(MeanRequest(0))
+        .expect("thread pool to be available");
     println!("{}", mean_response_0.mean());
 
     // remove pool item with id 1
     // it will be dropped from the thread where it was residing
-    thread_pool
-        .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+    assert!(thread_pool
+        .send_and_receive_once(RemovePoolItemRequest(1))
         .expect("thread pool to be available")
-        .for_each(|response: RemovePoolItemResponse| assert!(response.item_existed()));
+        .item_existed());
 
     // add a new pool item with id 1000
-    thread_pool
-        .send_and_receive(iter::once(RandomsAddRequest(1000)))
+    assert!(thread_pool
+        .send_and_receive_once(RandomsAddRequest(1000))
         .expect("thread pool to be available")
-        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
+        .result()
+        .is_ok());
 
     thread_pool
         .send_and_receive((2..1000u64).map(RemovePoolItemRequest))

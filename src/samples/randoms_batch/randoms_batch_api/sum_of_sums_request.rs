@@ -1,10 +1,7 @@
-use crate::{
-    samples::{Randoms, RandomsBatch},
-    *,
-};
+use crate::{samples::RandomsBatch, *};
 use std::fmt::Debug;
 
-use super::{RandomsBatchApi, SumOfSumsResponse};
+use super::{InnerThreadPool, RandomsBatchApi, SumOfSumsResponse};
 
 /// This is the message that is sent to request that a given RandomsBatch calculates the sum of all of the
 /// sums of its contained Randoms
@@ -18,17 +15,11 @@ impl IdTargeted for SumOfSumsRequest {
 }
 
 /// ties together the request with a response
-impl<P> RequestWithResponse<RandomsBatch<P>> for SumOfSumsRequest
-where
-    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
-{
+impl<P: InnerThreadPool> RequestWithResponse<RandomsBatch<P>> for SumOfSumsRequest {
     type Response = SumOfSumsResponse;
 }
 
-impl<P> From<SumOfSumsRequest> for ThreadRequestResponse<RandomsBatch<P>>
-where
-    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
-{
+impl<P: InnerThreadPool> From<SumOfSumsRequest> for ThreadRequestResponse<RandomsBatch<P>> {
     fn from(request: SumOfSumsRequest) -> Self {
         ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
             RequestResponse::Request(request),
@@ -36,10 +27,7 @@ where
     }
 }
 
-impl<P> From<ThreadRequestResponse<RandomsBatch<P>>> for SumOfSumsRequest
-where
-    P: SenderAndReceiver<Randoms> + Send + Debug + Sync,
-{
+impl<P: InnerThreadPool> From<ThreadRequestResponse<RandomsBatch<P>>> for SumOfSumsRequest {
     fn from(request: ThreadRequestResponse<RandomsBatch<P>>) -> Self {
         let ThreadRequestResponse::MessagePoolItem(RandomsBatchApi::SumOfSums(
             RequestResponse::Request(result),

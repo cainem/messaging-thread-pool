@@ -8,6 +8,7 @@ mod sum_response;
 
 pub use mean_request::MeanRequest;
 pub use mean_response::MeanResponse;
+use panic_response::PanicResponse;
 pub use randoms_add_request::RandomsAddRequest;
 pub use sum_request::SumRequest;
 pub use sum_response::SumResponse;
@@ -16,42 +17,18 @@ use self::panic_request::PanicRequest;
 use super::Randoms;
 use crate::*;
 
-/// This enum defines the api used to communicate with the Randoms struct
-/// It defines two pairs of messages \
-/// One request the calculation of the mean and the other the calculation of the sum
-#[derive(Debug, PartialEq)]
-pub enum RandomsApi {
-    /// a request response pair to handle the calculation of the mean of the contained randoms
-    Mean(RequestResponse<Randoms, MeanRequest>),
-    /// a request response pair to handle the calculation of the sum of the contained randoms
-    Sum(RequestResponse<Randoms, SumRequest>),
-    Panic(RequestResponse<Randoms, PanicRequest>),
-}
-
-impl IdTargeted for RandomsApi {
-    fn id(&self) -> u64 {
-        match self {
-            RandomsApi::Mean(payload) => payload.request().id(),
-            RandomsApi::Sum(payload) => payload.request().id(),
-            RandomsApi::Panic(payload) => payload.request().id(),
-        }
-    }
-}
-
-impl From<ThreadRequestResponse<Randoms>> for RandomsApi {
-    fn from(response: ThreadRequestResponse<Randoms>) -> Self {
-        let ThreadRequestResponse::MessagePoolItem(result) = response else {
-            panic!("must be a response to a call to the pool item")
-        };
-        result
-    }
-}
-
-impl From<RandomsApi> for ThreadRequestResponse<Randoms> {
-    fn from(request_response: RandomsApi) -> Self {
-        ThreadRequestResponse::MessagePoolItem(request_response)
-    }
-}
+// implement Randoms using the api_specification macro
+// This generates the RandomApi enum as well as generating all of the code
+// to perform the mappings of the various request/response structs in and
+// out of the ThreadRequestResponse enum.
+// The other sample, RandomsBatch, does not use the macro and demonstrates the
+// code that would have to be written if it is not used.
+api_specification!(pool_item: Randoms, api_name: RandomsApi, add_request: RandomsAddRequest,
+calls: [
+    { call_name: Mean, request: MeanRequest, response: MeanResponse },
+    { call_name: Sum, request: SumRequest, response: SumResponse },
+    { call_name: Panic, request: PanicRequest, response: PanicResponse },
+    ]);
 
 #[cfg(test)]
 mod tests {

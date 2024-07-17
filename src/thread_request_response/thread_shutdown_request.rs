@@ -5,6 +5,7 @@ use crate::{
 
 use super::{ThreadRequestResponse, ThreadShutdownResponse};
 
+/// A request to shutdown a thread pool;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadShutdownRequest(pub u64);
 

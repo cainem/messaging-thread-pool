@@ -1,24 +1,24 @@
 //! # Messaging thread pool
 //!
-//! Messaging thread pool is a collection of traits and structs for setting up a simple fix sized thread pool
+//! Messaging thread pool is a collection of traits and structs for setting up a simple fixed-sized thread pool
 //! which holds a collection of a given type.
 //!
 //! Instances of the objects are identified by an id which is unique within the thread pool.
 //!
 //! Objects are distributed across the thread pool based on their id and ownership of the
-//! object is held there
+//! object is held there.
 //!
-//! Objects are communicated with via a user defined set of messages which effectively form an api.
+//! Objects are communicated with via a user defined set of messages which effectively form an API.
 //! These messages are sent and received over crossbeam channels.
 //!
-//! The object need to implement a set of simple traits and define a set of request/response messages
+//! The objects need to implement a set of simple traits and define a set of request/response messages
 //! to allow the thread pool infrastructure to handle the objects and to route messages to them.
 //!
-//! The lifetimes of the objects are easy to reason about as is the behaviour of the thread pools themselves.
+//! The lifetimes of the objects are easy to reason about, as is the behaviour of the thread pools themselves.
 //!
 //! The original motivation was to provide support for a hierarchy of dependent, long-lived objects,
 //! that each required their own thread pools to avoid complex threading dependencies
-//! The objects in the thread pools were all CPU bound i.e. did not perform any significant I/O
+//! The objects in the thread pools were all CPU bound i.e. did not perform any significant I/O.
 //!
 //! # Example
 //! ```
@@ -54,24 +54,22 @@
 //!    // get the mean of the randoms for object with id 0, this will execute on thread 0
 //!    // this call will block until complete
 //!    let mean_response_0: MeanResponse = thread_pool
-//!        .send_and_receive(iter::once(MeanRequest(0)))
-//!        .expect("thread pool to be available")
-//!        .nth(0)
-//!        .unwrap();
+//!        .send_and_receive_once(MeanRequest(0))
+//!        .expect("thread pool to be available");
 //!    println!("{}", mean_response_0.mean());
 //!
 //!    // remove object with id 1
 //!    // it will be dropped from the thread where it was residing
-//!    thread_pool
-//!        .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+//!    assert!(thread_pool
+//!        .send_and_receive_once(RemovePoolItemRequest(1))
 //!        .expect("thread pool to be available")
-//!        .for_each(|response: RemovePoolItemResponse| assert!(response.item_existed()));
+//!        .item_existed());
 //!
 //!    // add a new object with id 1000
-//!    thread_pool
-//!        .send_and_receive(iter::once(RandomsAddRequest(1000)))
+//!    assert!(thread_pool
+//!        .send_and_receive_once(RandomsAddRequest(1000))
 //!        .expect("thread pool to be available")
-//!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
+//!        .result().is_ok());
 //!
 //!    // all objects are dropped when the basic thread pool batcher is dropped
 //!    // the threads are shutdown and joined back the the main thread
@@ -93,6 +91,7 @@
 use std::{cell::RefCell, sync::RwLock};
 use thread_endpoint::ThreadEndpoint;
 
+pub mod api_specification;
 pub mod global_test_scope;
 pub mod id_being_processed;
 pub mod id_provider;

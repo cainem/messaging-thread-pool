@@ -25,6 +25,23 @@ where
         self.send(return_back_to, requests)?;
         Ok(self.receive::<T>(receive_from_worker))
     }
+
+    #[instrument(skip(self, request))]
+    pub fn send_and_receive_once<T>(
+        &self,
+        request: T,
+    ) -> Result<T::Response, SendError<SenderCouplet<P>>>
+    where
+        T: RequestWithResponse<P> + IdTargeted,
+    {
+        let mut responses = self.send_and_receive(std::iter::once(request))?;
+        if let Some(response) = responses.next() {
+            if responses.next().is_none() {
+                return Ok(response);
+            }
+        }
+        panic!("too many responses");
+    }
 }
 
 #[cfg(test)]

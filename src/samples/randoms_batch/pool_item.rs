@@ -1,14 +1,13 @@
-use crate::{samples::Randoms, *};
-use std::{fmt::Debug, fs};
+use std::fs;
 
-use self::id_based_blocking::IdBasedBlocking;
+use crate::{
+    IdBasedBlocking, IdTargeted, NewPoolItemError, PoolItem, RequestResponse,
+    ThreadRequestResponse, ThreadShutdownResponse,
+};
 
 use super::{randoms_batch_api::*, RandomsBatch};
 
-impl<P> PoolItem for RandomsBatch<P>
-where
-    P: SenderAndReceiver<Randoms> + Send + Sync + Debug,
-{
+impl<P: InnerThreadPool> PoolItem for RandomsBatch<P> {
     type Init = RandomsBatchAddRequest<P>;
     type Api = RandomsBatchApi<P>;
     type ThreadStartInfo = IdBasedBlocking;

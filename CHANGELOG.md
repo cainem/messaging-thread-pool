@@ -75,5 +75,11 @@ As started these changes were primarily made for logging/tracing reasons and the
 The new shared state allows a single tracer to be used for all pool items or individual pool items can be conditionally traced. \
 If the functionality is not required *ThreadStartInfo* can just be set to the unit type () and the default behaviour of the three new functions is simply to do nothing.
 
+## [4.1.0]
+
+* Add api_specification macro to reduce the amount of boiler plate code needed to define the api on a pool item. \
+  It creates the api enum and implements all of the necessary *From* traits for the request/responses
+  See *Randoms* sample for an example of use.
+* Add *send_and_receive_once* to *ThreadPool* as a convenience when sending single messages
 
 

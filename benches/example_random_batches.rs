@@ -1,7 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use messaging_thread_pool::id_provider::id_provider_mutex::IdProviderMutex;
 use messaging_thread_pool::samples::{
-    Randoms, RandomsBatch, RandomsBatchAddRequest, SumOfSumsRequest, SumOfSumsResponse,
+    Randoms, RandomsBatch, RandomsBatchAddRequest, RandomsThreadPool, SumOfSumsRequest,
+    SumOfSumsResponse,
 };
 use messaging_thread_pool::{AddResponse, ThreadPool};
 use std::sync::Arc;
@@ -19,7 +20,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| {
             // Create a thread pool for RandomsBatch
             // It is the lifetime of this struct that controls the lifetime of all the pool items that are added
-            let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<ThreadPool<Randoms>>>::new(4);
+            let randoms_batch_thread_pool = ThreadPool::<RandomsBatch<RandomsThreadPool>>::new(4);
 
             // Create another thread pool to be used by the children of the RandomsBatches (which are Randoms)
             // The arrangement here is to have this thread shared by all the Randoms regardless of which RandomsBatch

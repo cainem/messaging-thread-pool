@@ -5,6 +5,7 @@ use crate::{
 
 use super::{ThreadAbortResponse, ThreadRequestResponse};
 
+/// Request to abort a thread; for testing only
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreadAbortRequest(pub u64);
 
