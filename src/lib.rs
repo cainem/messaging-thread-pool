@@ -1,24 +1,24 @@
 //! # Messaging thread pool
 //!
-//! Messaging thread pool is a collection of traits and structs for setting up a simple fix sized thread pool
+//! Messaging thread pool is a collection of traits and structs for setting up a simple fixed-sized thread pool
 //! which holds a collection of a given type.
 //!
 //! Instances of the objects are identified by an id which is unique within the thread pool.
 //!
 //! Objects are distributed across the thread pool based on their id and ownership of the
-//! object is held there
+//! object is held there.
 //!
-//! Objects are communicated with via a user defined set of messages which effectively form an api.
+//! Objects are communicated with via a user defined set of messages which effectively form an API.
 //! These messages are sent and received over crossbeam channels.
 //!
-//! The object need to implement a set of simple traits and define a set of request/response messages
+//! The objects need to implement a set of simple traits and define a set of request/response messages
 //! to allow the thread pool infrastructure to handle the objects and to route messages to them.
 //!
-//! The lifetimes of the objects are easy to reason about as is the behaviour of the thread pools themselves.
+//! The lifetimes of the objects are easy to reason about, as is the behaviour of the thread pools themselves.
 //!
 //! The original motivation was to provide support for a hierarchy of dependent, long-lived objects,
 //! that each required their own thread pools to avoid complex threading dependencies
-//! The objects in the thread pools were all CPU bound i.e. did not perform any significant I/O
+//! The objects in the thread pools were all CPU bound i.e. did not perform any significant I/O.
 //!
 //! # Example
 //! ```

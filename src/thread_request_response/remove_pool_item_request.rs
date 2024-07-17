@@ -5,6 +5,7 @@ use crate::{
 
 use super::{RemovePoolItemResponse, ThreadRequestResponse};
 
+/// A request to remove a pool item
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemRequest(pub u64);
 

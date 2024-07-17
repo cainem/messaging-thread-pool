@@ -2,6 +2,7 @@ use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
+/// The response received after a request to remove a pool item
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RemovePoolItemResponse {
     id: u64,

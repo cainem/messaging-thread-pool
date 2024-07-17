@@ -33,7 +33,7 @@ where
     /// Causes the message loop of the thread to be exited and the thread is rejoined to the main thread
     /// Give contained pool items the opportunity to (optionally) shut down a child thread pool
     ThreadShutdown(RequestResponse<P, ThreadShutdownRequest>),
-    /// As shutdown but leaves all of the state thread state intact (for use in testing)
+    /// As shutdown but leaves all of the thread state intact (for use in testing)
     ThreadAbort(RequestResponse<P, ThreadAbortRequest>),
     /// For testing thread communications in test
     ThreadEcho(RequestResponse<P, ThreadEchoRequest>),

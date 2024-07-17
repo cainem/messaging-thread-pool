@@ -2,6 +2,7 @@ use crate::{pool_item::PoolItem, request_response::RequestResponse};
 
 use super::ThreadRequestResponse;
 
+/// Response from a ThreadAbortRequest
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ThreadAbortResponse(pub u64);
 
