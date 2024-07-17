@@ -40,21 +40,15 @@ for the `PoolItem` trait.\
 This approximately equates to providing a constructor for the pool items, a set of messages and a message processor 
 
 ```rust
-// defining the api with which to communicate with the pool item
-pub enum RandomsApi {
-    Mean(RequestResponse<Randoms, MeanRequest>),
-    Sum(RequestResponse<Randoms, SumRequest>),
-}
+// defining the "api" with which to communicate with the pool item
+api_specification!(pool_item: Randoms, api_name: RandomsApi, add_request: RandomsAddRequest,
+                    calls: [
+                        { call_name: Mean, request: MeanRequest, response: MeanResponse },
+                        { call_name: Sum, request: SumRequest, response: SumResponse },
+                    ]);
 
 // a request needs to contain the id of the targeted pool item
 pub struct MeanRequest(pub u64);
-
-// implementing this trait binds together a request and response
-// it tells the pool infrastructure what response is expected
-// from a given request
-impl RequestWithResponse<Randoms> for MeanRequest {
-    type Response = MeanResponse;
-}
 
 // a response contains the results of the operation
 pub struct MeanResponse {
@@ -62,24 +56,30 @@ pub struct MeanResponse {
     pub mean: u128,
 }
 
-// this function (from the PoolItem trait) defines what to do 
-// on receipt of a request and how to respond to it
-fn process_message(&mut self, request: &Self::Api) 
-        -> ThreadRequestResponse<Self> {
-    match request {
-        // calculate the mean of the contained randoms and 
-        // return the result
-        RandomsApi::Mean(request) => MeanResponse {
-            id: request.id(),
-            mean: self.mean(),
+impl PoolItem for Randoms {
+    type Init = RandomsAddRequest;
+    type Api = RandomsApi;
+    type ThreadStartInfo = ();
+
+    // this function (from the PoolItem trait) defines what to do 
+    // on receipt of a request and how to respond to it
+    fn process_message(&mut self, request: &Self::Api) 
+            -> ThreadRequestResponse<Self> {
+        match request {
+            // calculate the mean of the contained randoms and 
+            // return the result
+            RandomsApi::Mean(request) => MeanResponse {
+                id: request.id(),
+                mean: self.mean(),
+            }
+            .into(),
+            // calculate the sum of the contained randoms and return
+            RandomsApi::Sum(request) => SumResponse {
+                id: request.id(),
+                sum: self.sum(),
+            }
+            .into(),
         }
-        .into(),
-        // calculate the sum of the contained randoms and return
-        RandomsApi::Sum(request) => SumResponse {
-            id: request.id(),
-            sum: self.sum(),
-        }
-        .into(),
     }
 }
 
@@ -144,27 +144,23 @@ use messaging_thread_pool::{samples::*,
     // will execute on thread 0.
     // this call will block until complete
     let mean_response_0: MeanResponse = thread_pool
-        .send_and_receive(iter::once(MeanRequest(0)))
-        .expect("thread pool to be available")
-        .nth(0)
-        .unwrap();
+        .send_and_receive_once(MeanRequest(0))
+        .expect("thread pool to be available");
     println!("{}", mean_response_0.mean());
 
     // remove object with id 1
     // it will be dropped from the thread where it was residing
     // freeing up any memory it was using
-    thread_pool
-        .send_and_receive(iter::once(RemovePoolItemRequest(1)))
+    assert!(thread_pool
+        .send_and_receive_once(RemovePoolItemRequest(1))
         .expect("thread pool to be available")
-        .for_each(|response: RemovePoolItemResponse| 
-            assert!(response.success()));
+        .success());
 
     // add a new object with id 1000
-    thread_pool
-        .send_and_receive(iter::once(RandomsAddRequest(1000)))
+    assert!(thread_pool
+        .send_and_receive_once(RandomsAddRequest(1000))
         .expect("thread pool to be available")
-        .for_each(|response: AddResponse| 
-            assert!(response.success()));
+        .success());
 
     // all objects are dropped when the thread pool is
     // dropped, the worker threads are shutdown and
