@@ -154,7 +154,7 @@ where
 #[cfg(test)]
 mod tests {
 
-    use criterion::black_box;
+    use std::hint::black_box;
 
     use crate::{
         samples::{MeanRequest, MeanResponse, Randoms},
