@@ -37,7 +37,7 @@ impl Randoms {
         self.numbers.iter().map(|n| *n as u128).sum::<u128>() / self.numbers.len() as u128
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub fn sum(&self) -> u128 {
         event!(Level::DEBUG, "evaluating sum");
         // do this very slowly with unnecessary loops

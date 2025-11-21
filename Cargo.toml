@@ -2,7 +2,7 @@
 name = "messaging_thread_pool"
 version = "4.1.0"
 authors = ["cainem"]
-edition = '2021'
+edition = '2024'
 description = "A library for aiding the creation of typed thread pool of objects that is communicated with via channels"
 license = "MIT"
 homepage = "https://github.com/cainem/messaging-thread-pool"
