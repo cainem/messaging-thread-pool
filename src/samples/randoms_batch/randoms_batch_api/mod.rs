@@ -11,19 +11,19 @@ use std::fmt::Debug;
 
 use super::RandomsBatch;
 
-/// Define the RandomsBatchApi which defines the a request/response
-/// pair that can be used to communicate with the RandomsBatch pool item
-///
-/// This sample has been implemented without the use of the api_specification
-/// macro to demonstrate what code needs to be written without it.
-/// A lot of this repetitive boiler plate code can be omitted if the macro is used.
-///
-/// This api could have been defined with this macro statement
-///
-/// api_specification!(pool_item: RandomsBatch<T>, api_name: RandomsBatchApi, add_request: RandomsBatchAddRequest<T>,
-/// calls: [
-///           { call_name: SumOfSums, request: SumOfSumsRequest, response: SumOfSumsResponse },
-///], generics: T: InnerThreadPool);
+// Define the RandomsBatchApi which defines the a request/response
+// pair that can be used to communicate with the RandomsBatch pool item
+//
+// This sample has been implemented without the use of the api_specification
+// macro to demonstrate what code needs to be written without it.
+// A lot of this repetitive boiler plate code can be omitted if the macro is used.
+//
+// This api could have been defined with this macro statement
+//
+// api_specification!(pool_item: RandomsBatch<T>, api_name: RandomsBatchApi, add_request: RandomsBatchAddRequest<T>,
+// calls: [
+//           { call_name: SumOfSums, request: SumOfSumsRequest, response: SumOfSumsResponse },
+//], generics: T: InnerThreadPool);
 
 /// Define a trait to reduce type complexity for inner thread pool
 pub trait InnerThreadPool: Debug {
