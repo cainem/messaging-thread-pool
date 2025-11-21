@@ -55,13 +55,11 @@ where
             let response = match request {
                 ThreadRequestResponse::MessagePoolItem(request) => {
                     // find the pool item that needs to process the request
-                    let response = if let Some(targeted) = self.pool_item_map.get_mut(&id) {
+                    if let Some(targeted) = self.pool_item_map.get_mut(&id) {
                         targeted.process_message(request)
                     } else {
                         P::id_not_found(&request)
-                    };
-
-                    response
+                    }
                 }
                 ThreadRequestResponse::AddPoolItem(RequestResponse::Request(request)) => {
                     match P::new_pool_item(request) {

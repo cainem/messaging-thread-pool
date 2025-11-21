@@ -35,10 +35,10 @@ where
         T: RequestWithResponse<P> + IdTargeted,
     {
         let mut responses = self.send_and_receive(std::iter::once(request))?;
-        if let Some(response) = responses.next() {
-            if responses.next().is_none() {
-                return Ok(response);
-            }
+        if let Some(response) = responses.next()
+            && responses.next().is_none()
+        {
+            return Ok(response);
         }
         panic!("too many responses");
     }
