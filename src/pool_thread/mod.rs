@@ -2,7 +2,7 @@ mod message_loop;
 pub mod new;
 pub mod shutdown_child_pool;
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use crossbeam_channel::Receiver;
 
@@ -19,5 +19,5 @@ where
     pool_thread_receiver: Receiver<SenderCouplet<P>>,
     /// This is a hash map that will hold the ownership of all pool items created in this
     /// pool thread keyed by their ids
-    pool_item_map: BTreeMap<u64, P>,
+    pool_item_map: HashMap<u64, P>,
 }

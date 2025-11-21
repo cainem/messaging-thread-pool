@@ -30,10 +30,12 @@ where
         }
     }
 
+    /// Returns the request contained in the couplet
     pub fn request(&self) -> &ThreadRequestResponse<P> {
         &self.request
     }
 
+    /// Returns the channel to return the response to
     #[allow(dead_code)]
     pub fn return_to(&self) -> &Sender<ThreadRequestResponse<P>> {
         &self.return_to

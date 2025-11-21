@@ -11,7 +11,8 @@ where
     pub fn shutdown_child_pool(&mut self) -> Vec<ThreadShutdownResponse> {
         // all pool items should, if they contain a reference to a thread pool, have the ability to shut
         // it down, so just take the first one, clear the map of all others and call shutdown_child_threads
-        if let Some((_, pool_item)) = self.pool_item_map.pop_first() {
+        if let Some(key) = self.pool_item_map.keys().min().copied() {
+            let pool_item = self.pool_item_map.remove(&key).unwrap();
             self.pool_item_map.clear();
             pool_item.shutdown_pool()
         } else {

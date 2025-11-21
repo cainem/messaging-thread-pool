@@ -12,6 +12,7 @@ pub fn global_test_scope(filter: LevelFilter) {
     tracing::dispatcher::set_global_default(dispatcher).unwrap();
 }
 
+/// A trace helper used in the examples that scopes the trace to the provided closure
 pub fn test_scope(filter: LevelFilter, enclosed_function: fn() -> ()) {
     let subscriber = FmtSubscriber::builder()
         // all spans/events with a level higher than LevelFilter

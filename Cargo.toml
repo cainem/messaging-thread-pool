@@ -39,6 +39,9 @@ harness = false
 [[bench]]
 name = "example_random_batches"
 harness = false
+[[bench]]
+name = "message_throughput"
+harness = false
 
 
 [profile.release]
