@@ -13,7 +13,7 @@ where
 {
     /// This function sends a request to a worker thread and receives a response back
     ///
-    /// The request is received as a vec and the responses are received back in a vec
+    /// The request is received as an iterator and the responses are received back as an iterator
     #[instrument(skip(self, requests))]
     pub fn send_and_receive<T>(
         &self,

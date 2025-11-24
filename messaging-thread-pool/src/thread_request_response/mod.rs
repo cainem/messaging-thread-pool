@@ -24,29 +24,29 @@ pub use self::{
 
 /// This enum defines all of the messages that can be used to communicate with the thread pool.
 /// Each element of the enum takes a [`RequestResponse`] struct which can contain either a request
-/// or a response
+/// or a response.
 #[derive(Debug, PartialEq)]
 pub enum ThreadRequestResponse<P>
 where
     P: PoolItem,
 {
-    /// Causes the message loop of the thread to be exited and the thread is rejoined to the main thread
-    /// Give contained pool items the opportunity to (optionally) shut down a child thread pool
+    /// Causes the message loop of the thread to be exited and the thread is rejoined to the main thread.
+    /// Gives contained pool items the opportunity to (optionally) shut down a child thread pool.
     ThreadShutdown(RequestResponse<P, ThreadShutdownRequest>),
-    /// As shutdown but leaves all of the thread state intact (for use in testing)
+    /// As shutdown but leaves all of the thread state intact (for use in testing).
     ThreadAbort(RequestResponse<P, ThreadAbortRequest>),
-    /// For testing thread communications in test
+    /// For testing thread communications in test.
     ThreadEcho(RequestResponse<P, ThreadEchoRequest>),
-    /// Add a new pool item to the thread pool
-    /// The pool item will be assigned a thread within the thread pool and it will be instantiated there
-    /// It remain on that thread for its entire life
-    /// The form of the message to create the pool item is defined by the pool item
+    /// Add a new pool item to the thread pool.
+    /// The pool item will be assigned a thread within the thread pool and it will be instantiated there.
+    /// It remains on that thread for its entire life.
+    /// The form of the message to create the pool item is defined by the pool item.
     AddPoolItem(RequestResponse<P, P::Init>),
-    /// Requests that an item be removed from the thread pool
-    /// The request is routed to the thread that has ownership and the pool item is dropped
+    /// Requests that an item be removed from the thread pool.
+    /// The request is routed to the thread that has ownership and the pool item is dropped.
     RemovePoolItem(RequestResponse<P, RemovePoolItemRequest>),
-    /// Send a message from the pool items defined api to a given pool item
-    /// The message is routed to the owning thread and any work is performed there
+    /// Send a message from the pool item's defined API to a given pool item.
+    /// The message is routed to the owning thread and any work is performed there.
     MessagePoolItem(P::Api),
 }
 

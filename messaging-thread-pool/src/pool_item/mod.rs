@@ -25,7 +25,7 @@ where
     type Api;
     /// This is the type that is optionally created when a thread within the thread pool
     /// is started (see thread_start function)
-    /// A writeable reference to this is them passed to a pool item each time it is loaded
+    /// A writeable reference to this is then passed to a pool item each time it is loaded
     /// to "run" (see loading_pool_item function)
     /// The primary motivation behind this is for the implementation of tracing
     /// If this functionality is not required then this can be set to the unit type ()
@@ -37,7 +37,7 @@ where
     /// the various messages type defined in the Api
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self>;
 
-    /// The function called if an item with the specified is not found
+    /// The function called if an item with the specified id is not found
     /// The default behaviour is to panic
     fn id_not_found(request: &Self::Api) -> ThreadRequestResponse<Self> {
         // default behaviour is to panic

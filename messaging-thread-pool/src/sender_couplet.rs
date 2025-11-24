@@ -5,7 +5,7 @@ use crate::{
     thread_request_response::ThreadRequestResponse,
 };
 
-/// A struct that defines the contents of a message sent to the thread pool
+/// A struct that defines the contents of a message sent to the thread pool.
 #[derive(Debug)]
 pub struct SenderCouplet<P>
 where
@@ -19,7 +19,7 @@ impl<P> SenderCouplet<P>
 where
     P: PoolItem,
 {
-    /// Creates a new SenderCouplet
+    /// Creates a new SenderCouplet.
     pub fn new<T>(return_to: Sender<ThreadRequestResponse<P>>, request: T) -> Self
     where
         T: RequestWithResponse<P>,
@@ -30,12 +30,12 @@ where
         }
     }
 
-    /// Returns the request contained in the couplet
+    /// Returns the request contained in the couplet.
     pub fn request(&self) -> &ThreadRequestResponse<P> {
         &self.request
     }
 
-    /// Returns the channel to return the response to
+    /// Returns the channel to return the response to.
     #[allow(dead_code)]
     pub fn return_to(&self) -> &Sender<ThreadRequestResponse<P>> {
         &self.return_to

@@ -1,4 +1,3 @@
-use crate::pool_item::PoolItem;
 use messaging_thread_pool_macros::pool_item;
 
 // Allow the macro to refer to the crate by name
@@ -6,8 +5,12 @@ use crate as messaging_thread_pool;
 
 /// A ChatRoom is a stateful entity that manages a list of messages.
 /// It is managed by the thread pool, so we don't need internal mutexes.
+///
+/// This struct demonstrates the use of the `#[pool_item]` macro to automatically
+/// generate the necessary boilerplate for the `PoolItem` trait.
 #[derive(Debug)]
 pub struct ChatRoom {
+    #[allow(dead_code)]
     id: u64,
     pub history: Vec<String>,
 }

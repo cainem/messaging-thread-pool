@@ -17,63 +17,48 @@
 //! The lifetimes of the objects are easy to reason about, as is the behaviour of the thread pools themselves.
 //!
 //! The original motivation was to provide support for a hierarchy of dependent, long-lived objects,
-//! that each required their own thread pools to avoid complex threading dependencies
+//! that each required their own thread pools to avoid complex threading dependencies.
 //! The objects in the thread pools were all CPU bound i.e. did not perform any significant I/O.
 //!
 //! # Example
 //! ```
-//! use std::iter;
-//! use messaging_thread_pool::{*, samples::*};
+//! use messaging_thread_pool::{ThreadPool, samples::*};
 //!
-//!    // creates a thread pool with 4 threads.
-//!    // The lifetime of the elements created (the Randoms in this case) will be tied to the
-//!    // life of this struct
-//!    let thread_pool = ThreadPool::<Randoms>::new(10);
+//!    // Create a thread pool with 4 threads
+//!    let thread_pool = ThreadPool::<ChatRoom>::new(4);
 //!
-//!    // create a 1000 Randoms across the thread pool by sending a thousand add requests.
-//!    // The creation of these objects (with the keys 0..1000) will be distributed across
-//!    // the 10 threads in the pool.
-//!    // Their owning thread will create and store them.
-//!    // They will not be dropped until they are either requested to be dropped or until the
-//!    // thread pool itself is dropped.
+//!    // Create two chat rooms (ID 1 and 2)
+//!    // The pool will route these to the appropriate threads based on ID
 //!    thread_pool
-//!        .send_and_receive((0..1000u64).map(|i| RandomsAddRequest(i)))
-//!        .expect("thread pool to be available")
-//!        .for_each(|response: AddResponse| assert!(response.result().is_ok()));
+//!        .send_and_receive(vec![
+//!            ChatRoomInit(1),
+//!            ChatRoomInit(2),
+//!        ].into_iter())
+//!        .expect("creation requests")
+//!        .for_each(|_| {});
 //!
-//!    // now create 1000 messages asking them for the sum of the Randoms objects contained
-//!    // random numbers.
-//!    // The message will be routed to the thread to where the targeted object resides
-//!    // This call will block until all of the work is done and the responses returned
-//!    let sums: Vec<SumResponse> = thread_pool
-//!        .send_and_receive((0..1000u64).map(|i| SumRequest(i)))
-//!        .expect("thread pool to be available")
-//!        .collect();
-//!    assert_eq!(1000, sums.len());
+//!    // Post messages to Room 1
+//!    thread_pool
+//!        .send_and_receive(vec![
+//!            PostRequest(1, "Alice".to_string(), "Hello!".to_string()),
+//!            PostRequest(1, "Bob".to_string(), "Hi Alice!".to_string()),
+//!        ].into_iter())
+//!        .expect("messages to send")
+//!        .for_each(|response| {
+//!            // The response is the index of the message
+//!            assert!(response.result < 100);
+//!        });
 //!
-//!    // get the mean of the randoms for object with id 0, this will execute on thread 0
-//!    // this call will block until complete
-//!    let mean_response_0: MeanResponse = thread_pool
-//!        .send_and_receive_once(MeanRequest(0))
-//!        .expect("thread pool to be available");
-//!    println!("{}", mean_response_0.mean());
+//!    // Get history from Room 1
+//!    let history = thread_pool
+//!        .send_and_receive(vec![GetHistoryRequest(1)].into_iter())
+//!        .expect("request to send")
+//!        .next()
+//!        .expect("response")
+//!        .result;
 //!
-//!    // remove object with id 1
-//!    // it will be dropped from the thread where it was residing
-//!    assert!(thread_pool
-//!        .send_and_receive_once(RemovePoolItemRequest(1))
-//!        .expect("thread pool to be available")
-//!        .item_existed());
-//!
-//!    // add a new object with id 1000
-//!    assert!(thread_pool
-//!        .send_and_receive_once(RandomsAddRequest(1000))
-//!        .expect("thread pool to be available")
-//!        .result().is_ok());
-//!
-//!    // all objects are dropped when the basic thread pool batcher is dropped
-//!    // the threads are shutdown and joined back the the main thread
-//!    drop(thread_pool);
+//!    assert_eq!(history.len(), 2);
+//!    assert_eq!(history[0], "Alice: Hello!");
 //! ```
 //!
 //! # Limitations
@@ -82,9 +67,9 @@
 //! It is fixed at creation.\
 //! As there is a ThreadShutdown request it could be implied that therefore there should be a ThreadCreation request.
 //! This is not the case, and it is not intended that individual threads will be shutdown in isolation and in fact
-//! this will lead to the thread pool panicking.\
+//! this will lead to the thread pool panicking.
 //! The shutdown request is intended to be called only when the whole thread pool is finished with and in fact it
-//! is probably best to avoid using it and to just drop the thread pool (which internally sends out all the required shutdown messages).\
+//! is probably best to avoid using it and to just drop the thread pool (which internally sends out all the required shutdown messages).
 //!
 //! It was not really intended for anything other than long-lived CPU bound elements.
 //!

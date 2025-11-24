@@ -1,5 +1,7 @@
 /// This macro generates an API enum and implements various generics and conversions for provided types.
 ///
+/// **Note:** For simple non-generic cases, consider using the `#[pool_item]` attribute macro instead.
+///
 /// # Parameters
 ///
 /// - `pool_item`: The type of the pool item.
