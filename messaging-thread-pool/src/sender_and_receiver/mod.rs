@@ -66,8 +66,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        samples::{MeanRequest, MeanResponse, Randoms},
         SenderAndReceiver, SenderAndReceiverMock,
+        samples::{MeanRequest, MeanResponse, Randoms},
     };
 
     #[test]

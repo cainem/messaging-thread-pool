@@ -4,7 +4,7 @@ mod pool_item;
 
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
-use tracing::{event, Level};
+use tracing::{Level, event};
 
 use crate::id_targeted::IdTargeted;
 

@@ -44,7 +44,7 @@ impl IdProvider for IdProviderMutex {
 
 #[cfg(test)]
 mod tests {
-    use crate::id_provider::{id_provider_mutex::IdProviderMutex, IdProvider};
+    use crate::id_provider::{IdProvider, id_provider_mutex::IdProviderMutex};
 
     #[test]
     fn peek_id_as_expected() {

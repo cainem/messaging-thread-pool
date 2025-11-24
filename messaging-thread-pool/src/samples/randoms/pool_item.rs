@@ -1,7 +1,7 @@
 use std::fs;
 
 use self::id_based_blocking::IdBasedBlocking;
-use super::{randoms_api::RandomsApi, Randoms};
+use super::{Randoms, randoms_api::RandomsApi};
 use crate::{
     samples::{MeanResponse, RandomsAddRequest, SumResponse},
     *,

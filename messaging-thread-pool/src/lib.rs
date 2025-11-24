@@ -98,21 +98,23 @@ pub mod id_provider;
 pub mod samples;
 pub mod sender_couplet;
 
+pub use messaging_thread_pool_macros::pool_item;
+
 mod drop;
 mod id_based_blocking;
 mod id_targeted;
 mod new;
-mod pool_item;
+pub mod pool_item;
 mod pool_thread;
 mod receive;
-mod request_response;
+pub mod request_response;
 mod request_with_response;
 mod send;
 mod send_and_receive;
 mod sender_and_receiver;
 mod shutdown;
 mod thread_endpoint;
-mod thread_request_response;
+pub mod thread_request_response;
 
 pub use id_based_blocking::*;
 pub use id_being_processed::*;
@@ -156,7 +158,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{samples::*, ThreadPool};
+    use crate::{ThreadPool, samples::*};
 
     #[test]
     fn thread_pool_size_2_thread_count_2() {

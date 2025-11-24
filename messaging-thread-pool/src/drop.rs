@@ -1,4 +1,4 @@
-use crate::{pool_item::PoolItem, ThreadPool};
+use crate::{ThreadPool, pool_item::PoolItem};
 
 impl<P> Drop for ThreadPool<P>
 where
@@ -12,7 +12,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{samples::*, ThreadPool};
+    use crate::{ThreadPool, samples::*};
 
     #[test]
     fn one_thread_drop_clean_shutdown_as_expected() {

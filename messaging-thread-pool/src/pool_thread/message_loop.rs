@@ -1,10 +1,10 @@
 use std::collections::hash_map::Entry;
 
-use tracing::{event, instrument, Level};
+use tracing::{Level, event, instrument};
 
 use crate::{
-    pool_item::PoolItem, request_response::RequestResponse, sender_couplet::SenderCouplet,
-    thread_request_response::*, ID_BEING_PROCESSED,
+    ID_BEING_PROCESSED, pool_item::PoolItem, request_response::RequestResponse,
+    sender_couplet::SenderCouplet, thread_request_response::*,
 };
 
 use super::PoolThread;
@@ -153,7 +153,11 @@ where
                     // The channel that is supposed to be receiving the response cannot receive it,
                     // it has probably been dropped,
                     // discard the response message and continue
-                    event!(Level::WARN, "Cannot return results, other end of channel has most likely been dropped. Err = {}", &err);
+                    event!(
+                        Level::WARN,
+                        "Cannot return results, other end of channel has most likely been dropped. Err = {}",
+                        &err
+                    );
                 }
             };
 

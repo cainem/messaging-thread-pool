@@ -1,6 +1,6 @@
 use crate::{
-    pool_item::PoolItem, request_with_response::RequestWithResponse,
-    thread_request_response::ThreadRequestResponse, ThreadPool,
+    ThreadPool, pool_item::PoolItem, request_with_response::RequestWithResponse,
+    thread_request_response::ThreadRequestResponse,
 };
 use crossbeam_channel::Receiver;
 
@@ -28,7 +28,7 @@ where
 mod tests {
     use crossbeam_channel::unbounded;
 
-    use crate::{samples::*, thread_request_response::*, ThreadPool};
+    use crate::{ThreadPool, samples::*, thread_request_response::*};
 
     #[test]
     fn three_init_requests_two_thread_received_three_responses_received() {

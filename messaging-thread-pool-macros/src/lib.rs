@@ -1,15 +1,11 @@
+mod generation;
+mod parsing;
+
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{parse_macro_input, ItemImpl};
 
 #[proc_macro_attribute]
 pub fn pool_item(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as DeriveInput);
-    
-    // For now, just return the input unchanged
-    let expanded = quote! {
-        #input
-    };
-
-    TokenStream::from(expanded)
+    let input = parse_macro_input!(item as ItemImpl);
+    generation::generate_pool_item_impl(input).into()
 }

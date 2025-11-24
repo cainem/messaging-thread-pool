@@ -1,11 +1,11 @@
 use std::{sync::RwLock, thread::Builder};
 
 use crossbeam_channel::unbounded;
-use tracing::{event, Level};
+use tracing::{Level, event};
 
 use crate::{
-    pool_item::PoolItem, pool_thread::PoolThread, sender_couplet::SenderCouplet,
-    thread_endpoint::ThreadEndpoint, ThreadPool,
+    ThreadPool, pool_item::PoolItem, pool_thread::PoolThread, sender_couplet::SenderCouplet,
+    thread_endpoint::ThreadEndpoint,
 };
 
 impl<P> ThreadPool<P>
@@ -64,7 +64,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{samples::*, thread_request_response::*, ThreadPool};
+    use crate::{ThreadPool, samples::*, thread_request_response::*};
 
     #[test]
     fn new_called_with_thread_pool_size_2_two_threads_created() {

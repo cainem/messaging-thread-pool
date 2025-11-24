@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use messaging_thread_pool::{samples::*, ThreadPool};
+use criterion::{Criterion, criterion_group, criterion_main};
+use messaging_thread_pool::{ThreadPool, samples::*};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let thread_pool = ThreadPool::<Randoms>::new(10);

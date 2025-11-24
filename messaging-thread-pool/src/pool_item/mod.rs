@@ -5,7 +5,7 @@ use crate::{
     id_targeted::IdTargeted, request_with_response::RequestWithResponse, thread_request_response::*,
 };
 use std::fmt::Debug;
-use tracing::{event, Level};
+use tracing::{Level, event};
 
 /// This is the trait that needs to be implemented by a struct in order that it can be
 /// managed by the thread pool infrastructure

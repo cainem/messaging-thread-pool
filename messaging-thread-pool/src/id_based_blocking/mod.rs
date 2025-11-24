@@ -93,7 +93,7 @@ mod tests {
 
     use crate::{
         global_test_scope::test_scope,
-        id_based_blocking::{id_based_writer::IdBasedWriter, IdBasedBlocking},
+        id_based_blocking::{IdBasedBlocking, id_based_writer::IdBasedWriter},
     };
 
     const TEST_DIR: &str = "target\\tmp";

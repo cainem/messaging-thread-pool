@@ -5,7 +5,7 @@ use crate::{
     ThreadRequestResponse, ThreadShutdownResponse,
 };
 
-use super::{randoms_batch_api::*, RandomsBatch};
+use super::{RandomsBatch, randoms_batch_api::*};
 
 impl<P: InnerThreadPool> PoolItem for RandomsBatch<P> {
     type Init = RandomsBatchAddRequest<P>;

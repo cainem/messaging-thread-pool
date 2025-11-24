@@ -1,4 +1,4 @@
-use tracing::{metadata::LevelFilter, Dispatch};
+use tracing::{Dispatch, metadata::LevelFilter};
 use tracing_subscriber::FmtSubscriber;
 
 /// A trace helper used in the examples

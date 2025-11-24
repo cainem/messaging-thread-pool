@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use messaging_thread_pool::id_provider::id_provider_mutex::IdProviderMutex;
 use messaging_thread_pool::samples::{
     Randoms, RandomsBatch, RandomsBatchAddRequest, RandomsThreadPool, SumOfSumsRequest,

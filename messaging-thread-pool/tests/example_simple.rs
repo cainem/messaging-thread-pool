@@ -35,17 +35,21 @@ pub fn example_simple_one_level_thread_pool() {
 
     // remove pool item with id 1
     // it will be dropped from the thread where it was residing
-    assert!(thread_pool
-        .send_and_receive_once(RemovePoolItemRequest(1))
-        .expect("thread pool to be available")
-        .item_existed());
+    assert!(
+        thread_pool
+            .send_and_receive_once(RemovePoolItemRequest(1))
+            .expect("thread pool to be available")
+            .item_existed()
+    );
 
     // add a new pool item with id 1000
-    assert!(thread_pool
-        .send_and_receive_once(RandomsAddRequest(1000))
-        .expect("thread pool to be available")
-        .result()
-        .is_ok());
+    assert!(
+        thread_pool
+            .send_and_receive_once(RandomsAddRequest(1000))
+            .expect("thread pool to be available")
+            .result()
+            .is_ok()
+    );
 
     thread_pool
         .send_and_receive((2..1000u64).map(RemovePoolItemRequest))

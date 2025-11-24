@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use messaging_thread_pool::{samples::*, AddResponse, ThreadPool};
+use criterion::{Criterion, criterion_group, criterion_main};
+use messaging_thread_pool::{AddResponse, ThreadPool, samples::*};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("create 1000 randoms", |b| {

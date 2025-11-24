@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use messaging_thread_pool::{samples::*, AddResponse, ThreadPool};
+use criterion::{Criterion, criterion_group, criterion_main};
+use messaging_thread_pool::{AddResponse, ThreadPool, samples::*};
 
 // There are big gains to be made in performance by using mimalloc
 #[global_allocator]

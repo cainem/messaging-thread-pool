@@ -1,9 +1,10 @@
-use crossbeam_channel::{unbounded, SendError};
+use crossbeam_channel::{SendError, unbounded};
 use tracing::instrument;
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
-    sender_couplet::SenderCouplet, thread_request_response::ThreadRequestResponse, ThreadPool,
+    ThreadPool, id_targeted::IdTargeted, pool_item::PoolItem,
+    request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
+    thread_request_response::ThreadRequestResponse,
 };
 
 impl<P> ThreadPool<P>
@@ -46,7 +47,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{samples::*, thread_request_response::*, ThreadPool};
+    use crate::{ThreadPool, samples::*, thread_request_response::*};
 
     #[test]
     fn two_threads_three_echoes_receives_expected_response() {

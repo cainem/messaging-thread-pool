@@ -34,7 +34,7 @@ calls: [
 mod tests {
     use crate::{IdTargeted, RequestResponse};
 
-    use super::{panic_request::PanicRequest, MeanRequest, RandomsApi, SumRequest};
+    use super::{MeanRequest, RandomsApi, SumRequest, panic_request::PanicRequest};
 
     #[test]
     fn returns_expected_ids_for_all_api_variants() {

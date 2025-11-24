@@ -1,7 +1,7 @@
 use crossbeam_channel::bounded;
 
 use crate::{
-    pool_item::PoolItem, request_response::RequestResponse, thread_request_response::*, ThreadPool,
+    ThreadPool, pool_item::PoolItem, request_response::RequestResponse, thread_request_response::*,
 };
 
 impl<P> ThreadPool<P>
@@ -73,9 +73,9 @@ mod tests {
     use std::iter;
 
     use crate::{
+        ThreadPool,
         samples::{panic_request::PanicRequest, *},
         thread_request_response::*,
-        ThreadPool,
     };
 
     #[test]

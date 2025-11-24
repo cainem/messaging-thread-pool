@@ -1,8 +1,8 @@
 use crossbeam_channel::SendError;
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
-    sender_couplet::SenderCouplet, ThreadPool,
+    ThreadPool, id_targeted::IdTargeted, pool_item::PoolItem,
+    request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
 };
 
 use super::SenderAndReceiver;
