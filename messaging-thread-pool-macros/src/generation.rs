@@ -230,8 +230,9 @@ fn generate_process_message_arm(
                 messaging_thread_pool::request_response::RequestResponse::Request(r) => r,
                 _ => panic!("Unexpected message in process_message (expected Request)"),
             };
+            let id = messaging_thread_pool::IdTargeted::id(&request);
             let result = self.#method_name(#call_args);
-            #response_name { id: messaging_thread_pool::IdTargeted::id(&request), result }.into()
+            #response_name { id, result }.into()
         }
     }
 }

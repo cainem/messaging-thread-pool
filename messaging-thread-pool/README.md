@@ -23,150 +23,84 @@ It provides simple call schematics, easy to reason about lifetimes and predictab
 The type needs to define an enum of message types and provide implementations of a few simple traits to enable it to be
 hosted within the thread pool.
 
-So, for example, a simple type holding a collection of random numbers such as this
+The `#[pool_item]` macro simplifies this process significantly.
+
+So, for example, a simple type representing a Chat Room:
 
 ```rust
-// define what a pool item looks like
-pub struct Randoms {
-    // pool items require an id so they can be identified within
-    // the thread pool
-    pub id: u64,  
-    pub numbers: Vec<u64>,
-}
-```
+use messaging_thread_pool_macros::pool_item;
 
-Can be hosted in a thread pool and communicated with via a defined set of messages by providing implementations 
-for the `PoolItem` trait.\
-This approximately equates to providing a constructor for the pool items, a set of messages and a message processor 
-
-```rust
-// defining the "api" with which to communicate with the pool item
-api_specification!(pool_item: Randoms, api_name: RandomsApi, add_request: RandomsAddRequest,
-                    calls: [
-                        { call_name: Mean, request: MeanRequest, response: MeanResponse },
-                        { call_name: Sum, request: SumRequest, response: SumResponse },
-                    ]);
-
-// a request needs to contain the id of the targeted pool item
-pub struct MeanRequest(pub u64);
-
-// a response contains the results of the operation
-pub struct MeanResponse {
-    pub id: u64,
-    pub mean: u128,
+#[derive(Debug)]
+pub struct ChatRoom {
+    id: u64,
+    pub history: Vec<String>,
 }
 
-impl PoolItem for Randoms {
-    type Init = RandomsAddRequest;
-    type Api = RandomsApi;
-    type ThreadStartInfo = ();
-
-    // this function (from the PoolItem trait) defines what to do 
-    // on receipt of a request and how to respond to it
-    fn process_message(&mut self, request: &Self::Api) 
-            -> ThreadRequestResponse<Self> {
-        match request {
-            // calculate the mean of the contained randoms and 
-            // return the result
-            RandomsApi::Mean(request) => MeanResponse {
-                id: request.id(),
-                mean: self.mean(),
-            }
-            .into(),
-            // calculate the sum of the contained randoms and return
-            RandomsApi::Sum(request) => SumResponse {
-                id: request.id(),
-                sum: self.sum(),
-            }
-            .into(),
+impl ChatRoom {
+    pub fn new(id: u64) -> Self {
+        Self {
+            id,
+            history: Vec::new(),
         }
     }
 }
 
-// a request is defined defined to construct a pool item
-pub struct RandomsAddRequest(pub u64);
+#[pool_item]
+impl ChatRoom {
+    #[messaging(PostRequest, PostResponse)]
+    pub fn post(&mut self, user: String, text: String) -> usize {
+        let entry = format!("{}: {}", user, text);
+        self.history.push(entry);
+        self.history.len() - 1
+    }
 
-// ... and the implementation of this function (in the
-// PoolItem trait) defines how to use that message to
-// construct a new pool item
-fn new_pool_item(request: &Self::Init) 
-        -> Result<Self, NewPoolItemError> {
-    Ok(Randoms::new(request.0))
+    #[messaging(GetHistoryRequest, GetHistoryResponse)]
+    pub fn get_history(&self) -> Vec<String> {
+        self.history.clone()
+    }
 }
-
 ```
 
 With this infrastructure in place a pool item can then use the library provided structs 
 to host instances of the pool items in a fixed sized thread pool. 
 
-
 ```rust
-use std::iter;
-use messaging_thread_pool::{samples::*,
-     thread_request_response::*,
-     ThreadPool};
+use messaging_thread_pool::ThreadPool;
 
-    // creates a thread pool with 4 threads and a mechanism 
-    // by which to communicate with the threads in the pool.
-    // The lifetime of the structs created (the Randoms) 
-    // will be tied to the life of this struct
-    let thread_pool = ThreadPool::<Randoms>::new(10);
+// Create a thread pool with 4 threads
+let thread_pool = ThreadPool::<ChatRoom>::new(4);
 
-    // create a 1000 Randoms across the thread pool by 
-    // sending a thousand add requests.
-    // The creation of these objects (with the keys 0..1000)
-    // will be distributed across the 10 threads in the pool.
-    // Their owning thread will create and store them.
-    // They will not be dropped until they are either 
-    // requested to be dropped or until the thread pool
-    // itself is dropped.
-    thread_pool
-        .send_and_receive((0..1000u64)
-        .expect("thread pool to be available")
-        .map(|i| RandomsAddRequest(i)))
-        .for_each(|response: AddResponse| 
-            assert!(response.success()));
+// Create two chat rooms (ID 1 and 2)
+// The pool will route these to the appropriate threads based on ID
+thread_pool
+    .send_and_receive(vec![
+        ChatRoomInit(1),
+        ChatRoomInit(2),
+    ].into_iter())
+    .expect("creation requests")
+    .for_each(|_| {});
 
-    // now create 1000 messages asking each of them for the sum of
-    // the Randoms objects contained random numbers
-    // The message will be routed to the thread to where
-    // the targeted object resides
-    // This call will block until all of the work is done and
-    // the responses returned
-    let sums: Vec<SumResponse> = thread_pool
-        .send_and_receive((0..1000u64)
-        .expect("thread pool to be available")
-        .map(|i| SumRequest(i)))
-        .collect();
-    assert_eq!(1000, sums.len());
+// Post messages to Room 1
+thread_pool
+    .send_and_receive(vec![
+        PostRequest(1, "Alice".to_string(), "Hello!".to_string()),
+        PostRequest(1, "Bob".to_string(), "Hi Alice!".to_string()),
+    ].into_iter())
+    .expect("messages to send")
+    .for_each(|response| {
+        println!("Message index: {}", response.result);
+    });
 
-    // now get the mean of the randoms for object with id 0, this 
-    // will execute on thread 0.
-    // this call will block until complete
-    let mean_response_0: MeanResponse = thread_pool
-        .send_and_receive_once(MeanRequest(0))
-        .expect("thread pool to be available");
-    println!("{}", mean_response_0.mean());
+// Get history from Room 1
+let history = thread_pool
+    .send_and_receive(vec![GetHistoryRequest(1)].into_iter())
+    .expect("request to send")
+    .next()
+    .expect("response")
+    .result;
 
-    // remove object with id 1
-    // it will be dropped from the thread where it was residing
-    // freeing up any memory it was using
-    assert!(thread_pool
-        .send_and_receive_once(RemovePoolItemRequest(1))
-        .expect("thread pool to be available")
-        .success());
-
-    // add a new object with id 1000
-    assert!(thread_pool
-        .send_and_receive_once(RandomsAddRequest(1000))
-        .expect("thread pool to be available")
-        .success());
-
-    // all objects are dropped when the thread pool is
-    // dropped, the worker threads are shutdown and
-    // joined back the the main thread
-    drop(thread_pool);
-
+assert_eq!(history.len(), 2);
+assert_eq!(history[0], "Alice: Hello!");
 ```
 
 The original motivation for the library was to cope with hierarchies of long-lived dependent objects, each of which
