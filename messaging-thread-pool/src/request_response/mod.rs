@@ -26,6 +26,33 @@ where
     }
 }
 
+impl<P, T> RequestResponse<P, T>
+where
+    T: RequestWithResponse<P>,
+    P: PoolItem,
+{
+    pub fn request(&self) -> &T {
+        let RequestResponse::Request(request) = self else {
+            panic!("not expected");
+        };
+        request
+    }
+}
+
+impl<P, T> Clone for RequestResponse<P, T>
+where
+    T: RequestWithResponse<P> + Clone,
+    T::Response: Clone,
+    P: PoolItem,
+{
+    fn clone(&self) -> Self {
+        match self {
+            Self::Request(request) => Self::Request(request.clone()),
+            Self::Response(response) => Self::Response(response.clone()),
+        }
+    }
+}
+
 impl<P, T> PartialEq for RequestResponse<P, T>
 where
     T: RequestWithResponse<P> + PartialEq,
@@ -41,17 +68,12 @@ where
     }
 }
 
-impl<P, T> RequestResponse<P, T>
+impl<P, T> Eq for RequestResponse<P, T>
 where
-    T: RequestWithResponse<P>,
+    T: RequestWithResponse<P> + Eq,
+    T::Response: Eq,
     P: PoolItem,
 {
-    pub fn request(&self) -> &T {
-        let RequestResponse::Request(request) = self else {
-            panic!("not expected");
-        };
-        request
-    }
 }
 
 #[cfg(test)]

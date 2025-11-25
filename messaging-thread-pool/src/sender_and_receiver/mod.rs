@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn send_and_receive_one_functions_as_expected() {
-        let expected_response = MeanResponse { id: 1, mean: 10 };
+        let expected_response = MeanResponse { id: 1, result: 10 };
         let target = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
             vec![MeanRequest(1)],
             vec![expected_response.clone()],

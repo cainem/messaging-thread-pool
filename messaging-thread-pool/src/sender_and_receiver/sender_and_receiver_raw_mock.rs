@@ -165,8 +165,8 @@ mod tests {
 
     #[test]
     fn two_responses_returned_over_multiple_heterogeneous_requests() {
-        let response_0 = MeanResponse { id: 1, mean: 22 };
-        let response_1 = SumResponse { id: 2, sum: 44 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
+        let response_1 = SumResponse { id: 2, result: 44 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new(vec![
             response_0.clone().into(),
@@ -205,8 +205,8 @@ mod tests {
 
     #[test]
     fn two_responses_only_one_returned_is_complete_returns_false() {
-        let response_0 = MeanResponse { id: 1, mean: 22 };
-        let response_1 = MeanResponse { id: 2, mean: 44 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
+        let response_1 = MeanResponse { id: 2, result: 44 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new(vec![
             response_0.clone().into(),
@@ -226,8 +226,8 @@ mod tests {
 
     #[test]
     fn two_responses_returned_over_multiple_requests() {
-        let response_0 = MeanResponse { id: 1, mean: 22 };
-        let response_1 = MeanResponse { id: 2, mean: 44 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
+        let response_1 = MeanResponse { id: 2, result: 44 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new(vec![
             response_0.clone().into(),
@@ -255,7 +255,7 @@ mod tests {
     #[should_panic]
     fn one_expected_request_differs_from_one_actual_request() {
         let request_0 = MeanRequest(1);
-        let response_0 = MeanResponse { id: 1, mean: 22 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new_with_expected_requests(
             vec![MeanRequest(2).into()],
@@ -273,7 +273,7 @@ mod tests {
     #[should_panic(expected = "count of expected [1] less than actual requests [2]")]
     fn one_expected_request_actual_requests_2_panics() {
         let request_0 = MeanRequest(1);
-        let response_0 = MeanResponse { id: 1, mean: 22 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new_with_expected_requests(
             vec![request_0.into()],
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "number of requests do not match number of responses")]
     fn unmatched_requests_and_responses() {
-        let response_0 = MeanResponse { id: 1, mean: 22 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new_with_expected_requests(
             vec![],
@@ -316,7 +316,7 @@ mod tests {
 
     #[test]
     fn one_response_only_returns_expected_response() {
-        let response_0 = MeanResponse { id: 1, mean: 22 };
+        let response_0 = MeanResponse { id: 1, result: 22 };
 
         let mock = SenderAndReceiverRawMock::<Randoms>::new(vec![response_0.clone().into()]);
 
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn one_response_empty_requests_returns_empty_iterator() {
         let mock =
-            SenderAndReceiverRawMock::<Randoms>::new(vec![MeanResponse { id: 1, mean: 0 }.into()]);
+            SenderAndReceiverRawMock::<Randoms>::new(vec![MeanResponse { id: 1, result: 0 }.into()]);
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())

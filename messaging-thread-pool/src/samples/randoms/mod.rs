@@ -1,12 +1,10 @@
-pub mod randoms_api;
-
-mod pool_item;
-
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
 use tracing::{Level, event};
 
-use crate::id_targeted::IdTargeted;
+use crate::pool_item;
+use crate::IdTargeted;
+use crate::ThreadShutdownResponse;
 
 /// This represents a simple collection of random numbers which is hosted inside the thread pool
 ///
@@ -25,6 +23,13 @@ pub struct Randoms {
     pub numbers: Vec<u64>,
 }
 
+impl IdTargeted for Randoms {
+    fn id(&self) -> u64 {
+        self.id
+    }
+}
+
+#[pool_item(Shutdown = "shutdown_pool_impl")]
 impl Randoms {
     pub fn new(id: u64) -> Self {
         let mut rng = Xoshiro256Plus::seed_from_u64(id);
@@ -32,12 +37,18 @@ impl Randoms {
         Self { id, numbers }
     }
 
+    pub fn shutdown_pool_impl(&self) -> Vec<ThreadShutdownResponse> {
+        vec![ThreadShutdownResponse::new(self.id, vec![])]
+    }
+
+    #[messaging(MeanRequest, MeanResponse)]
     pub fn mean(&self) -> u128 {
         event!(Level::DEBUG, "evaluating mean");
         self.numbers.iter().map(|n| *n as u128).sum::<u128>() / self.numbers.len() as u128
     }
 
     #[unsafe(no_mangle)]
+    #[messaging(SumRequest, SumResponse)]
     pub fn sum(&self) -> u128 {
         event!(Level::DEBUG, "evaluating sum");
         // do this very slowly with unnecessary loops
@@ -49,10 +60,23 @@ impl Randoms {
         }
         0
     }
+
+    #[messaging(PanicRequest, PanicResponse)]
+    pub fn panic_call(&self) {
+        panic!("request to panic received")
+    }
 }
 
-impl IdTargeted for Randoms {
-    fn id(&self) -> u64 {
-        self.id
+pub use RandomsInit as RandomsAddRequest;
+
+impl MeanResponse {
+    pub fn mean(&self) -> u128 {
+        self.result
+    }
+}
+
+impl SumResponse {
+    pub fn sum(&self) -> u128 {
+        self.result
     }
 }

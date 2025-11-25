@@ -38,7 +38,7 @@ where
             .contained_thread_pool
             .send_and_receive(self.contained_ids.iter().map(|id| MeanRequest(*id)))
             .expect("contained thread pool to be available")
-            .map(|res: MeanResponse| res.mean)
+            .map(|res: MeanResponse| res.mean())
             .sum();
 
         result
@@ -64,8 +64,8 @@ mod tests {
         let responses: Vec<ThreadRequestResponse<Randoms>> = vec![
             AddResponse::new(1, Ok(1)).into(),
             AddResponse::new(2, Ok(2)).into(),
-            MeanResponse { id: 1, mean: 3 }.into(),
-            MeanResponse { id: 2, mean: 5 }.into(),
+            MeanResponse { id: 1, result: 3 }.into(),
+            MeanResponse { id: 2, result: 5 }.into(),
         ];
 
         // create a mock thread pool

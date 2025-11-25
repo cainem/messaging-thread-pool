@@ -445,7 +445,7 @@ mod tests {
         let response: SumResponse = response_receive.recv().unwrap().into();
         // there should be one get state response message on the response channel
         assert_eq!(id, response.id);
-        assert!(response.sum > 0);
+        assert!(response.sum() > 0);
     }
 
     #[test]

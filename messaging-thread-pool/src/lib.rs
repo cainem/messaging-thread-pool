@@ -18,63 +18,12 @@
 //!
 //! The original motivation was to provide support for a hierarchy of dependent, long-lived objects,
 //! that each required their own thread pools to avoid complex threading dependencies.
-//! The objects in the thread pools were all CPU bound i.e. did not perform any significant I/O.
-//!
-//! # Example
-//! ```
-//! use messaging_thread_pool::{ThreadPool, samples::*};
-//!
-//!    // Create a thread pool with 4 threads
-//!    let thread_pool = ThreadPool::<ChatRoom>::new(4);
-//!
-//!    // Create two chat rooms (ID 1 and 2)
-//!    // The pool will route these to the appropriate threads based on ID
-//!    thread_pool
-//!        .send_and_receive(vec![
-//!            ChatRoomInit(1),
-//!            ChatRoomInit(2),
-//!        ].into_iter())
-//!        .expect("creation requests")
-//!        .for_each(|_| {});
-//!
-//!    // Post messages to Room 1
-//!    thread_pool
-//!        .send_and_receive(vec![
-//!            PostRequest(1, "Alice".to_string(), "Hello!".to_string()),
-//!            PostRequest(1, "Bob".to_string(), "Hi Alice!".to_string()),
-//!        ].into_iter())
-//!        .expect("messages to send")
-//!        .for_each(|response| {
-//!            // The response is the index of the message
-//!            assert!(response.result < 100);
-//!        });
-//!
-//!    // Get history from Room 1
-//!    let history = thread_pool
-//!        .send_and_receive(vec![GetHistoryRequest(1)].into_iter())
-//!        .expect("request to send")
-//!        .next()
-//!        .expect("response")
-//!        .result;
-//!
-//!    assert_eq!(history.len(), 2);
-//!    assert_eq!(history[0], "Alice: Hello!");
-//! ```
-//!
-//! # Limitations
-//!
-//! The thread pool cannot be dynamically sized.\
-//! It is fixed at creation.\
-//! As there is a ThreadShutdown request it could be implied that therefore there should be a ThreadCreation request.
-//! This is not the case, and it is not intended that individual threads will be shutdown in isolation and in fact
-//! this will lead to the thread pool panicking.
-//! The shutdown request is intended to be called only when the whole thread pool is finished with and in fact it
-//! is probably best to avoid using it and to just drop the thread pool (which internally sends out all the required shutdown messages).
-//!
-//! It was not really intended for anything other than long-lived CPU bound elements.
-//!
-use std::{cell::RefCell, sync::RwLock};
-use thread_endpoint::ThreadEndpoint;
+
+extern crate self as messaging_thread_pool;
+
+use std::cell::RefCell;
+use std::sync::RwLock;
+use crate::thread_endpoint::ThreadEndpoint;
 
 pub mod api_specification;
 pub mod global_test_scope;

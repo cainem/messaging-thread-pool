@@ -48,9 +48,9 @@ pub fn example_random_batches_() {
 
     // this call distributes the work across the thread pool and blocks until all of the work is done
     let sum_of_sums: Vec<u128> = randoms_batch_thread_pool
-        .send_and_receive((0..10).map(SumOfSumsRequest))
+        .send_and_receive((0..10).map(|id| SumOfSumsRequest(id, std::marker::PhantomData)))
         .expect("thread pool to be available")
-        .map(|response: SumOfSumsResponse| response.sum_of_sums())
+        .map(|response: SumOfSumsResponse<RandomsThreadPool>| response.result)
         .collect();
 
     dbg!(sum_of_sums);
@@ -68,7 +68,7 @@ pub fn example_random_batches_with_mock_thread_pool() {
     let randoms_thread_pool =
         SenderAndReceiverMock::<Randoms, SumRequest>::new_with_expected_requests(
             vec![SumRequest(2), SumRequest(4)],
-            vec![SumResponse { id: 2, sum: 2 }, SumResponse { id: 4, sum: 4 }],
+            vec![SumResponse { id: 2, result: 2 }, SumResponse { id: 4, result: 4 }],
         );
 
     // new create a RandomsBatch using the mock thread pool

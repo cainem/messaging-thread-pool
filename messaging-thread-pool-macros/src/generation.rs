@@ -1,9 +1,9 @@
-use crate::parsing::MessagingArgs;
+use crate::parsing::{MessagingArgs, PoolItemArgs};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{FnArg, Ident, ImplItem, ItemImpl, ReturnType, Type};
 
-pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
+pub fn generate_pool_item_impl(mut input: ItemImpl, args: PoolItemArgs) -> TokenStream {
     let self_ty = &input.self_ty;
     let generics = &input.generics;
 
@@ -14,7 +14,15 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
     };
 
     let api_name = format_ident!("{}Api", struct_name);
-    let init_name = format_ident!("{}Init", struct_name);
+    let init_name = if let Some(_init_type) = &args.init_type {
+        // If custom init is provided, we don't generate an Init struct name to use for generation
+        // but we need a name to refer to it in the impl.
+        // Actually, we can just use the type directly.
+        // But for consistency with existing code structure, let's handle it carefully.
+        format_ident!("{}Init", struct_name) // Placeholder, might not be used if custom
+    } else {
+        format_ident!("{}Init", struct_name)
+    };
 
     let mut generated_items = Vec::new();
     let mut api_variants = Vec::new();
@@ -99,16 +107,17 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
                 // Let's just inline the type in the enum variant to avoid alias complexity with generics.
                 // Or update the alias generation.
                 // Let's inline it for simplicity in this refactor.
-                
+
                 // Wait, I need to remove the alias generation or update it.
                 // The original code used aliases.
                 // Let's see: `pub type #alias_name = ...`
                 // If I change it to inline, I don't need `type_aliases`.
-                
+
                 // Let's try to update the alias to be generic.
                 let (impl_generics, ty_generics, _where_clause) = generics.split_for_impl();
                 type_aliases.push(quote! {
                     #[allow(non_camel_case_types)]
+                    #[allow(type_alias_bounds)]
                     pub type #alias_name #impl_generics = messaging_thread_pool::request_response::RequestResponse<#struct_name #ty_generics, #request_name #ty_generics>;
                 });
 
@@ -137,7 +146,9 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
         generics,
     ));
 
-    generated_items.push(generate_init_struct(&init_name, struct_name, generics));
+    if args.init_type.is_none() {
+        generated_items.push(generate_init_struct(&init_name, struct_name, generics));
+    }
 
     generated_items.push(generate_pool_item_trait_impl(
         self_ty,
@@ -145,6 +156,8 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
         &api_name,
         &process_message_arms,
         generics,
+        &args.init_type,
+        &args.shutdown_method,
     ));
 
     quote! {
@@ -163,7 +176,7 @@ fn generate_request_struct(
 ) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let phantom_data = if !generics.params.is_empty() {
-        quote! { pub std::marker::PhantomData<#ty_generics>, }
+        quote! { pub std::marker::PhantomData #ty_generics, }
     } else {
         quote! {}
     };
@@ -204,13 +217,13 @@ fn generate_response_struct(
 ) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let phantom_data = if !generics.params.is_empty() {
-        quote! { pub phantom: std::marker::PhantomData<#ty_generics>, }
+        quote! { pub phantom: std::marker::PhantomData #ty_generics, }
     } else {
         quote! {}
     };
 
     quote! {
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, PartialEq, Eq)]
         pub struct #response_name #impl_generics #where_clause {
             pub id: u64,
             pub result: #result_type,
@@ -301,7 +314,7 @@ fn generate_api_enum(
     quote! {
         #(#type_aliases)*
 
-        #[derive(Debug)]
+        #[derive(Debug, PartialEq, Eq, Clone)]
         pub enum #api_name #impl_generics #where_clause {
             #(#api_variants),*
         }
@@ -318,16 +331,20 @@ fn generate_api_enum(
     }
 }
 
-fn generate_init_struct(init_name: &Ident, struct_name: &Ident, generics: &syn::Generics) -> TokenStream {
+fn generate_init_struct(
+    init_name: &Ident,
+    struct_name: &Ident,
+    generics: &syn::Generics,
+) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let phantom_data = if !generics.params.is_empty() {
-        quote! { pub std::marker::PhantomData<#ty_generics>, }
+        quote! { pub std::marker::PhantomData #ty_generics, }
     } else {
         quote! {}
     };
 
     quote! {
-        #[derive(Debug)]
+        #[derive(Debug, PartialEq, Eq, Clone)]
         pub struct #init_name #impl_generics (pub u64, #phantom_data) #where_clause;
 
         impl #impl_generics messaging_thread_pool::IdTargeted for #init_name #ty_generics #where_clause {
@@ -356,12 +373,32 @@ fn generate_pool_item_trait_impl(
     api_name: &Ident,
     process_message_arms: &[TokenStream],
     generics: &syn::Generics,
+    custom_init_type: &Option<Type>,
+    shutdown_method: &Option<Ident>,
 ) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
+    let init_type_def = if let Some(init_type) = custom_init_type {
+        quote! { #init_type }
+    } else {
+        quote! { #init_name #ty_generics }
+    };
+
+    let new_pool_item_body = if custom_init_type.is_some() {
+        quote! { Ok(Self::new(request)) }
+    } else {
+        quote! { Ok(Self::new(request.0)) }
+    };
+
+    let shutdown_body = if let Some(method_name) = shutdown_method {
+        quote! { self.#method_name() }
+    } else {
+        quote! { Vec::default() }
+    };
+
     quote! {
         impl #impl_generics messaging_thread_pool::PoolItem for #self_ty #where_clause {
-            type Init = #init_name #ty_generics;
+            type Init = #init_type_def;
             type Api = #api_name #ty_generics;
             type ThreadStartInfo = ();
 
@@ -377,11 +414,11 @@ fn generate_pool_item_trait_impl(
             }
 
             fn new_pool_item(request: Self::Init) -> Result<Self, messaging_thread_pool::pool_item::NewPoolItemError> {
-                Ok(Self::new(request.0))
+                #new_pool_item_body
             }
 
             fn shutdown_pool(&self) -> Vec<messaging_thread_pool::thread_request_response::ThreadShutdownResponse> {
-                Vec::default()
+                #shutdown_body
             }
         }
     }
@@ -403,7 +440,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
 
         // Check for key generated components
@@ -426,7 +463,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
 
         assert!(output_str.contains("struct Req1"));
@@ -448,7 +485,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
 
         assert!(output_str.contains("pub result : ()"));
@@ -468,7 +505,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
         assert!(output_str.contains("compile_error ! (\"Expected struct type\")"));
     }
@@ -482,7 +519,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
         assert!(output_str.contains("compile_error"));
     }
@@ -498,7 +535,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
         // Should still generate for method
         assert!(output_str.contains("struct Req"));
@@ -512,7 +549,7 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
         // Should generate empty Api enum and PoolItem impl
         assert!(output_str.contains("enum MyStructApi"));
@@ -530,14 +567,55 @@ mod tests {
             }
         };
 
-        let output = generate_pool_item_impl(input);
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
         let output_str = output.to_string();
 
         assert!(output_str.contains("struct Req < T >"));
         assert!(output_str.contains("struct Resp < T >"));
         assert!(output_str.contains("enum MyGenericStructApi < T >"));
-        assert!(output_str.contains("impl < T > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"));
+        assert!(output_str
+            .contains("impl < T > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"));
         // Check for PhantomData presence, might be fully qualified
         assert!(output_str.contains("PhantomData"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_custom_init() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                #[messaging(Req, Resp)]
+                pub fn method(&self) {}
+            }
+        };
+
+        let args = PoolItemArgs {
+            init_type: Some(syn::parse_quote!(MyCustomInit)),
+            shutdown_method: None,
+        };
+
+        let output = generate_pool_item_impl(input, args);
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("type Init = MyCustomInit ;"));
+        assert!(!output_str.contains("struct MyStructInit")); // Should not generate default init
+        assert!(output_str.contains("Ok (Self :: new (request))")); // Should pass request directly
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_generic_with_bounds() {
+        let input: ItemImpl = parse_quote! {
+            impl<T: Debug> MyGenericStruct<T> {
+                #[messaging(Req, Resp)]
+                pub fn method(&self, arg: T) -> T {
+                    arg
+                }
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("struct Req < T : Debug >"));
+        assert!(output_str.contains("impl < T : Debug > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"));
     }
 }

@@ -74,7 +74,7 @@ mod tests {
 
     use crate::{
         ThreadPool,
-        samples::{panic_request::PanicRequest, *},
+        samples::*,
         thread_request_response::*,
     };
 

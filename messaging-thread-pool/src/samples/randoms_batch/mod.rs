@@ -1,12 +1,75 @@
-mod pool_item;
-pub mod randoms_batch_api;
-
+use std::fmt::Debug;
 use std::sync::Arc;
 
-use samples::InnerThreadPool;
-
-use super::{RandomsAddRequest, RandomsBatchAddRequest, SumRequest, SumResponse};
+use crate::samples::Randoms;
 use crate::{id_provider::IdProvider, *};
+use crate::pool_item;
+
+use super::{RandomsAddRequest, SumRequest, SumResponse};
+
+/// Define a trait to reduce type complexity for inner thread pool
+pub trait InnerThreadPool: Debug + Send {
+    // the "thread pool" is really anything that implements this trait
+    type ThreadPool: SenderAndReceiver<Randoms> + Send + Sync + Debug;
+}
+
+/// define a struct to identify concrete type of thread pool
+#[derive(Debug)]
+pub struct RandomsThreadPool;
+impl InnerThreadPool for RandomsThreadPool {
+    type ThreadPool = ThreadPool<Randoms>;
+}
+
+/// implement InnerThreadPool trait for mock thread pool
+impl<T: RequestWithResponse<Randoms> + Send + Sync> InnerThreadPool
+    for SenderAndReceiverMock<Randoms, T>
+where
+    <T as request_with_response::RequestWithResponse<Randoms>>::Response: Send,
+{
+    type ThreadPool = SenderAndReceiverMock<Randoms, T>;
+}
+
+/// This is the request that is sent to create a new RandomsBatch
+/// It contains a field to configure the size of the contained child thread pool.
+/// As the this thread pool is shared it will only ever be used by the first request to create a RandomsBatch
+///
+/// RandomsBatches will also need to share a common "source of ids" for the Randoms that it will create
+#[derive(Debug, Clone)]
+pub struct RandomsBatchAddRequest<P: InnerThreadPool> {
+    pub id: u64,
+    pub number_of_contained_randoms: usize,
+    pub id_provider: Arc<dyn IdProvider>,
+    // this thread pool will be shared by all of the Randoms
+    pub randoms_thread_pool: Arc<P::ThreadPool>,
+}
+
+impl<P: InnerThreadPool> RandomsBatchAddRequest<P> {
+    pub fn id_provider(&self) -> &dyn IdProvider {
+        self.id_provider.as_ref()
+    }
+
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+}
+
+impl<P: InnerThreadPool> IdTargeted for RandomsBatchAddRequest<P> {
+    fn id(&self) -> u64 {
+        self.id
+    }
+}
+
+impl<P: InnerThreadPool> RequestWithResponse<RandomsBatch<P>> for RandomsBatchAddRequest<P> {
+    type Response = AddResponse;
+}
+
+impl<P: InnerThreadPool> From<RandomsBatchAddRequest<P>>
+    for ThreadRequestResponse<RandomsBatch<P>>
+{
+    fn from(request: RandomsBatchAddRequest<P>) -> Self {
+        ThreadRequestResponse::<RandomsBatch<P>>::AddPoolItem(RequestResponse::Request(request))
+    }
+}
 
 /// An example of an element that contains a child thread pool
 ///
@@ -27,6 +90,7 @@ pub struct RandomsBatch<P: InnerThreadPool> {
     pub randoms_thread_pool: Arc<P::ThreadPool>,
 }
 
+#[pool_item(Init = "RandomsBatchAddRequest<P>")]
 impl<P: InnerThreadPool> RandomsBatch<P> {
     pub fn new(add_request: RandomsBatchAddRequest<P>) -> Self {
         let mut new = Self {
@@ -56,6 +120,7 @@ impl<P: InnerThreadPool> RandomsBatch<P> {
         self.randoms_thread_pool.as_ref()
     }
 
+    #[messaging(SumOfSumsRequest, SumOfSumsResponse)]
     pub fn sum_of_sums(&self) -> u128 {
         // to get the sum of sums need to message the controls Randoms to get their sums
         // and then add them all up
