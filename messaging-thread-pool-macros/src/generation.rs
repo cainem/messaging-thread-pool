@@ -5,6 +5,7 @@ use syn::{FnArg, Ident, ImplItem, ItemImpl, ReturnType, Type};
 
 pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
     let self_ty = &input.self_ty;
+    let generics = &input.generics;
 
     let struct_name = if let Type::Path(type_path) = self_ty.as_ref() {
         &type_path.path.segments.last().unwrap().ident
@@ -66,6 +67,7 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
                     struct_name,
                     &response_name,
                     &api_name,
+                    generics,
                 ));
 
                 let result_type = return_type.unwrap_or_else(|| syn::parse_quote!(()));
@@ -75,6 +77,7 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
                     struct_name,
                     &api_name,
                     &request_name,
+                    generics,
                 ));
 
                 generated_items.push(generate_from_response_impl(
@@ -82,16 +85,35 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
                     struct_name,
                     &api_name,
                     &request_name,
+                    generics,
                 ));
 
                 let alias_name = format_ident!("{}_{}_RequestResponse", struct_name, request_name);
+                // Note: type aliases for generic types are tricky if we don't include generics in the alias.
+                // But we only use this alias in the enum variant.
+                // If struct_name is generic, the alias needs to be generic?
+                // Or we can just inline the type in the enum variant and skip the alias if it's too complex.
+                // For now, let's try to keep the alias but make it generic if needed.
+                // Actually, the alias is used in `api_variants`.
+                // If we make the alias generic, we need to pass generics to it.
+                // Let's just inline the type in the enum variant to avoid alias complexity with generics.
+                // Or update the alias generation.
+                // Let's inline it for simplicity in this refactor.
+                
+                // Wait, I need to remove the alias generation or update it.
+                // The original code used aliases.
+                // Let's see: `pub type #alias_name = ...`
+                // If I change it to inline, I don't need `type_aliases`.
+                
+                // Let's try to update the alias to be generic.
+                let (impl_generics, ty_generics, _where_clause) = generics.split_for_impl();
                 type_aliases.push(quote! {
                     #[allow(non_camel_case_types)]
-                    pub type #alias_name = messaging_thread_pool::request_response::RequestResponse<#struct_name, #request_name>;
+                    pub type #alias_name #impl_generics = messaging_thread_pool::request_response::RequestResponse<#struct_name #ty_generics, #request_name #ty_generics>;
                 });
 
                 api_variants.push(quote! {
-                    #request_name(#alias_name)
+                    #request_name(#alias_name #ty_generics)
                 });
                 request_names.push(request_name.clone());
 
@@ -101,6 +123,7 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
                     method_name,
                     &request_fields,
                     &response_name,
+                    generics,
                 ));
             }
         }
@@ -111,15 +134,17 @@ pub fn generate_pool_item_impl(mut input: ItemImpl) -> TokenStream {
         &type_aliases,
         &api_variants,
         &request_names,
+        generics,
     ));
 
-    generated_items.push(generate_init_struct(&init_name, struct_name));
+    generated_items.push(generate_init_struct(&init_name, struct_name, generics));
 
     generated_items.push(generate_pool_item_trait_impl(
         self_ty,
         &init_name,
         &api_name,
         &process_message_arms,
+        generics,
     ));
 
     quote! {
@@ -134,23 +159,31 @@ fn generate_request_struct(
     struct_name: &Ident,
     response_name: &Ident,
     api_name: &Ident,
+    generics: &syn::Generics,
 ) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let phantom_data = if !generics.params.is_empty() {
+        quote! { pub std::marker::PhantomData<#ty_generics>, }
+    } else {
+        quote! {}
+    };
+
     quote! {
         #[derive(Debug, Clone, PartialEq, Eq)]
-        pub struct #request_name( #(pub #request_fields),* );
+        pub struct #request_name #impl_generics ( #(pub #request_fields),*, #phantom_data ) #where_clause;
 
-        impl messaging_thread_pool::IdTargeted for #request_name {
+        impl #impl_generics messaging_thread_pool::IdTargeted for #request_name #ty_generics #where_clause {
             fn id(&self) -> u64 {
                 self.0
             }
         }
 
-        impl messaging_thread_pool::RequestWithResponse<#struct_name> for #request_name {
-            type Response = #response_name;
+        impl #impl_generics messaging_thread_pool::RequestWithResponse<#struct_name #ty_generics> for #request_name #ty_generics #where_clause {
+            type Response = #response_name #ty_generics;
         }
 
-        impl From<#request_name> for messaging_thread_pool::ThreadRequestResponse<#struct_name> {
-            fn from(request: #request_name) -> Self {
+        impl #impl_generics From<#request_name #ty_generics> for messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics> #where_clause {
+            fn from(request: #request_name #ty_generics) -> Self {
                 messaging_thread_pool::ThreadRequestResponse::MessagePoolItem(
                     #api_name::#request_name(
                         messaging_thread_pool::request_response::RequestResponse::Request(request)
@@ -167,16 +200,25 @@ fn generate_response_struct(
     struct_name: &Ident,
     api_name: &Ident,
     request_name: &Ident,
+    generics: &syn::Generics,
 ) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let phantom_data = if !generics.params.is_empty() {
+        quote! { pub phantom: std::marker::PhantomData<#ty_generics>, }
+    } else {
+        quote! {}
+    };
+
     quote! {
         #[derive(Debug, Clone)]
-        pub struct #response_name {
+        pub struct #response_name #impl_generics #where_clause {
             pub id: u64,
             pub result: #result_type,
+            #phantom_data
         }
 
-        impl From<messaging_thread_pool::ThreadRequestResponse<#struct_name>> for #response_name {
-            fn from(response: messaging_thread_pool::ThreadRequestResponse<#struct_name>) -> Self {
+        impl #impl_generics From<messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics>> for #response_name #ty_generics #where_clause {
+            fn from(response: messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics>) -> Self {
                 if let messaging_thread_pool::ThreadRequestResponse::MessagePoolItem(
                     #api_name::#request_name(
                         messaging_thread_pool::request_response::RequestResponse::Response(res)
@@ -196,10 +238,13 @@ fn generate_from_response_impl(
     struct_name: &Ident,
     api_name: &Ident,
     request_name: &Ident,
+    generics: &syn::Generics,
 ) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     quote! {
-        impl From<#response_name> for messaging_thread_pool::ThreadRequestResponse<#struct_name> {
-            fn from(response: #response_name) -> Self {
+        impl #impl_generics From<#response_name #ty_generics> for messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics> #where_clause {
+            fn from(response: #response_name #ty_generics) -> Self {
                 messaging_thread_pool::ThreadRequestResponse::MessagePoolItem(
                     #api_name::#request_name(
                         messaging_thread_pool::request_response::RequestResponse::Response(response)
@@ -216,10 +261,17 @@ fn generate_process_message_arm(
     method_name: &Ident,
     request_fields: &[Type],
     response_name: &Ident,
+    generics: &syn::Generics,
 ) -> TokenStream {
     let call_args = if request_fields.len() > 1 {
         let indices = (1..request_fields.len()).map(syn::Index::from);
         quote! { #(request.#indices),* }
+    } else {
+        quote! {}
+    };
+
+    let phantom_init = if !generics.params.is_empty() {
+        quote! { phantom: std::marker::PhantomData, }
     } else {
         quote! {}
     };
@@ -232,7 +284,7 @@ fn generate_process_message_arm(
             };
             let id = messaging_thread_pool::IdTargeted::id(&request);
             let result = self.#method_name(#call_args);
-            #response_name { id, result }.into()
+            #response_name { id, result, #phantom_init }.into()
         }
     }
 }
@@ -242,16 +294,19 @@ fn generate_api_enum(
     type_aliases: &[TokenStream],
     api_variants: &[TokenStream],
     request_names: &[Ident],
+    generics: &syn::Generics,
 ) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     quote! {
         #(#type_aliases)*
 
         #[derive(Debug)]
-        pub enum #api_name {
+        pub enum #api_name #impl_generics #where_clause {
             #(#api_variants),*
         }
 
-        impl messaging_thread_pool::IdTargeted for #api_name {
+        impl #impl_generics messaging_thread_pool::IdTargeted for #api_name #ty_generics #where_clause {
             fn id(&self) -> u64 {
                 match self {
                     #(
@@ -263,23 +318,30 @@ fn generate_api_enum(
     }
 }
 
-fn generate_init_struct(init_name: &Ident, struct_name: &Ident) -> TokenStream {
+fn generate_init_struct(init_name: &Ident, struct_name: &Ident, generics: &syn::Generics) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let phantom_data = if !generics.params.is_empty() {
+        quote! { pub std::marker::PhantomData<#ty_generics>, }
+    } else {
+        quote! {}
+    };
+
     quote! {
         #[derive(Debug)]
-        pub struct #init_name(pub u64);
+        pub struct #init_name #impl_generics (pub u64, #phantom_data) #where_clause;
 
-        impl messaging_thread_pool::IdTargeted for #init_name {
+        impl #impl_generics messaging_thread_pool::IdTargeted for #init_name #ty_generics #where_clause {
             fn id(&self) -> u64 {
                 self.0
             }
         }
 
-        impl messaging_thread_pool::RequestWithResponse<#struct_name> for #init_name {
+        impl #impl_generics messaging_thread_pool::RequestWithResponse<#struct_name #ty_generics> for #init_name #ty_generics #where_clause {
             type Response = messaging_thread_pool::thread_request_response::AddResponse;
         }
 
-        impl From<#init_name> for messaging_thread_pool::ThreadRequestResponse<#struct_name> {
-            fn from(request: #init_name) -> Self {
+        impl #impl_generics From<#init_name #ty_generics> for messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics> #where_clause {
+            fn from(request: #init_name #ty_generics) -> Self {
                 messaging_thread_pool::ThreadRequestResponse::AddPoolItem(
                     messaging_thread_pool::request_response::RequestResponse::Request(request)
                 )
@@ -293,11 +355,14 @@ fn generate_pool_item_trait_impl(
     init_name: &Ident,
     api_name: &Ident,
     process_message_arms: &[TokenStream],
+    generics: &syn::Generics,
 ) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     quote! {
-        impl messaging_thread_pool::PoolItem for #self_ty {
-            type Init = #init_name;
-            type Api = #api_name;
+        impl #impl_generics messaging_thread_pool::PoolItem for #self_ty #where_clause {
+            type Init = #init_name #ty_generics;
+            type Api = #api_name #ty_generics;
             type ThreadStartInfo = ();
 
             fn process_message(&mut self, request: Self::Api) -> messaging_thread_pool::ThreadRequestResponse<Self> {
@@ -452,5 +517,27 @@ mod tests {
         // Should generate empty Api enum and PoolItem impl
         assert!(output_str.contains("enum MyStructApi"));
         assert!(output_str.contains("impl messaging_thread_pool :: PoolItem for MyStruct"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_generic() {
+        let input: ItemImpl = parse_quote! {
+            impl<T> MyGenericStruct<T> {
+                #[messaging(Req, Resp)]
+                pub fn method(&self, arg: T) -> T {
+                    arg
+                }
+            }
+        };
+
+        let output = generate_pool_item_impl(input);
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("struct Req < T >"));
+        assert!(output_str.contains("struct Resp < T >"));
+        assert!(output_str.contains("enum MyGenericStructApi < T >"));
+        assert!(output_str.contains("impl < T > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"));
+        // Check for PhantomData presence, might be fully qualified
+        assert!(output_str.contains("PhantomData"));
     }
 }
