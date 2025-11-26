@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use crate::pool_item;
 use crate::samples::Randoms;
 use crate::{id_provider::IdProvider, *};
-use crate::pool_item;
 
 use super::{RandomsAddRequest, SumRequest, SumResponse};
 

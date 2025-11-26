@@ -55,9 +55,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
             // this call distributes the work across the thread pool and blocks until all the work is done
             let _sum_of_sums: Vec<u128> = randoms_batch_thread_pool
-                .send_and_receive((0..10).map(SumOfSumsRequest))
+                .send_and_receive((0..10).map(|id| SumOfSumsRequest(id, std::marker::PhantomData)))
                 .expect("thread pool to be available")
-                .map(|response: SumOfSumsResponse| response.sum_of_sums())
+                .map(|response: SumOfSumsResponse<RandomsThreadPool>| response.result)
                 .collect();
         })
     });

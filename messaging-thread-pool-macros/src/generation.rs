@@ -616,6 +616,8 @@ mod tests {
         let output_str = output.to_string();
 
         assert!(output_str.contains("struct Req < T : Debug >"));
-        assert!(output_str.contains("impl < T : Debug > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"));
+        assert!(output_str.contains(
+            "impl < T : Debug > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"
+        ));
     }
 }

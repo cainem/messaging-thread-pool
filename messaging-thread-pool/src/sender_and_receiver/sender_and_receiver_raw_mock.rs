@@ -332,8 +332,9 @@ mod tests {
 
     #[test]
     fn one_response_empty_requests_returns_empty_iterator() {
-        let mock =
-            SenderAndReceiverRawMock::<Randoms>::new(vec![MeanResponse { id: 1, result: 0 }.into()]);
+        let mock = SenderAndReceiverRawMock::<Randoms>::new(vec![
+            MeanResponse { id: 1, result: 0 }.into(),
+        ]);
 
         let results: Vec<MeanResponse> = mock
             .send_and_receive(Vec::<MeanRequest>::default().into_iter())

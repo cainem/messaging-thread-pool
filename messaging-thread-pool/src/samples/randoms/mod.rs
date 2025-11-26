@@ -2,9 +2,9 @@ use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
 use tracing::{Level, event};
 
-use crate::pool_item;
 use crate::IdTargeted;
 use crate::ThreadShutdownResponse;
+use crate::pool_item;
 
 /// This represents a simple collection of random numbers which is hosted inside the thread pool
 ///

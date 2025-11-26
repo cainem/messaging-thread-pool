@@ -58,10 +58,7 @@ impl Parse for PoolItemArgs {
                     } else if let syn::Expr::Lit(lit) = nv.value {
                         if let syn::Lit::Str(lit_str) = lit.lit {
                             let path: syn::Path = lit_str.parse()?;
-                            args.init_type = Some(Type::Path(syn::TypePath {
-                                qself: None,
-                                path,
-                            }));
+                            args.init_type = Some(Type::Path(syn::TypePath { qself: None, path }));
                         } else {
                             return Err(syn::Error::new_spanned(
                                 lit,

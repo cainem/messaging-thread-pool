@@ -72,11 +72,7 @@ where
 mod tests {
     use std::iter;
 
-    use crate::{
-        ThreadPool,
-        samples::*,
-        thread_request_response::*,
-    };
+    use crate::{ThreadPool, samples::*, thread_request_response::*};
 
     #[test]
     fn single_thread_errors_trying_to_send_request_shutdown_does_not_panic() {

@@ -56,5 +56,6 @@ cargo test                                # Run all tests
 
 ## Key Behaviors
 - **Always read `AGENTS.md`** for comprehensive context at conversation start
+- **When asked a question ALWAYS answer the question before changing any code**
 - **Ask before changing** - clarify requirements vs assumptions
 - **Use existing patterns** - examine similar functions before creating new approaches

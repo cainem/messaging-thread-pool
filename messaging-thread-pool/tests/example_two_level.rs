@@ -68,7 +68,10 @@ pub fn example_random_batches_with_mock_thread_pool() {
     let randoms_thread_pool =
         SenderAndReceiverMock::<Randoms, SumRequest>::new_with_expected_requests(
             vec![SumRequest(2), SumRequest(4)],
-            vec![SumResponse { id: 2, result: 2 }, SumResponse { id: 4, result: 4 }],
+            vec![
+                SumResponse { id: 2, result: 2 },
+                SumResponse { id: 4, result: 4 },
+            ],
         );
 
     // new create a RandomsBatch using the mock thread pool

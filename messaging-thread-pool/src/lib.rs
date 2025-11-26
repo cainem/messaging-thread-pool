@@ -21,9 +21,9 @@
 
 extern crate self as messaging_thread_pool;
 
+use crate::thread_endpoint::ThreadEndpoint;
 use std::cell::RefCell;
 use std::sync::RwLock;
-use crate::thread_endpoint::ThreadEndpoint;
 
 pub mod api_specification;
 pub mod global_test_scope;
