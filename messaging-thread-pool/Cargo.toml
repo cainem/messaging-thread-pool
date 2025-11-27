@@ -1,0 +1,49 @@
+[package]
+name = "messaging_thread_pool"
+version = "5.0.0"
+authors = ["cainem"]
+edition = '2024'
+description = "A library for aiding the creation of typed thread pool of objects that is communicated with via channels"
+license = "MIT"
+homepage = "https://github.com/cainem/messaging-thread-pool"
+repository = "https://github.com/cainem/messaging-thread-pool"
+documentation = "https://docs.rs/messaging_thread_pool/latest/messaging_thread_pool/"
+readme = "README.md"
+keywords = ["threadpool", "thread", "pool", "parallelism", "messaging"]
+categories = ["concurrency"]
+
+[dependencies]
+tracing = { version = "0.1.41", features = [
+    "max_level_trace",
+    "release_max_level_trace",
+] }
+tracing-subscriber = { version = "0.3.20", features = ["json", "env-filter"] }
+tracing-core = { version = "0.1" }
+tracing-attributes = "0.1.30"
+tracing-appender = "0.2.3"
+crossbeam-channel = "0.5.15"
+rand = "0.9.0"
+rand_xoshiro = "0.7.0"
+messaging-thread-pool-macros = { path = "../messaging-thread-pool-macros", version = "0.1.0" }
+
+[dev-dependencies]
+criterion = "0.7.0"
+mimalloc = { version = "0.1" }
+const_format = "0.2.35"
+
+[[bench]]
+name = "element_creation"
+harness = false
+[[bench]]
+name = "element_creation_with_mimalloc"
+harness = false
+[[bench]]
+name = "example_random_batches"
+harness = false
+[[bench]]
+name = "message_throughput"
+harness = false
+
+
+[profile.release]
+debug = true # Include debug symbols

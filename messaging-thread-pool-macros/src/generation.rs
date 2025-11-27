@@ -1,0 +1,623 @@
+use crate::parsing::{MessagingArgs, PoolItemArgs};
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+use syn::{FnArg, Ident, ImplItem, ItemImpl, ReturnType, Type};
+
+pub fn generate_pool_item_impl(mut input: ItemImpl, args: PoolItemArgs) -> TokenStream {
+    let self_ty = &input.self_ty;
+    let generics = &input.generics;
+
+    let struct_name = if let Type::Path(type_path) = self_ty.as_ref() {
+        &type_path.path.segments.last().unwrap().ident
+    } else {
+        return quote! { compile_error!("Expected struct type"); };
+    };
+
+    let api_name = format_ident!("{}Api", struct_name);
+    let init_name = if let Some(_init_type) = &args.init_type {
+        // If custom init is provided, we don't generate an Init struct name to use for generation
+        // but we need a name to refer to it in the impl.
+        // Actually, we can just use the type directly.
+        // But for consistency with existing code structure, let's handle it carefully.
+        format_ident!("{}Init", struct_name) // Placeholder, might not be used if custom
+    } else {
+        format_ident!("{}Init", struct_name)
+    };
+
+    let mut generated_items = Vec::new();
+    let mut api_variants = Vec::new();
+    let mut request_names = Vec::new();
+    let mut process_message_arms = Vec::new();
+    let mut type_aliases = Vec::new();
+
+    for item in &mut input.items {
+        if let ImplItem::Fn(method) = item {
+            let mut messaging_attr_index = None;
+            for (i, attr) in method.attrs.iter().enumerate() {
+                if attr.path().is_ident("messaging") {
+                    messaging_attr_index = Some(i);
+                    break;
+                }
+            }
+
+            if let Some(index) = messaging_attr_index {
+                let attr = method.attrs.remove(index);
+                let args: MessagingArgs = match attr.parse_args() {
+                    Ok(args) => args,
+                    Err(e) => return e.to_compile_error(),
+                };
+
+                let request_name = args.request_type;
+                let response_name = args.response_type;
+                let method_name = &method.sig.ident;
+
+                // Parse arguments
+                let mut request_fields: Vec<Type> = Vec::new();
+                // Always add ID as first field
+                request_fields.push(syn::parse_quote!(u64));
+
+                for input in &method.sig.inputs {
+                    if let FnArg::Typed(pat_type) = input {
+                        let ty = &pat_type.ty;
+                        request_fields.push(*ty.clone());
+                    }
+                }
+
+                // Parse return type
+                let return_type = match &method.sig.output {
+                    ReturnType::Default => None,
+                    ReturnType::Type(_, ty) => Some(ty.clone()),
+                };
+
+                generated_items.push(generate_request_struct(
+                    &request_name,
+                    &request_fields,
+                    struct_name,
+                    &response_name,
+                    &api_name,
+                    generics,
+                ));
+
+                let result_type = return_type.unwrap_or_else(|| syn::parse_quote!(()));
+                generated_items.push(generate_response_struct(
+                    &response_name,
+                    &result_type,
+                    struct_name,
+                    &api_name,
+                    &request_name,
+                    generics,
+                ));
+
+                generated_items.push(generate_from_response_impl(
+                    &response_name,
+                    struct_name,
+                    &api_name,
+                    &request_name,
+                    generics,
+                ));
+
+                let alias_name = format_ident!("{}_{}_RequestResponse", struct_name, request_name);
+                // Note: type aliases for generic types are tricky if we don't include generics in the alias.
+                // But we only use this alias in the enum variant.
+                // If struct_name is generic, the alias needs to be generic?
+                // Or we can just inline the type in the enum variant and skip the alias if it's too complex.
+                // For now, let's try to keep the alias but make it generic if needed.
+                // Actually, the alias is used in `api_variants`.
+                // If we make the alias generic, we need to pass generics to it.
+                // Let's just inline the type in the enum variant to avoid alias complexity with generics.
+                // Or update the alias generation.
+                // Let's inline it for simplicity in this refactor.
+
+                // Wait, I need to remove the alias generation or update it.
+                // The original code used aliases.
+                // Let's see: `pub type #alias_name = ...`
+                // If I change it to inline, I don't need `type_aliases`.
+
+                // Let's try to update the alias to be generic.
+                let (impl_generics, ty_generics, _where_clause) = generics.split_for_impl();
+                type_aliases.push(quote! {
+                    #[allow(non_camel_case_types)]
+                    #[allow(type_alias_bounds)]
+                    pub type #alias_name #impl_generics = messaging_thread_pool::request_response::RequestResponse<#struct_name #ty_generics, #request_name #ty_generics>;
+                });
+
+                api_variants.push(quote! {
+                    #request_name(#alias_name #ty_generics)
+                });
+                request_names.push(request_name.clone());
+
+                process_message_arms.push(generate_process_message_arm(
+                    &api_name,
+                    &request_name,
+                    method_name,
+                    &request_fields,
+                    &response_name,
+                    generics,
+                ));
+            }
+        }
+    }
+
+    generated_items.push(generate_api_enum(
+        &api_name,
+        &type_aliases,
+        &api_variants,
+        &request_names,
+        generics,
+    ));
+
+    if args.init_type.is_none() {
+        generated_items.push(generate_init_struct(&init_name, struct_name, generics));
+    }
+
+    generated_items.push(generate_pool_item_trait_impl(
+        self_ty,
+        &init_name,
+        &api_name,
+        &process_message_arms,
+        generics,
+        &args.init_type,
+        &args.shutdown_method,
+    ));
+
+    quote! {
+        #input
+        #(#generated_items)*
+    }
+}
+
+fn generate_request_struct(
+    request_name: &Ident,
+    request_fields: &[Type],
+    struct_name: &Ident,
+    response_name: &Ident,
+    api_name: &Ident,
+    generics: &syn::Generics,
+) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let phantom_data = if !generics.params.is_empty() {
+        quote! { pub std::marker::PhantomData #ty_generics, }
+    } else {
+        quote! {}
+    };
+
+    quote! {
+        #[derive(Debug, Clone, PartialEq, Eq)]
+        pub struct #request_name #impl_generics ( #(pub #request_fields),*, #phantom_data ) #where_clause;
+
+        impl #impl_generics messaging_thread_pool::IdTargeted for #request_name #ty_generics #where_clause {
+            fn id(&self) -> u64 {
+                self.0
+            }
+        }
+
+        impl #impl_generics messaging_thread_pool::RequestWithResponse<#struct_name #ty_generics> for #request_name #ty_generics #where_clause {
+            type Response = #response_name #ty_generics;
+        }
+
+        impl #impl_generics From<#request_name #ty_generics> for messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics> #where_clause {
+            fn from(request: #request_name #ty_generics) -> Self {
+                messaging_thread_pool::ThreadRequestResponse::MessagePoolItem(
+                    #api_name::#request_name(
+                        messaging_thread_pool::request_response::RequestResponse::Request(request)
+                    )
+                )
+            }
+        }
+    }
+}
+
+fn generate_response_struct(
+    response_name: &Ident,
+    result_type: &Type,
+    struct_name: &Ident,
+    api_name: &Ident,
+    request_name: &Ident,
+    generics: &syn::Generics,
+) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let phantom_data = if !generics.params.is_empty() {
+        quote! { pub phantom: std::marker::PhantomData #ty_generics, }
+    } else {
+        quote! {}
+    };
+
+    quote! {
+        #[derive(Debug, Clone, PartialEq, Eq)]
+        pub struct #response_name #impl_generics #where_clause {
+            pub id: u64,
+            pub result: #result_type,
+            #phantom_data
+        }
+
+        impl #impl_generics From<messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics>> for #response_name #ty_generics #where_clause {
+            fn from(response: messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics>) -> Self {
+                if let messaging_thread_pool::ThreadRequestResponse::MessagePoolItem(
+                    #api_name::#request_name(
+                        messaging_thread_pool::request_response::RequestResponse::Response(res)
+                    )
+                ) = response {
+                    res
+                } else {
+                    panic!("Unexpected response type")
+                }
+            }
+        }
+    }
+}
+
+fn generate_from_response_impl(
+    response_name: &Ident,
+    struct_name: &Ident,
+    api_name: &Ident,
+    request_name: &Ident,
+    generics: &syn::Generics,
+) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    quote! {
+        impl #impl_generics From<#response_name #ty_generics> for messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics> #where_clause {
+            fn from(response: #response_name #ty_generics) -> Self {
+                messaging_thread_pool::ThreadRequestResponse::MessagePoolItem(
+                    #api_name::#request_name(
+                        messaging_thread_pool::request_response::RequestResponse::Response(response)
+                    )
+                )
+            }
+        }
+    }
+}
+
+fn generate_process_message_arm(
+    api_name: &Ident,
+    request_name: &Ident,
+    method_name: &Ident,
+    request_fields: &[Type],
+    response_name: &Ident,
+    generics: &syn::Generics,
+) -> TokenStream {
+    let call_args = if request_fields.len() > 1 {
+        let indices = (1..request_fields.len()).map(syn::Index::from);
+        quote! { #(request.#indices),* }
+    } else {
+        quote! {}
+    };
+
+    let phantom_init = if !generics.params.is_empty() {
+        quote! { phantom: std::marker::PhantomData, }
+    } else {
+        quote! {}
+    };
+
+    quote! {
+        #api_name::#request_name(request_response) => {
+            let request = match request_response {
+                messaging_thread_pool::request_response::RequestResponse::Request(r) => r,
+                _ => panic!("Unexpected message in process_message (expected Request)"),
+            };
+            let id = messaging_thread_pool::IdTargeted::id(&request);
+            let result = self.#method_name(#call_args);
+            #response_name { id, result, #phantom_init }.into()
+        }
+    }
+}
+
+fn generate_api_enum(
+    api_name: &Ident,
+    type_aliases: &[TokenStream],
+    api_variants: &[TokenStream],
+    request_names: &[Ident],
+    generics: &syn::Generics,
+) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    quote! {
+        #(#type_aliases)*
+
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        pub enum #api_name #impl_generics #where_clause {
+            #(#api_variants),*
+        }
+
+        impl #impl_generics messaging_thread_pool::IdTargeted for #api_name #ty_generics #where_clause {
+            fn id(&self) -> u64 {
+                match self {
+                    #(
+                        #api_name::#request_names(req) => req.id(),
+                    )*
+                }
+            }
+        }
+    }
+}
+
+fn generate_init_struct(
+    init_name: &Ident,
+    struct_name: &Ident,
+    generics: &syn::Generics,
+) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let phantom_data = if !generics.params.is_empty() {
+        quote! { pub std::marker::PhantomData #ty_generics, }
+    } else {
+        quote! {}
+    };
+
+    quote! {
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        pub struct #init_name #impl_generics (pub u64, #phantom_data) #where_clause;
+
+        impl #impl_generics messaging_thread_pool::IdTargeted for #init_name #ty_generics #where_clause {
+            fn id(&self) -> u64 {
+                self.0
+            }
+        }
+
+        impl #impl_generics messaging_thread_pool::RequestWithResponse<#struct_name #ty_generics> for #init_name #ty_generics #where_clause {
+            type Response = messaging_thread_pool::thread_request_response::AddResponse;
+        }
+
+        impl #impl_generics From<#init_name #ty_generics> for messaging_thread_pool::ThreadRequestResponse<#struct_name #ty_generics> #where_clause {
+            fn from(request: #init_name #ty_generics) -> Self {
+                messaging_thread_pool::ThreadRequestResponse::AddPoolItem(
+                    messaging_thread_pool::request_response::RequestResponse::Request(request)
+                )
+            }
+        }
+    }
+}
+
+fn generate_pool_item_trait_impl(
+    self_ty: &Type,
+    init_name: &Ident,
+    api_name: &Ident,
+    process_message_arms: &[TokenStream],
+    generics: &syn::Generics,
+    custom_init_type: &Option<Type>,
+    shutdown_method: &Option<Ident>,
+) -> TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    let init_type_def = if let Some(init_type) = custom_init_type {
+        quote! { #init_type }
+    } else {
+        quote! { #init_name #ty_generics }
+    };
+
+    let new_pool_item_body = if custom_init_type.is_some() {
+        quote! { Ok(Self::new(request)) }
+    } else {
+        quote! { Ok(Self::new(request.0)) }
+    };
+
+    let shutdown_body = if let Some(method_name) = shutdown_method {
+        quote! { self.#method_name() }
+    } else {
+        quote! { Vec::default() }
+    };
+
+    quote! {
+        impl #impl_generics messaging_thread_pool::PoolItem for #self_ty #where_clause {
+            type Init = #init_type_def;
+            type Api = #api_name #ty_generics;
+            type ThreadStartInfo = ();
+
+            fn process_message(&mut self, request: Self::Api) -> messaging_thread_pool::ThreadRequestResponse<Self> {
+                match request {
+                    #(#process_message_arms)*
+                    _ => panic!("Unexpected message or response in process_message"),
+                }
+            }
+
+            fn name() -> &'static str {
+                stringify!(#self_ty)
+            }
+
+            fn new_pool_item(request: Self::Init) -> Result<Self, messaging_thread_pool::pool_item::NewPoolItemError> {
+                #new_pool_item_body
+            }
+
+            fn shutdown_pool(&self) -> Vec<messaging_thread_pool::thread_request_response::ThreadShutdownResponse> {
+                #shutdown_body
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_quote;
+
+    #[test]
+    fn test_generate_pool_item_impl_basic() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                #[messaging(MyRequest, MyResponse)]
+                pub fn my_method(&self, arg1: u32) -> bool {
+                    true
+                }
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+
+        // Check for key generated components
+        assert!(output_str.contains("struct MyRequest"));
+        assert!(output_str.contains("struct MyResponse"));
+        assert!(output_str.contains("enum MyStructApi"));
+        assert!(output_str.contains("impl messaging_thread_pool :: PoolItem for MyStruct"));
+        assert!(output_str.contains("MyStruct_MyRequest_RequestResponse"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_multiple_methods() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                #[messaging(Req1, Resp1)]
+                pub fn method1(&self) {}
+
+                #[messaging(Req2, Resp2)]
+                pub fn method2(&self) {}
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("struct Req1"));
+        assert!(output_str.contains("struct Resp1"));
+        assert!(output_str.contains("struct Req2"));
+        assert!(output_str.contains("struct Resp2"));
+        assert!(output_str.contains("Req1 (MyStruct_Req1_RequestResponse)"));
+        assert!(output_str.contains("Req2 (MyStruct_Req2_RequestResponse)"));
+        // Check that method call is generated
+        assert!(output_str.contains("self . method1"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_no_return_type() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                #[messaging(Req, Resp)]
+                pub fn method(&self) {}
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("pub result : ()"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_error_not_struct() {
+        // This is hard to test directly because parse_macro_input! expects ItemImpl which has a Type.
+        // But we can pass an ItemImpl where self_ty is not a path.
+        // However, syn::parse_quote! usually produces valid types.
+        // Let's try to construct one manually or just skip this edge case if it's hard to trigger with parse_quote.
+        // Actually, `impl &str` is valid syntax but not a struct path.
+        let input: ItemImpl = parse_quote! {
+            impl &str {
+                #[messaging(Req, Resp)]
+                fn method(&self) {}
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+        assert!(output_str.contains("compile_error ! (\"Expected struct type\")"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_invalid_attr() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                #[messaging(OnlyOneArg)]
+                pub fn method(&self) {}
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+        assert!(output_str.contains("compile_error"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_ignore_const() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                const MY_CONST: u32 = 0;
+
+                #[messaging(Req, Resp)]
+                pub fn method(&self) {}
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+        // Should still generate for method
+        assert!(output_str.contains("struct Req"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_no_attr() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                pub fn method(&self) {}
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+        // Should generate empty Api enum and PoolItem impl
+        assert!(output_str.contains("enum MyStructApi"));
+        assert!(output_str.contains("impl messaging_thread_pool :: PoolItem for MyStruct"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_generic() {
+        let input: ItemImpl = parse_quote! {
+            impl<T> MyGenericStruct<T> {
+                #[messaging(Req, Resp)]
+                pub fn method(&self, arg: T) -> T {
+                    arg
+                }
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("struct Req < T >"));
+        assert!(output_str.contains("struct Resp < T >"));
+        assert!(output_str.contains("enum MyGenericStructApi < T >"));
+        assert!(output_str
+            .contains("impl < T > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"));
+        // Check for PhantomData presence, might be fully qualified
+        assert!(output_str.contains("PhantomData"));
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_custom_init() {
+        let input: ItemImpl = parse_quote! {
+            impl MyStruct {
+                #[messaging(Req, Resp)]
+                pub fn method(&self) {}
+            }
+        };
+
+        let args = PoolItemArgs {
+            init_type: Some(syn::parse_quote!(MyCustomInit)),
+            shutdown_method: None,
+        };
+
+        let output = generate_pool_item_impl(input, args);
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("type Init = MyCustomInit ;"));
+        assert!(!output_str.contains("struct MyStructInit")); // Should not generate default init
+        assert!(output_str.contains("Ok (Self :: new (request))")); // Should pass request directly
+    }
+
+    #[test]
+    fn test_generate_pool_item_impl_generic_with_bounds() {
+        let input: ItemImpl = parse_quote! {
+            impl<T: Debug> MyGenericStruct<T> {
+                #[messaging(Req, Resp)]
+                pub fn method(&self, arg: T) -> T {
+                    arg
+                }
+            }
+        };
+
+        let output = generate_pool_item_impl(input, PoolItemArgs::default());
+        let output_str = output.to_string();
+
+        assert!(output_str.contains("struct Req < T : Debug >"));
+        assert!(output_str.contains(
+            "impl < T : Debug > messaging_thread_pool :: PoolItem for MyGenericStruct < T >"
+        ));
+    }
+}
