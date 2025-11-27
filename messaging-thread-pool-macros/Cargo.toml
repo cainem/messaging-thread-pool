@@ -2,6 +2,11 @@
 name = "messaging-thread-pool-macros"
 version = "0.1.0"
 edition = "2021"
+authors = ["cainem"]
+description = "Macros for the messaging-thread-pool library"
+license = "MIT"
+homepage = "https://github.com/cainem/messaging-thread-pool"
+repository = "https://github.com/cainem/messaging-thread-pool"
 
 [lib]
 proc-macro = true
