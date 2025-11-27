@@ -82,4 +82,10 @@ If the functionality is not required *ThreadStartInfo* can just be set to the un
   See *Randoms* sample for an example of use.
 * Add *send_and_receive_once* to *ThreadPool* as a convenience when sending single messages
 
+## [5.0.0]
+
+* **Breaking Change**: The `#[pool_item]` macro now generates request structs that include `PhantomData` for generic types. This requires updating the constructor calls for these requests to include `PhantomData`.
+* **Documentation**: Added a new example `UserSession` demonstrating how to use `Rc<RefCell<T>>` with the thread pool, highlighting the library's ability to handle non-`Send`/`Sync` data types.
+* **Documentation**: Expanded `README.md` to detail the key advantages of the library: Sequential Consistency, Zero Contention, and Data Locality.
+
 
