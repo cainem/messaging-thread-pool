@@ -1,3 +1,11 @@
+//! # RandomsBatch - Advanced Nested Thread Pool Example
+//!
+//! This module demonstrates advanced patterns including:
+//! - Generic pool items
+//! - Custom initialization types
+//! - Nested thread pools (a pool item that contains another pool)
+//! - Mocking nested dependencies for testing
+
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -7,20 +15,34 @@ use crate::{id_provider::IdProvider, *};
 
 use super::{RandomsAddRequest, SumRequest, SumResponse};
 
-/// Define a trait to reduce type complexity for inner thread pool
+/// Trait for abstracting the inner thread pool type.
+///
+/// This enables:
+/// - Using a real `ThreadPool<Randoms>` in production
+/// - Using a `SenderAndReceiverMock` in tests
+///
+/// # Example
+///
+/// ```rust,ignore
+/// // Production code uses RandomsThreadPool
+/// let batch: RandomsBatch<RandomsThreadPool> = /* ... */;
+///
+/// // Test code uses a mock
+/// let batch: RandomsBatch<SenderAndReceiverMock<_, _>> = /* ... */;
+/// ```
 pub trait InnerThreadPool: Debug + Send {
-    // the "thread pool" is really anything that implements this trait
+    /// The concrete thread pool type that implements `SenderAndReceiver<Randoms>`
     type ThreadPool: SenderAndReceiver<Randoms> + Send + Sync + Debug;
 }
 
-/// define a struct to identify concrete type of thread pool
+/// Marker type for using a real `ThreadPool<Randoms>` as the inner pool.
 #[derive(Debug)]
 pub struct RandomsThreadPool;
 impl InnerThreadPool for RandomsThreadPool {
     type ThreadPool = ThreadPool<Randoms>;
 }
 
-/// implement InnerThreadPool trait for mock thread pool
+/// Implement `InnerThreadPool` for mock types to enable testing.
 impl<T: RequestWithResponse<Randoms> + Send + Sync> InnerThreadPool
     for SenderAndReceiverMock<Randoms, T>
 where
@@ -29,17 +51,26 @@ where
     type ThreadPool = SenderAndReceiverMock<Randoms, T>;
 }
 
-/// This is the request that is sent to create a new RandomsBatch
-/// It contains a field to configure the size of the contained child thread pool.
-/// As the this thread pool is shared it will only ever be used by the first request to create a RandomsBatch
+/// Custom initialization request for `RandomsBatch`.
 ///
-/// RandomsBatches will also need to share a common "source of ids" for the Randoms that it will create
+/// This demonstrates using a custom `Init` type instead of the generated one.
+/// Custom Init types are needed when:
+/// - The constructor needs more than just an ID
+/// - You need to pass complex configuration
+/// - The pool item is generic and needs type information
+///
+/// # Fields
+///
+/// - `id` - Unique identifier for this batch
+/// - `number_of_contained_randoms` - How many `Randoms` items to create
+/// - `id_provider` - Shared ID generator (ensures unique IDs across batches)
+/// - `randoms_thread_pool` - Shared inner thread pool for the `Randoms`
 #[derive(Debug, Clone)]
 pub struct RandomsBatchAddRequest<P: InnerThreadPool> {
     pub id: u64,
     pub number_of_contained_randoms: usize,
     pub id_provider: Arc<dyn IdProvider>,
-    // this thread pool will be shared by all of the Randoms
+    /// This thread pool is shared by all Randoms across all RandomsBatches
     pub randoms_thread_pool: Arc<P::ThreadPool>,
 }
 
@@ -71,17 +102,66 @@ impl<P: InnerThreadPool> From<RandomsBatchAddRequest<P>>
     }
 }
 
-/// An example of an element that contains a child thread pool
+/// A batch of `Randoms` items, demonstrating nested thread pools.
 ///
-/// RandomsBatches and Randoms form a hierarchy.
-/// A RandomsBatch contains many Randoms.
+/// This is an advanced example showing:
+/// - **Generic pool items**: `RandomsBatch<P>` is generic over the inner pool type
+/// - **Custom Init type**: Uses `RandomsBatchAddRequest<P>` instead of generated init
+/// - **Nested pools**: Each batch references an inner pool of `Randoms`
+/// - **Shared resources**: Multiple batches share the same inner pool and ID provider
 ///
-/// RandomsBatches are managed by a one thread pool and internally they have a collection of Randoms which
-/// are managed in a separate "child" thread pool
-/// In this example all of the Randoms share a single thread pool regardless of which RandomsBatch created them
+/// # Architecture
 ///
-/// For this reason the RandomsBatches need to share an id_provider which provides globally unique ids
-/// (ids, must be unique across the thread pool for obvious reasons)
+/// ```text
+/// ┌─────────────────────────────────────────┐
+/// │     ThreadPool<RandomsBatch<P>>         │ ← Outer pool (manages batches)
+/// │  ┌─────────────┐  ┌─────────────┐       │
+/// │  │ Batch (id=0)│  │ Batch (id=1)│  ...  │
+/// │  │  refs→[1,2] │  │  refs→[3,4] │       │
+/// │  └──────┬──────┘  └──────┬──────┘       │
+/// └─────────┼────────────────┼──────────────┘
+///           │                │
+///           ▼                ▼
+/// ┌─────────────────────────────────────────┐
+/// │       Arc<ThreadPool<Randoms>>          │ ← Inner pool (shared)
+/// │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐    │
+/// │  │ R(1) │ │ R(2) │ │ R(3) │ │ R(4) │    │
+/// │  └──────┘ └──────┘ └──────┘ └──────┘    │
+/// └─────────────────────────────────────────┘
+/// ```
+///
+/// # Example: Real Thread Pools
+///
+/// ```rust
+/// use std::sync::Arc;
+/// use messaging_thread_pool::{ThreadPool, id_provider::id_provider_mutex::IdProviderMutex, samples::*};
+///
+/// // Create the outer pool for batches
+/// let batch_pool = ThreadPool::<RandomsBatch<RandomsThreadPool>>::new(2);
+///
+/// // Create the shared inner pool for Randoms
+/// let randoms_pool = Arc::new(ThreadPool::<Randoms>::new(4));
+///
+/// // Create shared ID provider (ensures unique IDs across all batches)
+/// let id_provider = Arc::new(IdProviderMutex::new(0));
+///
+/// // Create a batch - this will create 10 Randoms in the inner pool
+/// batch_pool.send_and_receive_once(RandomsBatchAddRequest {
+///     id: 0,
+///     number_of_contained_randoms: 10,
+///     id_provider: id_provider.clone(),
+///     randoms_thread_pool: randoms_pool.clone(),
+/// }).unwrap();
+///
+/// // Query the batch - it will in turn query its Randoms
+/// let response = batch_pool.send_and_receive_once(
+///     SumOfSumsRequest(0, std::marker::PhantomData)
+/// ).unwrap();
+/// ```
+///
+/// # Example: Mocking the Inner Pool
+///
+/// See `tests/example_two_level.rs` for a complete mocking example.
 #[derive(Debug)]
 pub struct RandomsBatch<P: InnerThreadPool> {
     pub id: u64,

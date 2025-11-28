@@ -2,8 +2,59 @@ use std::sync::Mutex;
 
 use super::IdProvider;
 
-/// Provides an implementation of IdProvider that is Send.
-/// This is probably too slow to be of any practical use; for test only
+/// A thread-safe ID provider using a `Mutex`.
+///
+/// This is a simple implementation suitable for:
+/// - Testing and examples
+/// - Low-contention scenarios
+/// - Situations where ID generation isn't a bottleneck
+///
+/// For high-performance scenarios with many threads generating IDs,
+/// consider using atomic operations instead.
+///
+/// # Example
+///
+/// ```rust
+/// use std::sync::Arc;
+/// use messaging_thread_pool::id_provider::{IdProvider, id_provider_mutex::IdProviderMutex};
+///
+/// // Start IDs at 1000
+/// let provider = Arc::new(IdProviderMutex::new(1000));
+///
+/// assert_eq!(provider.next_id(), 1000);
+/// assert_eq!(provider.next_id(), 1001);
+/// assert_eq!(provider.peek_next_id(), 1002); // Peek doesn't advance
+/// assert_eq!(provider.next_id(), 1002);
+/// ```
+///
+/// # Thread Safety
+///
+/// This type is `Send + Sync` and can be safely shared across threads:
+///
+/// ```rust
+/// use std::sync::Arc;
+/// use std::thread;
+/// use messaging_thread_pool::id_provider::{IdProvider, id_provider_mutex::IdProviderMutex};
+///
+/// let provider = Arc::new(IdProviderMutex::new(0));
+/// let mut handles = vec![];
+///
+/// for _ in 0..4 {
+///     let p = Arc::clone(&provider);
+///     handles.push(thread::spawn(move || {
+///         for _ in 0..10 {
+///             let _id = p.next_id();
+///         }
+///     }));
+/// }
+///
+/// for h in handles {
+///     h.join().unwrap();
+/// }
+///
+/// // 4 threads × 10 IDs each = 40 total IDs generated
+/// assert_eq!(provider.peek_next_id(), 40);
+/// ```
 #[derive(Debug, Default)]
 pub struct IdProviderMutex {
     internal_counter: Mutex<u64>,

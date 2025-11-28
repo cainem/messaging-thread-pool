@@ -1,6 +1,74 @@
-/// This macro generates an API enum and implements various generics and conversions for provided types.
+//! # Legacy API Specification Macro
+//!
+//! This module contains the `api_specification!` macro, which is the **legacy** way
+//! to define pool items.
+//!
+//! ## ⚠️ Prefer `#[pool_item]` for New Code
+//!
+//! The `#[pool_item]` attribute macro is the recommended approach for new code.
+//! It generates the same types with less boilerplate:
+//!
+//! ```rust,ignore
+//! // OLD WAY (api_specification! macro)
+//! api_specification!(
+//!     pool_item: Counter,
+//!     api_name: CounterApi,
+//!     add_request: CounterAddRequest,
+//!     calls: [
+//!         { call_name: Increment, request: IncrementRequest, response: IncrementResponse },
+//!     ]
+//! );
+//!
+//! // NEW WAY (#[pool_item] macro)
+//! #[pool_item]
+//! impl Counter {
+//!     pub fn new(id: u64) -> Self { /* ... */ }
+//!
+//!     #[messaging(IncrementRequest, IncrementResponse)]
+//!     pub fn increment(&mut self, amount: i32) -> i32 { /* ... */ }
+//! }
+//! ```
+//!
+//! ## When You Might Still Need `api_specification!`
+//!
+//! - Complex generic bounds not supported by `#[pool_item]`
+//! - Gradual migration of existing codebases
+//! - Edge cases where more control over generated types is needed
+//!
+//! For new projects, start with `#[pool_item]` and only fall back to
+//! `api_specification!` if you encounter limitations.
+
+/// Generates an API enum and trait implementations for a pool item.
 ///
-/// **Note:** For simple non-generic cases, consider using the `#[pool_item]` attribute macro instead.
+/// ## ⚠️ Legacy Macro
+///
+/// **This is the legacy approach.** For new code, prefer the [`pool_item`](macro@crate::pool_item)
+/// attribute macro, which provides the same functionality with less boilerplate.
+///
+/// ## Migration Example
+///
+/// Before (with `api_specification!`):
+/// ```rust,ignore
+/// api_specification!(
+///     pool_item: MyItem,
+///     api_name: MyItemApi,
+///     add_request: MyItemAddRequest,
+///     calls: [
+///         { call_name: DoWork, request: DoWorkRequest, response: DoWorkResponse },
+///     ]
+/// );
+/// ```
+///
+/// After (with `#[pool_item]`):
+/// ```rust,ignore
+/// #[pool_item]
+/// impl MyItem {
+///     pub fn new(id: u64) -> Self { /* ... */ }
+///
+///     #[messaging(DoWorkRequest, DoWorkResponse)]
+///     pub fn do_work(&self) { /* ... */ }
+/// }
+/// ```
 ///
 /// # Parameters
 ///

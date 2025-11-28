@@ -6,17 +6,57 @@ use crate::IdTargeted;
 use crate::ThreadShutdownResponse;
 use crate::pool_item;
 
-/// This represents a simple collection of random numbers which is hosted inside the thread pool
+/// A collection of random numbers managed by the thread pool.
 ///
-/// It is tied to a particular thread by the modulus of its id.
+/// This sample demonstrates:
+/// - CPU-intensive operations (seeded random number generation)
+/// - Custom shutdown handling via `Shutdown = "shutdown_pool_impl"`
+/// - Tracing integration with `tracing::event!`
+/// - Benchmarking patterns (used in `benches/`)
 ///
-/// The interface that it supports is governed by its implementation of the PoolItem trait.
-/// This in turn needs to be supported by the use of two enums of supported requests and responses
+/// # Generated Types
 ///
-/// It supports the following operations
-/// Init    creates a new Random with an stack based store of random numbers
-/// Mean    calculates the mean of the contained numbers
-/// Sum     calculates the sum of the contained numbers
+/// - `RandomsInit(u64)` / `RandomsAddRequest` - Create new Randoms with given ID
+/// - `MeanRequest(u64)` / `MeanResponse` - Calculate mean of contained numbers
+/// - `SumRequest(u64)` / `SumResponse` - Calculate sum of contained numbers
+/// - `PanicRequest(u64)` / `PanicResponse` - Intentionally panic (for testing)
+///
+/// # Example
+///
+/// ```rust
+/// use messaging_thread_pool::{ThreadPool, samples::*};
+///
+/// let pool = ThreadPool::<Randoms>::new(4);
+///
+/// // Create item with ID 1
+/// pool.send_and_receive_once(RandomsAddRequest(1)).unwrap();
+///
+/// // Calculate mean
+/// let mean = pool.send_and_receive_once(MeanRequest(1)).unwrap();
+/// println!("Mean: {}", mean.mean());
+///
+/// // Calculate sum
+/// let sum = pool.send_and_receive_once(SumRequest(1)).unwrap();
+/// println!("Sum: {}", sum.sum());
+/// ```
+///
+/// # Shutdown Handling
+///
+/// This sample uses the `Shutdown` parameter to define a custom shutdown handler:
+///
+/// ```rust,ignore
+/// #[pool_item(Shutdown = "shutdown_pool_impl")]
+/// impl Randoms {
+///     pub fn shutdown_pool_impl(&self) -> Vec<ThreadShutdownResponse> {
+///         vec![ThreadShutdownResponse::new(self.id, vec![])]
+///     }
+/// }
+/// ```
+///
+/// # Note
+///
+/// This is primarily used for benchmarking. For a simpler example, see [`ChatRoom`](super::ChatRoom).
+/// For advanced patterns, see [`RandomsBatch`](super::RandomsBatch).
 #[derive(Debug, PartialEq, Eq)]
 pub struct Randoms {
     pub id: u64,
@@ -67,15 +107,18 @@ impl Randoms {
     }
 }
 
+/// Alias for backwards compatibility
 pub use RandomsInit as RandomsAddRequest;
 
 impl MeanResponse {
+    /// Get the calculated mean value
     pub fn mean(&self) -> u128 {
         self.result
     }
 }
 
 impl SumResponse {
+    /// Get the calculated sum value
     pub fn sum(&self) -> u128 {
         self.result
     }

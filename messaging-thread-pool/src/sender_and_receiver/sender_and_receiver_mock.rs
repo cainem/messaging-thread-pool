@@ -10,17 +10,76 @@ use crate::{
 
 use super::SenderAndReceiver;
 
-/// This structure enables the mocking of a [`crate::ThreadPool`]
+/// A mock implementation of [`SenderAndReceiver`] for testing.
 ///
-/// It has two constructors.
-/// One takes a vec of responses that are to be returned when send_and_receive is called, the
-/// other defines the requests that are expected to be received as well as an array of responses
-/// that are to be returned.
+/// This mock allows you to test code that depends on thread pools without actually
+/// spawning threads. It provides two modes of operation:
 ///
-/// The implementation of send_and_receive asserts that the requests are as expected if requests
-/// are provided.
-/// If no requests are provided any requests passed in are ignored and the defined set of responses
-/// are returned
+/// 1. **Response-only mode**: Returns predefined responses regardless of requests
+/// 2. **Request verification mode**: Asserts that requests match expectations
+///
+/// # Example: Response-Only Mode
+///
+/// Use this when you only care about the responses, not the exact requests:
+///
+/// ```rust
+/// use messaging_thread_pool::{SenderAndReceiver, SenderAndReceiverMock, samples::*};
+///
+/// // Create mock that returns predefined responses
+/// let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![
+///     MeanResponse { id: 1, result: 100 },
+///     MeanResponse { id: 2, result: 200 },
+/// ]);
+///
+/// // Any requests will return the predefined responses in order
+/// let responses: Vec<_> = mock
+///     .send_and_receive([MeanRequest(1), MeanRequest(2)].into_iter())
+///     .unwrap()
+///     .collect();
+///
+/// assert_eq!(responses[0].result, 100);
+/// assert_eq!(responses[1].result, 200);
+/// ```
+///
+/// # Example: Request Verification Mode
+///
+/// Use this when you want to verify the exact requests being sent:
+///
+/// ```rust
+/// use messaging_thread_pool::{SenderAndReceiver, SenderAndReceiverMock, samples::*};
+///
+/// // Create mock with expected requests and responses
+/// let mock = SenderAndReceiverMock::<Randoms, SumRequest>::new_with_expected_requests(
+///     vec![SumRequest(1), SumRequest(2)],  // Expected requests
+///     vec![
+///         SumResponse { id: 1, result: 100 },
+///         SumResponse { id: 2, result: 200 },
+///     ],
+/// );
+///
+/// // The mock will assert that requests match expectations
+/// let responses: Vec<_> = mock
+///     .send_and_receive([SumRequest(1), SumRequest(2)].into_iter())
+///     .unwrap()
+///     .collect();
+///
+/// // Verify all responses were consumed
+/// mock.assert_is_complete();
+/// ```
+///
+/// # Verification Methods
+///
+/// - [`was_called()`](Self::was_called) - Check if `send_and_receive` was invoked
+/// - [`is_complete()`](Self::is_complete) - Check if all responses have been returned
+/// - [`assert_is_complete()`](Self::assert_is_complete) - Panic if responses remain
+///
+/// # Type Parameters
+///
+/// - `P` - The pool item type (e.g., `Randoms`)
+/// - `T` - The request type (e.g., `MeanRequest`)
+///
+/// The mock can return responses for any request type that maps to the same pool item,
+/// but verification mode requires the request types to match.
 #[derive(Debug, Default)]
 pub struct SenderAndReceiverMock<P, T>
 where
@@ -38,6 +97,27 @@ where
     P: PoolItem,
     T: RequestWithResponse<P>,
 {
+    /// Creates a mock that verifies requests match expectations.
+    ///
+    /// When `send_and_receive` is called, the mock will:
+    /// 1. Assert that each request matches the corresponding expected request
+    /// 2. Return the corresponding response
+    ///
+    /// # Panics
+    ///
+    /// - Panics if `expected_requests.len() != returned_responses.len()`
+    /// - Panics during `send_and_receive` if a request doesn't match expectations
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use messaging_thread_pool::{SenderAndReceiverMock, samples::*};
+    ///
+    /// let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new_with_expected_requests(
+    ///     vec![MeanRequest(1)],
+    ///     vec![MeanResponse { id: 1, result: 42 }],
+    /// );
+    /// ```
     pub fn new_with_expected_requests(
         expected_requests: Vec<T>,
         returned_responses: Vec<T::Response>,
@@ -55,6 +135,21 @@ where
         }
     }
 
+    /// Creates a mock that returns predefined responses without verifying requests.
+    ///
+    /// This is useful when you only care about the returned values and don't need
+    /// to verify the exact requests being sent.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use messaging_thread_pool::{SenderAndReceiverMock, samples::*};
+    ///
+    /// let mock = SenderAndReceiverMock::<Randoms, SumRequest>::new(vec![
+    ///     SumResponse { id: 1, result: 100 },
+    ///     SumResponse { id: 2, result: 200 },
+    /// ]);
+    /// ```
     pub fn new(returned_responses: Vec<T::Response>) -> Self {
         Self {
             was_called: Mutex::new(false),
@@ -64,12 +159,16 @@ where
         }
     }
 
-    /// Verify that the mock send_and_receive was called at least once
+    /// Returns `true` if `send_and_receive` has been called at least once.
+    ///
+    /// Useful for verifying that your code actually used the mock.
     pub fn was_called(&self) -> bool {
         *self.was_called.lock().expect("that lock will never fail")
     }
 
-    /// Verify that all of the responses have been returned
+    /// Returns `true` if all predefined responses have been consumed.
+    ///
+    /// This helps verify that all expected interactions occurred.
     pub fn is_complete(&self) -> bool {
         self.returned_responses
             .lock()
@@ -77,7 +176,12 @@ where
             .is_empty()
     }
 
-    /// Assert that all of the responses have been returned; provides
+    /// Asserts that all predefined responses have been consumed.
+    ///
+    /// # Panics
+    ///
+    /// Panics if any responses remain unconsumed, indicating that fewer
+    /// requests were made than expected.
     pub fn assert_is_complete(&self) {
         let unreturned_responses = self
             .returned_responses
