@@ -1,6 +1,6 @@
 [package]
 name = "messaging_thread_pool"
-version = "5.0.0"
+version = "5.0.1"
 authors = ["cainem"]
 edition = '2024'
 description = "A library for aiding the creation of typed thread pool of objects that is communicated with via channels"
@@ -24,7 +24,7 @@ tracing-appender = "0.2.3"
 crossbeam-channel = "0.5.15"
 rand = "0.9.0"
 rand_xoshiro = "0.7.0"
-messaging-thread-pool-macros = { path = "../messaging-thread-pool-macros", version = "0.1.0" }
+messaging-thread-pool-macros = { path = "../messaging-thread-pool-macros", version = "0.1.1" }
 
 [dev-dependencies]
 criterion = "0.7.0"

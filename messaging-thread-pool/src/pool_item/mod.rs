@@ -7,88 +7,185 @@ use crate::{
 use std::fmt::Debug;
 use tracing::{Level, event};
 
-/// This is the trait that needs to be implemented by a struct in order that it can be
-/// managed by the thread pool infrastructure
+/// The core trait for types managed by a [`ThreadPool`](crate::ThreadPool).
+///
+/// A `PoolItem` is a stateful object that:
+/// - Lives on a single thread for its entire lifetime
+/// - Has a unique ID within the pool
+/// - Communicates via typed request/response messages
+/// - Can own non-`Send`/`Sync` types like `Rc<RefCell<T>>`
+///
+/// # Using the `#[pool_item]` Macro (Recommended)
+///
+/// The easiest way to implement `PoolItem` is with the `#[pool_item]` attribute macro,
+/// which generates all the boilerplate automatically:
+///
+/// ```rust
+/// use messaging_thread_pool::{IdTargeted, pool_item};
+///
+/// #[derive(Debug)]
+/// pub struct Counter {
+///     id: u64,
+///     value: i32,
+/// }
+///
+/// impl IdTargeted for Counter {
+///     fn id(&self) -> u64 { self.id }
+/// }
+///
+/// #[pool_item]
+/// impl Counter {
+///     pub fn new(id: u64) -> Self {
+///         Self { id, value: 0 }
+///     }
+///
+///     #[messaging(IncrementRequest, IncrementResponse)]
+///     pub fn increment(&mut self, amount: i32) -> i32 {
+///         self.value += amount;
+///         self.value
+///     }
+/// }
+/// ```
+///
+/// # Associated Types
+///
+/// - **`Init`**: The request type used to create new instances (e.g., `CounterInit(u64)`)
+/// - **`Api`**: An enum of all message types the pool item can handle
+/// - **`ThreadStartInfo`**: Optional per-thread state (e.g., for tracing configuration)
+///
+/// # Lifecycle
+///
+/// 1. **Creation**: When an `Init` request is received, `new_pool_item` is called
+/// 2. **Processing**: Messages are delivered to `process_message` sequentially
+/// 3. **Shutdown**: `shutdown_pool` is called when the pool is dropped
+///
+/// # Thread Affinity
+///
+/// Pool items are assigned to threads using `id_thread_router(id, thread_count)`.
+/// The default implementation is `id % thread_count`. All messages for the same ID
+/// go to the same thread, ensuring sequential processing without locks.
+///
+/// # Manual Implementation
+///
+/// For advanced use cases or when the macro isn't suitable, you can implement
+/// `PoolItem` manually. See the [`samples`](crate::samples) module for examples.
 pub trait PoolItem: Debug
 where
     Self: Sized,
     Self::Init: Send + IdTargeted + RequestWithResponse<Self, Response = AddResponse>,
     Self::Api: Debug + Send + IdTargeted,
 {
-    /// This is a struct that defines the message that will initiate a new instance
-    /// of the struct within the thread pool
+    /// The request type for creating new instances of this pool item.
+    ///
+    /// When the pool receives an `Init` message, it calls `new_pool_item` to
+    /// create the instance. The generated `{StructName}Init(u64)` type is typical,
+    /// but custom types can be used for complex initialization.
     type Init;
-    /// This is the enum that will define that messaging api that can be used to
-    /// communicate with instances of the struct
-    /// It will be an enum where each variant will define a request/response pair
-    /// of structs
+
+    /// The enum type containing all message variants for this pool item.
+    ///
+    /// Each variant represents a request/response pair. The `#[pool_item]` macro
+    /// generates this as `{StructName}Api` with variants for each `#[messaging]` method.
     type Api;
-    /// This is the type that is optionally created when a thread within the thread pool
-    /// is started (see thread_start function)
-    /// A writeable reference to this is then passed to a pool item each time it is loaded
-    /// to "run" (see loading_pool_item function)
-    /// The primary motivation behind this is for the implementation of tracing
-    /// If this functionality is not required then this can be set to the unit type ()
+
+    /// Per-thread state created when a pool thread starts.
+    ///
+    /// This is useful for:
+    /// - Configuring thread-local tracing/logging
+    /// - Setting up thread-local caches or resources
+    ///
+    /// Set to `()` if not needed (the default).
     type ThreadStartInfo;
 
-    /// This is the function that will define how the struct processes the messages that
-    /// it receives.
-    /// It will typically consist of a match statement that will discriminate amongst
-    /// the various messages type defined in the Api
+    /// Process an incoming message and return a response.
+    ///
+    /// This method is called for each message sent to the pool item. It typically
+    /// contains a `match` statement dispatching to the appropriate handler.
+    ///
+    /// The `#[pool_item]` macro generates this implementation automatically.
     fn process_message(&mut self, request: Self::Api) -> ThreadRequestResponse<Self>;
 
-    /// The function called if an item with the specified id is not found
-    /// The default behaviour is to panic
+    /// Called when a message targets an ID that doesn't exist in the pool.
+    ///
+    /// The default behavior is to panic. Override this to handle missing IDs gracefully
+    /// (e.g., by creating the item on-demand or returning an error response).
     fn id_not_found(request: &Self::Api) -> ThreadRequestResponse<Self> {
         // default behaviour is to panic
         event!(Level::ERROR, "pool item with id {} not found", request.id());
         panic!("pool item with id {} not found", request.id());
     }
 
-    /// used for debug only; allows logging to output the name of the type
+    /// Returns the type name for logging purposes.
     fn name() -> &'static str {
         std::any::type_name::<Self>()
     }
 
-    /// This function defines how a new struct will be created when it receives
-    /// The Init message.
-    /// It returns the created new instance of the struct
+    /// Create a new instance from an initialization request.
+    ///
+    /// Called when the pool receives an `Init` message. Return `Ok(instance)` on success,
+    /// or `Err(NewPoolItemError)` if creation fails.
+    ///
+    /// # Example
+    ///
+    /// When using the macro, this is generated automatically. For manual implementations:
+    ///
+    /// ```rust,ignore
+    /// fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError> {
+    ///     Ok(Self::new(request.id()))
+    /// }
+    /// ```
     fn new_pool_item(request: Self::Init) -> Result<Self, NewPoolItemError>;
 
-    /// This function is a hook that is called when the pool is shutting down.
+    /// Called for each pool item when the pool is shutting down.
+    ///
+    /// Override this to perform cleanup operations. The returned responses are
+    /// collected and can be inspected by the caller.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
+    ///     // Perform cleanup...
+    ///     vec![ThreadShutdownResponse::new(self.id(), vec![])]
+    /// }
+    /// ```
     fn shutdown_pool(&self) -> Vec<ThreadShutdownResponse> {
         Vec::<ThreadShutdownResponse>::default()
     }
 
-    /// This function is called once when the message loop to the thread starts up
-    /// It gives the implementer the opportunity to set up some shared state
-    /// of type `Self::ThreadContext`
-    /// The primary reason for adding this hook was to give the implementer the
-    /// opportunity to configure tracing/logging for the thread
+    /// Called once when a pool thread starts.
+    ///
+    /// Returns optional thread-local state that will be passed to
+    /// `pool_item_pre_process` and `pool_item_post_process`.
+    ///
+    /// Primary use case: Configuring tracing/logging for the thread.
     fn thread_start() -> Option<Self::ThreadStartInfo> {
         None
     }
 
-    /// This function is called each time that a pool item is loaded into the thread
-    /// and is about to start processing a message.
-    /// The primary motive here was to provide access to the tracing subscriber in some way
-    /// such that tracing can be selectively turned on and off for different pool items
+    /// Called before processing each message.
+    ///
+    /// Use this hook to enable per-item tracing or perform setup.
     #[allow(unused_variables)]
     fn pool_item_pre_process(pool_item_id: u64, thread_start_info: &mut Self::ThreadStartInfo) {
         // do nothing by default
     }
 
-    /// This function is called immediately after a pool item has processed a message
-    /// The primary motive here was to provide a hook to unload any conditional tracing
+    /// Called after processing each message.
+    ///
+    /// Use this hook to disable per-item tracing or perform cleanup.
     #[allow(unused_variables)]
     fn pool_item_post_process(pool_item_id: u64, thread_start_info: &mut Self::ThreadStartInfo) {
         // do nothing by default
     }
 
-    /// This method defines the algorithm to be used for routing a given pool item id
-    /// to a given pool item thread.
-    /// Usually just modding with the thread count is sufficient assuming that ids
-    /// are assigned linearly
+    /// Determines which thread handles a given pool item ID.
+    ///
+    /// The default implementation is `id % thread_count`, which distributes IDs
+    /// evenly across threads assuming sequential ID assignment.
+    ///
+    /// Override this for custom routing strategies (e.g., hash-based distribution
+    /// for non-sequential IDs).
     fn id_thread_router(id: u64, thread_count: usize) -> u64 {
         id % (thread_count as u64)
     }

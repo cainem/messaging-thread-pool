@@ -88,4 +88,19 @@ If the functionality is not required *ThreadStartInfo* can just be set to the un
 * **Documentation**: Added a new example `UserSession` demonstrating how to use `Rc<RefCell<T>>` with the thread pool, highlighting the library's ability to handle non-`Send`/`Sync` data types.
 * **Documentation**: Expanded `README.md` to detail the key advantages of the library: Sequential Consistency, Zero Contention, and Data Locality.
 
+## [5.0.1]
+
+### Documentation Improvements
+
+* **Comprehensive crate-level documentation**: Rewrote `lib.rs` with detailed overview, quick start guide, key concepts, and tested examples
+* **New `UserSession` sample**: Added canonical example in `samples::user_session` demonstrating `Rc<RefCell<T>>` usage with `HistoryTracker` for thread-local state management
+* **Enhanced `#[pool_item]` macro documentation**: Added comprehensive docs covering basic usage, `#[messaging]` attributes, optional parameters (`Init`, `Shutdown`), and generated types reference
+* **Improved trait documentation**: Enhanced docs for `PoolItem`, `IdTargeted`, `SenderAndReceiver`, and `SenderAndReceiverMock` with examples
+* **Samples module documentation**: Added module-level docs and examples for `chat_room`, `randoms`, and `randoms_batch`
+* **Legacy macro deprecation notice**: Added migration guidance in `api_specification` macro pointing users to the newer `#[pool_item]` approach
+* **Supporting module documentation**: Added docs for `id_provider`, `thread_request_response`, and related types
+* **Fixed documentation warnings**: Resolved broken intra-doc links and ambiguous references
+
+See also: [messaging-thread-pool-macros CHANGELOG](../messaging-thread-pool-macros/CHANGELOG.md)
+
 
