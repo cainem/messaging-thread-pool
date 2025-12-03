@@ -182,7 +182,7 @@ fn generate_request_struct(
     };
 
     quote! {
-        #[derive(Debug, Clone, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct #request_name #impl_generics ( #(pub #request_fields),*, #phantom_data ) #where_clause;
 
         impl #impl_generics messaging_thread_pool::IdTargeted for #request_name #ty_generics #where_clause {
@@ -223,7 +223,7 @@ fn generate_response_struct(
     };
 
     quote! {
-        #[derive(Debug, Clone, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct #response_name #impl_generics #where_clause {
             pub id: u64,
             pub result: #result_type,
@@ -314,7 +314,7 @@ fn generate_api_enum(
     quote! {
         #(#type_aliases)*
 
-        #[derive(Debug, PartialEq, Eq, Clone)]
+        #[derive(Debug, PartialEq, Clone)]
         pub enum #api_name #impl_generics #where_clause {
             #(#api_variants),*
         }
@@ -344,7 +344,7 @@ fn generate_init_struct(
     };
 
     quote! {
-        #[derive(Debug, PartialEq, Eq, Clone)]
+        #[derive(Debug, PartialEq, Clone)]
         pub struct #init_name #impl_generics (pub u64, #phantom_data) #where_clause;
 
         impl #impl_generics messaging_thread_pool::IdTargeted for #init_name #ty_generics #where_clause {

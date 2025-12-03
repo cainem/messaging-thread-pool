@@ -2,26 +2,64 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0]
+## [5.0.2]
 
-### Changes
+### Changed
 
-* Ditch Element trait in favour of PoolItem trait.\
-  The PoolItem trait provides a cleaner and hopefully more intuitive interface with which to communicate with items in
-  the pool.
+* Updated `messaging-thread-pool-macros` to 0.1.2. Generated request, response, API enum, and Init structs now derive `PartialEq` instead of `PartialEq, Eq`. This allows using types like `f64` and `Vec<f64>` in method signatures.
 
-## [2.0.0]
+See also: [messaging-thread-pool-macros CHANGELOG](../messaging-thread-pool-macros/CHANGELOG.md)
 
-* Add ThreadPoolSenderAndReceiver trait to allow for mocking of the thread pool
-* Flatten some namespaces
+## [5.0.1]
 
-## [2.0.1]
+### Documentation Improvements
 
-* Add Default to ThreadPoolMock
+* **Comprehensive crate-level documentation**: Rewrote `lib.rs` with detailed overview, quick start guide, key concepts, and tested examples
+* **New `UserSession` sample**: Added canonical example in `samples::user_session` demonstrating `Rc<RefCell<T>>` usage with `HistoryTracker` for thread-local state management
+* **Enhanced `#[pool_item]` macro documentation**: Added comprehensive docs covering basic usage, `#[messaging]` attributes, optional parameters (`Init`, `Shutdown`), and generated types reference
+* **Improved trait documentation**: Enhanced docs for `PoolItem`, `IdTargeted`, `SenderAndReceiver`, and `SenderAndReceiverMock` with examples
+* **Samples module documentation**: Added module-level docs and examples for `chat_room`, `randoms`, and `randoms_batch`
+* **Legacy macro deprecation notice**: Added migration guidance in `api_specification` macro pointing users to the newer `#[pool_item]` approach
+* **Supporting module documentation**: Added docs for `id_provider`, `thread_request_response`, and related types
+* **Fixed documentation warnings**: Resolved broken intra-doc links and ambiguous references
 
-## [2.0.2]
+See also: [messaging-thread-pool-macros CHANGELOG](../messaging-thread-pool-macros/CHANGELOG.md)
 
-* Add Default to AddResponse
+## [5.0.0]
+
+* **Breaking Change**: The `#[pool_item]` macro now generates request structs that include `PhantomData` for generic types. This requires updating the constructor calls for these requests to include `PhantomData`.
+* **Documentation**: Added a new example `UserSession` demonstrating how to use `Rc<RefCell<T>>` with the thread pool, highlighting the library's ability to handle non-`Send`/`Sync` data types.
+* **Documentation**: Expanded `README.md` to detail the key advantages of the library: Sequential Consistency, Zero Contention, and Data Locality.
+
+## [4.1.0]
+
+* Add api_specification macro to reduce the amount of boiler plate code needed to define the api on a pool item. \
+  It creates the api enum and implements all of the necessary *From* traits for the request/responses
+  See *Randoms* sample for an example of use.
+* Add *send_and_receive_once* to *ThreadPool* as a convenience when sending single messages
+
+## [4.0.0]
+
+### These changes were made primarily to allow logging and tracing to be catered for more efficiently
+
+* Add a new associated type *ThreadStartInfo* to PoolItem trait. 
+* Add a new *thread_start* function to PoolItem trait that optionally returns a *ThreadStartInfo* when a thread in the thread pool first starts up. This gives the opportunity to create state that is shared across all of the pool items using that thread
+* Add a new *pool_item_pre_process* function to PoolItem trait. This gets called prior to the thread switching context to a new pool item. A mutable copy of the shared state *ThreadStartInfo* is passed in.
+* Add a new *pool_item_post_process* function to PoolItem trait. This gets called once a message to a pool item has been processed and it is about to switch context to another pool item. A mutable copy of the shared state *ThreadStartInfo* is passed in.
+* Remove the function *add_pool_thread_tracing*. This is superseded by the 3 new function calls which give the opportunity to provide whatever logging is required.
+* Revert back to using u64 as IDs rather than usize. This was due to interop problems with WASM32.
+
+As started these changes were primarily made for logging/tracing reasons and the examples have been adjusted to show how this might be used. \
+The new shared state allows a single tracer to be used for all pool items or individual pool items can be conditionally traced. \
+If the functionality is not required *ThreadStartInfo* can just be set to the unit type () and the default behaviour of the three new functions is simply to do nothing.
+
+## [3.4.0]
+
+* Add a PoolItem function to provide custom id to thread mapping rather that relying on a simple mod
+* Add assert_is_complete to SenderAndReceiverMock
+* Add Send + Sync constraint on GuardDrop so that it can be used in async functions
+* Allow id currently being processed to be accessed with new id_being_processed() function
+* Add mimalloc benchmark to show the benefits of changing the default allocator (only tried on windows but the benefits were large)
 
 ## [3.1.0]
 
@@ -53,54 +91,25 @@ All notable changes to this project will be documented in this file.
 * tidy up add_pool_thread_tracing
 * add more logging
 
-## [3.4.0]
+## [2.0.2]
 
-* Add a PoolItem function to provide custom id to thread mapping rather that relying on a simple mod
-* Add assert_is_complete to SenderAndReceiverMock
-* Add Send + Sync constraint on GuardDrop so that it can be used in async functions
-* Allow id currently being processed to be accessed with new id_being_processed() function
-* Add mimalloc benchmark to show the benefits of changing the default allocator (only tried on windows but the benefits were large)
+* Add Default to AddResponse
 
-## [4.0.0]
-### These changes were made primarily to allow logging and tracing to be catered for more efficiently
+## [2.0.1]
 
-* Add a new associated type *ThreadStartInfo* to PoolItem trait. 
-* Add a new *thread_start* function to PoolItem trait that optionally returns a *ThreadStartInfo* when a thread in the thread pool first starts up. This gives the opportunity to create state that is shared across all of the pool items using that thread
-* Add a new *pool_item_pre_process* function to PoolItem trait. This gets called prior to the thread switching context to a new pool item. A mutable copy of the shared state *ThreadStartInfo* is passed in.
-* Add a new *pool_item_post_process* function to PoolItem trait. This gets called once a message to a pool item has been processed and it is about to switch context to another pool item. A mutable copy of the shared state *ThreadStartInfo* is passed in.
-* Remove the function *add_pool_thread_tracing*. This is superseded by the 3 new function calls which give the opportunity to provide whatever logging is required.
-* Revert back to using u64 as IDs rather than usize. This was due to interop problems with WASM32.
+* Add Default to ThreadPoolMock
 
-As started these changes were primarily made for logging/tracing reasons and the examples have been adjusted to show how this might be used. \
-The new shared state allows a single tracer to be used for all pool items or individual pool items can be conditionally traced. \
-If the functionality is not required *ThreadStartInfo* can just be set to the unit type () and the default behaviour of the three new functions is simply to do nothing.
+## [2.0.0]
 
-## [4.1.0]
+* Add ThreadPoolSenderAndReceiver trait to allow for mocking of the thread pool
+* Flatten some namespaces
 
-* Add api_specification macro to reduce the amount of boiler plate code needed to define the api on a pool item. \
-  It creates the api enum and implements all of the necessary *From* traits for the request/responses
-  See *Randoms* sample for an example of use.
-* Add *send_and_receive_once* to *ThreadPool* as a convenience when sending single messages
+## [1.0.0]
 
-## [5.0.0]
+### Changes
 
-* **Breaking Change**: The `#[pool_item]` macro now generates request structs that include `PhantomData` for generic types. This requires updating the constructor calls for these requests to include `PhantomData`.
-* **Documentation**: Added a new example `UserSession` demonstrating how to use `Rc<RefCell<T>>` with the thread pool, highlighting the library's ability to handle non-`Send`/`Sync` data types.
-* **Documentation**: Expanded `README.md` to detail the key advantages of the library: Sequential Consistency, Zero Contention, and Data Locality.
-
-## [5.0.1]
-
-### Documentation Improvements
-
-* **Comprehensive crate-level documentation**: Rewrote `lib.rs` with detailed overview, quick start guide, key concepts, and tested examples
-* **New `UserSession` sample**: Added canonical example in `samples::user_session` demonstrating `Rc<RefCell<T>>` usage with `HistoryTracker` for thread-local state management
-* **Enhanced `#[pool_item]` macro documentation**: Added comprehensive docs covering basic usage, `#[messaging]` attributes, optional parameters (`Init`, `Shutdown`), and generated types reference
-* **Improved trait documentation**: Enhanced docs for `PoolItem`, `IdTargeted`, `SenderAndReceiver`, and `SenderAndReceiverMock` with examples
-* **Samples module documentation**: Added module-level docs and examples for `chat_room`, `randoms`, and `randoms_batch`
-* **Legacy macro deprecation notice**: Added migration guidance in `api_specification` macro pointing users to the newer `#[pool_item]` approach
-* **Supporting module documentation**: Added docs for `id_provider`, `thread_request_response`, and related types
-* **Fixed documentation warnings**: Resolved broken intra-doc links and ambiguous references
-
-See also: [messaging-thread-pool-macros CHANGELOG](../messaging-thread-pool-macros/CHANGELOG.md)
+* Ditch Element trait in favour of PoolItem trait.\
+  The PoolItem trait provides a cleaner and hopefully more intuitive interface with which to communicate with items in
+  the pool.
 
 

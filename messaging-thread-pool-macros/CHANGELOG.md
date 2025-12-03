@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2]
+
+### Changed
+
+* Generated request, response, API enum, and Init structs now derive `PartialEq` instead of `PartialEq, Eq`. This allows using types like `f64` and `Vec<f64>` in method signatures, which implement `PartialEq` but not `Eq`.
+
 ## [0.1.1]
 
 * Added comprehensive documentation for the `#[pool_item]` attribute macro
