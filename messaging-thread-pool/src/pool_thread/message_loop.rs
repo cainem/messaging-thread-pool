@@ -636,4 +636,16 @@ mod tests {
             thread_shutdown_payload.children()
         )
     }
+
+    #[test]
+    fn given_request_sender_dropped_when_message_loop_runs_then_exits_cleanly_without_panic() {
+        let (_response_send, _response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        drop(request_send);
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        target.message_loop();
+    }
 }
