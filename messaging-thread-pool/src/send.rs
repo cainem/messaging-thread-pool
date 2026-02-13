@@ -1,10 +1,14 @@
+use crossbeam_channel::unbounded;
 use crossbeam_channel::{SendError, Sender};
 use tracing::{Level, event, instrument};
 
 use crate::{
-    ThreadPool, id_targeted::IdTargeted, pool_item::PoolItem,
-    request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
-    thread_request_response::ThreadRequestResponse,
+    ThreadPool,
+    id_targeted::IdTargeted,
+    pool_item::PoolItem,
+    request_with_response::RequestWithResponse,
+    sender_couplet::SenderCouplet,
+    thread_request_response::{ThreadAbortRequest, ThreadRequestResponse},
 };
 
 impl<P> ThreadPool<P>
@@ -32,6 +36,14 @@ where
             .read()
             .expect("no poisoned locks")
             .len();
+
+        if thread_count == 0 {
+            let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
+            return Err(SendError(SenderCouplet::<P>::new(
+                return_to,
+                ThreadAbortRequest(0),
+            )));
+        }
 
         let guard = self.thread_endpoints.read().expect("no poisoned locks");
 

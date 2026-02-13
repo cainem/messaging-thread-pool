@@ -171,9 +171,11 @@ where
             // loop will only exit here if the "main" thread has exited; this is not expected
         }
 
-        // to get here the "send end" of the channel must have been dropped which
-        // suggest that the main thread has ended.
-        panic!("message loop finished unexpectedly; thread shutting down");
+        event!(
+            Level::INFO,
+            "request channel closed; message loop exiting, thread_id={}",
+            self.thread_id
+        );
     }
 }
 

@@ -76,7 +76,9 @@ impl IdProviderMutex {
 
 impl Clone for IdProviderMutex {
     fn clone(&self) -> Self {
-        todo!()
+        Self {
+            internal_counter: Mutex::new(self.peek_next_id()),
+        }
     }
 }
 

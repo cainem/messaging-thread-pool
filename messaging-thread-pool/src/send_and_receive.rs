@@ -2,9 +2,12 @@ use crossbeam_channel::{SendError, unbounded};
 use tracing::instrument;
 
 use crate::{
-    ThreadPool, id_targeted::IdTargeted, pool_item::PoolItem,
-    request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
-    thread_request_response::ThreadRequestResponse,
+    ThreadPool,
+    id_targeted::IdTargeted,
+    pool_item::PoolItem,
+    request_with_response::RequestWithResponse,
+    sender_couplet::SenderCouplet,
+    thread_request_response::{ThreadAbortRequest, ThreadRequestResponse},
 };
 
 impl<P> ThreadPool<P>
@@ -35,13 +38,19 @@ where
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
+        let request_id = request.id();
         let mut responses = self.send_and_receive(std::iter::once(request))?;
         if let Some(response) = responses.next()
             && responses.next().is_none()
         {
             return Ok(response);
         }
-        panic!("too many responses");
+
+        let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
+        Err(SendError(SenderCouplet::new(
+            return_to,
+            ThreadAbortRequest(request_id),
+        )))
     }
 }
 
