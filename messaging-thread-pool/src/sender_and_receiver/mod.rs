@@ -55,11 +55,10 @@ use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_with_response::RequestWithResponse,
-    sender_couplet::SenderCouplet,
-    thread_request_response::{ThreadAbortRequest, ThreadRequestResponse},
+    sender_couplet::{SenderCouplet, thread_abort_send_error},
 };
 
-use crossbeam_channel::{SendError, unbounded};
+use crossbeam_channel::SendError;
 pub use sender_and_receiver_mock::SenderAndReceiverMock;
 
 /// Trait for types that can send requests to pool items and receive responses.
@@ -154,19 +153,11 @@ where
         let mut responses = self.send_and_receive(iter::once(request))?;
 
         let Some(response) = responses.next() else {
-            let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
-            return Err(SendError(SenderCouplet::new(
-                return_to,
-                ThreadAbortRequest(id),
-            )));
+            return Err(thread_abort_send_error::<P>(id));
         };
 
         if responses.next().is_some() {
-            let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
-            return Err(SendError(SenderCouplet::new(
-                return_to,
-                ThreadAbortRequest(id),
-            )));
+            return Err(thread_abort_send_error::<P>(id));
         }
 
         Ok(response)

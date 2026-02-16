@@ -6,8 +6,8 @@ use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_with_response::RequestWithResponse,
-    sender_couplet::SenderCouplet,
-    thread_request_response::{ThreadAbortRequest, ThreadRequestResponse},
+    sender_couplet::{SenderCouplet, thread_abort_send_error},
+    thread_request_response::ThreadRequestResponse,
 };
 
 impl<P> ThreadPool<P>
@@ -46,11 +46,7 @@ where
             return Ok(response);
         }
 
-        let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
-        Err(SendError(SenderCouplet::new(
-            return_to,
-            ThreadAbortRequest(request_id),
-        )))
+        Err(thread_abort_send_error::<P>(request_id))
     }
 }
 

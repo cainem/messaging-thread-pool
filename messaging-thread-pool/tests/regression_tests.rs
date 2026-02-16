@@ -28,7 +28,7 @@ fn given_shutdown_thread_pool_when_sending_then_returns_error_instead_of_panicki
 }
 
 #[test]
-fn given_sender_and_receiver_mock_with_no_responses_when_send_and_receive_one_then_no_panic() {
+fn given_sender_and_receiver_mock_with_no_responses_when_mock_send_and_receive_one_then_no_panic() {
     let mock = SenderAndReceiverMock::<Randoms, MeanRequest>::new(vec![]);
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -42,15 +42,13 @@ fn given_sender_and_receiver_mock_with_no_responses_when_send_and_receive_one_th
 }
 
 #[test]
-fn given_missing_pool_item_id_when_message_sent_then_no_panic() {
+fn given_missing_pool_item_id_when_message_sent_then_returns_error() {
     let pool = ThreadPool::<Randoms>::new(1);
 
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let _ = pool.send_and_receive_once(SumRequest(999));
-    }));
+    let result = pool.send_and_receive_once(SumRequest(999));
 
     assert!(
-        result.is_ok(),
-        "sending to a missing id should be handled without panic"
+        result.is_err(),
+        "sending to a missing id should return an error"
     );
 }

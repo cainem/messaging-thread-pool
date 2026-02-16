@@ -1,4 +1,3 @@
-use crossbeam_channel::unbounded;
 use crossbeam_channel::{SendError, Sender};
 use tracing::{Level, event, instrument};
 
@@ -7,9 +6,11 @@ use crate::{
     id_targeted::IdTargeted,
     pool_item::PoolItem,
     request_with_response::RequestWithResponse,
-    sender_couplet::SenderCouplet,
-    thread_request_response::{ThreadAbortRequest, ThreadRequestResponse},
+    sender_couplet::{SenderCouplet, thread_abort_send_error},
+    thread_request_response::ThreadRequestResponse,
 };
+
+const NO_THREAD_AVAILABLE_REQUEST_ID: u64 = u64::MAX;
 
 impl<P> ThreadPool<P>
 where
@@ -35,11 +36,7 @@ where
         let thread_count = guard.len();
 
         if thread_count == 0 {
-            let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
-            return Err(SendError(SenderCouplet::<P>::new(
-                return_to,
-                ThreadAbortRequest(0),
-            )));
+            return Err(thread_abort_send_error::<P>(NO_THREAD_AVAILABLE_REQUEST_ID));
         }
 
         let mut request_count = 0;

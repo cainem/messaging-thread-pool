@@ -185,12 +185,30 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
     use crossbeam_channel::unbounded;
+    use tracing::Level;
+    use tracing_subscriber::{layer::Context, prelude::*, registry::Registry};
 
     use crate::{
         pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
         thread_request_response::*,
     };
+
+    struct CapturingLayer {
+        events: Arc<Mutex<Vec<Level>>>,
+    }
+
+    impl<S> tracing_subscriber::layer::Layer<S> for CapturingLayer
+    where
+        S: tracing::Subscriber,
+    {
+        fn on_event(&self, event: &tracing::Event<'_>, _ctx: Context<'_, S>) {
+            let mut events = self.events.lock().expect("events mutex poisoned");
+            events.push(*event.metadata().level());
+        }
+    }
 
     #[test]
     fn send_init_id_2_twice_returns_response_indicating_second_request_was_ignored() {
@@ -648,10 +666,22 @@ mod tests {
         let (_response_send, _response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
         let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
 
+        let events = Arc::new(Mutex::new(Vec::<Level>::new()));
+        let subscriber = Registry::default().with(CapturingLayer {
+            events: Arc::clone(&events),
+        });
+        let _guard = tracing::subscriber::set_default(subscriber);
+
         drop(request_send);
 
         let mut target = PoolThread::new(1, request_receive);
 
         target.message_loop();
+
+        let captured_events = events.lock().expect("events mutex poisoned");
+        assert!(
+            captured_events.contains(&Level::INFO),
+            "expected at least one INFO-level log when request sender is dropped"
+        );
     }
 }

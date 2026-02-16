@@ -14,8 +14,8 @@ We already have deterministic failing tests for several concrete bugs. Miri/Loom
 ## Current Risk Areas to Target First
 
 1. `messaging-thread-pool/src/id_based_blocking/cloneable_id_based_writer.rs`
-   - `unsafe impl Send/Sync` over `Rc<UnsafeCell<_>>`
-   - Highest soundness risk; prioritize Miri and a Loom model around writer access patterns
+   - `Arc<Mutex<IdBasedWriter>>` coordination and cloning semantics
+   - Concurrency hotspot; prioritize a Loom model around writer access patterns and lock behavior
 
 2. `messaging-thread-pool/src/pool_thread/message_loop.rs`
    - Shutdown/abort/channel-closed state transitions
