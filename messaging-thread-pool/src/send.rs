@@ -31,11 +31,8 @@ where
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
-        let thread_count = self
-            .thread_endpoints
-            .read()
-            .expect("no poisoned locks")
-            .len();
+        let guard = self.thread_endpoints.read().expect("no poisoned locks");
+        let thread_count = guard.len();
 
         if thread_count == 0 {
             let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
@@ -45,22 +42,25 @@ where
             )));
         }
 
-        let guard = self.thread_endpoints.read().expect("no poisoned locks");
-
         let mut request_count = 0;
         for request in requests {
+            let request_id = request.id();
             // route to correct thread; share the load based on id and the mod of the thread count
-            let targeted = P::id_thread_router(request.id(), thread_count);
-            event!(
-                Level::DEBUG,
-                "Sending to target=[{}-{}], id=[{}], message type=[{}]",
-                P::name(),
-                targeted,
-                request.id(),
-                std::any::type_name::<T>()
-            );
-            event!(Level::TRACE, ?request);
-            guard[targeted as usize].send(&send_back_to.clone(), request)?;
+            let targeted = P::id_thread_router(request_id, thread_count);
+            if tracing::enabled!(Level::DEBUG) {
+                event!(
+                    Level::DEBUG,
+                    "Sending to target=[{}-{}], id=[{}], message type=[{}]",
+                    P::name(),
+                    targeted,
+                    request_id,
+                    std::any::type_name::<T>()
+                );
+            }
+            if tracing::enabled!(Level::TRACE) {
+                event!(Level::TRACE, ?request);
+            }
+            guard[targeted as usize].send(&send_back_to, request)?;
             request_count += 1;
         }
 

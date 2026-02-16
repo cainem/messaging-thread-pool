@@ -36,11 +36,13 @@ where
         let mut thread_start_info = P::thread_start();
 
         while let Ok(sender_couplet) = self.pool_thread_receiver.recv() {
-            event!(
-                Level::TRACE,
-                "receiving request {:?}",
-                sender_couplet.request(),
-            );
+            if tracing::enabled!(Level::TRACE) {
+                event!(
+                    Level::TRACE,
+                    "receiving request {:?}",
+                    sender_couplet.request(),
+                );
+            }
 
             let SenderCouplet { return_to, request } = sender_couplet;
 
@@ -145,7 +147,9 @@ where
 
                 _ => panic!("unrecognised thread thread request"),
             };
-            event!(Level::TRACE, ?response);
+            if tracing::enabled!(Level::TRACE) {
+                event!(Level::TRACE, ?response);
+            }
 
             match return_to.send(response) {
                 Ok(_) => (),
