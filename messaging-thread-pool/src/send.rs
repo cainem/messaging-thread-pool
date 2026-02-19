@@ -2,10 +2,15 @@ use crossbeam_channel::{SendError, Sender};
 use tracing::{Level, event, instrument};
 
 use crate::{
-    ThreadPool, id_targeted::IdTargeted, pool_item::PoolItem,
-    request_with_response::RequestWithResponse, sender_couplet::SenderCouplet,
+    ThreadPool,
+    id_targeted::IdTargeted,
+    pool_item::PoolItem,
+    request_with_response::RequestWithResponse,
+    sender_couplet::{SenderCouplet, thread_abort_send_error},
     thread_request_response::ThreadRequestResponse,
 };
+
+const NO_THREAD_AVAILABLE_REQUEST_ID: u64 = u64::MAX;
 
 impl<P> ThreadPool<P>
 where
@@ -27,28 +32,32 @@ where
     where
         T: RequestWithResponse<P> + IdTargeted,
     {
-        let thread_count = self
-            .thread_endpoints
-            .read()
-            .expect("no poisoned locks")
-            .len();
-
         let guard = self.thread_endpoints.read().expect("no poisoned locks");
+        let thread_count = guard.len();
+
+        if thread_count == 0 {
+            return Err(thread_abort_send_error::<P>(NO_THREAD_AVAILABLE_REQUEST_ID));
+        }
 
         let mut request_count = 0;
         for request in requests {
+            let request_id = request.id();
             // route to correct thread; share the load based on id and the mod of the thread count
-            let targeted = P::id_thread_router(request.id(), thread_count);
-            event!(
-                Level::DEBUG,
-                "Sending to target=[{}-{}], id=[{}], message type=[{}]",
-                P::name(),
-                targeted,
-                request.id(),
-                std::any::type_name::<T>()
-            );
-            event!(Level::TRACE, ?request);
-            guard[targeted as usize].send(&send_back_to.clone(), request)?;
+            let targeted = P::id_thread_router(request_id, thread_count);
+            if tracing::enabled!(Level::DEBUG) {
+                event!(
+                    Level::DEBUG,
+                    "Sending to target=[{}-{}], id=[{}], message type=[{}]",
+                    P::name(),
+                    targeted,
+                    request_id,
+                    std::any::type_name::<T>()
+                );
+            }
+            if tracing::enabled!(Level::TRACE) {
+                event!(Level::TRACE, ?request);
+            }
+            guard[targeted as usize].send(&send_back_to, request)?;
             request_count += 1;
         }
 

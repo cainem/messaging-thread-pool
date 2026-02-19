@@ -1,8 +1,9 @@
-use crossbeam_channel::Sender;
+use crossbeam_channel::{SendError, Sender, unbounded};
 
 use crate::{
-    pool_item::PoolItem, request_with_response::RequestWithResponse,
-    thread_request_response::ThreadRequestResponse,
+    pool_item::PoolItem,
+    request_with_response::RequestWithResponse,
+    thread_request_response::{ThreadAbortRequest, ThreadRequestResponse},
 };
 
 /// A struct that defines the contents of a message sent to the thread pool.
@@ -40,4 +41,15 @@ where
     pub fn return_to(&self) -> &Sender<ThreadRequestResponse<P>> {
         &self.return_to
     }
+}
+
+pub(crate) fn thread_abort_send_error<P>(request_id: u64) -> SendError<SenderCouplet<P>>
+where
+    P: PoolItem,
+{
+    let (return_to, _) = unbounded::<ThreadRequestResponse<P>>();
+    SendError(SenderCouplet::new(
+        return_to,
+        ThreadAbortRequest(request_id),
+    ))
 }

@@ -242,11 +242,11 @@ where
         }
 
         // convert type U1 to U via the intermediary ThreadRequestResponse
-        let results: Vec<_> = self
-            .returned_responses
-            .lock()
-            .unwrap()
-            .drain(..actual_count)
+        let mut returned_responses = self.returned_responses.lock().unwrap();
+        let available_count = returned_responses.len().min(actual_count);
+
+        let results: Vec<_> = returned_responses
+            .drain(..available_count)
             .map(<T1::Response as Into<ThreadRequestResponse<P>>>::into)
             .map(<T::Response as From<ThreadRequestResponse<P>>>::from)
             .collect();

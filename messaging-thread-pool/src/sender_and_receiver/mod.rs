@@ -52,8 +52,10 @@ mod thread_pool;
 use std::iter;
 
 use crate::{
-    id_targeted::IdTargeted, pool_item::PoolItem, request_with_response::RequestWithResponse,
-    sender_couplet::SenderCouplet,
+    id_targeted::IdTargeted,
+    pool_item::PoolItem,
+    request_with_response::RequestWithResponse,
+    sender_couplet::{SenderCouplet, thread_abort_send_error},
 };
 
 use crossbeam_channel::SendError;
@@ -151,14 +153,12 @@ where
         let mut responses = self.send_and_receive(iter::once(request))?;
 
         let Some(response) = responses.next() else {
-            // panics if there has been a down stream panic
-            panic!("response not received for request id {:?}", id);
+            return Err(thread_abort_send_error::<P>(id));
         };
 
-        assert!(
-            responses.next().is_none(),
-            "more than one response received"
-        );
+        if responses.next().is_some() {
+            return Err(thread_abort_send_error::<P>(id));
+        }
 
         Ok(response)
     }

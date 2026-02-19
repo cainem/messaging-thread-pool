@@ -75,8 +75,16 @@ impl IdProviderMutex {
 }
 
 impl Clone for IdProviderMutex {
+    /// Creates a snapshot clone of the current counter value.
+    ///
+    /// The clone does not share state with the original instance; both counters
+    /// continue independently from the same observed `peek_next_id()` value.
+    /// This is useful for deterministic test setup but can produce overlapping
+    /// ID sequences if both clones are used concurrently as independent providers.
     fn clone(&self) -> Self {
-        todo!()
+        Self {
+            internal_counter: Mutex::new(self.peek_next_id()),
+        }
     }
 }
 

@@ -36,11 +36,13 @@ where
         let mut thread_start_info = P::thread_start();
 
         while let Ok(sender_couplet) = self.pool_thread_receiver.recv() {
-            event!(
-                Level::TRACE,
-                "receiving request {:?}",
-                sender_couplet.request(),
-            );
+            if tracing::enabled!(Level::TRACE) {
+                event!(
+                    Level::TRACE,
+                    "receiving request {:?}",
+                    sender_couplet.request(),
+                );
+            }
 
             let SenderCouplet { return_to, request } = sender_couplet;
 
@@ -145,7 +147,9 @@ where
 
                 _ => panic!("unrecognised thread thread request"),
             };
-            event!(Level::TRACE, ?response);
+            if tracing::enabled!(Level::TRACE) {
+                event!(Level::TRACE, ?response);
+            }
 
             match return_to.send(response) {
                 Ok(_) => (),
@@ -171,20 +175,40 @@ where
             // loop will only exit here if the "main" thread has exited; this is not expected
         }
 
-        // to get here the "send end" of the channel must have been dropped which
-        // suggest that the main thread has ended.
-        panic!("message loop finished unexpectedly; thread shutting down");
+        event!(
+            Level::INFO,
+            "request channel closed; message loop exiting, thread_id={}",
+            self.thread_id
+        );
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
     use crossbeam_channel::unbounded;
+    use tracing::Level;
+    use tracing_subscriber::{layer::Context, prelude::*, registry::Registry};
 
     use crate::{
         pool_thread::PoolThread, samples::*, sender_couplet::SenderCouplet,
         thread_request_response::*,
     };
+
+    struct CapturingLayer {
+        events: Arc<Mutex<Vec<Level>>>,
+    }
+
+    impl<S> tracing_subscriber::layer::Layer<S> for CapturingLayer
+    where
+        S: tracing::Subscriber,
+    {
+        fn on_event(&self, event: &tracing::Event<'_>, _ctx: Context<'_, S>) {
+            let mut events = self.events.lock().expect("events mutex poisoned");
+            events.push(*event.metadata().level());
+        }
+    }
 
     #[test]
     fn send_init_id_2_twice_returns_response_indicating_second_request_was_ignored() {
@@ -635,5 +659,29 @@ mod tests {
             &Vec::<ThreadShutdownResponse>::default(),
             thread_shutdown_payload.children()
         )
+    }
+
+    #[test]
+    fn given_request_sender_dropped_when_message_loop_runs_then_exits_cleanly_without_panic() {
+        let (_response_send, _response_receive) = unbounded::<ThreadRequestResponse<Randoms>>();
+        let (request_send, request_receive) = unbounded::<SenderCouplet<Randoms>>();
+
+        let events = Arc::new(Mutex::new(Vec::<Level>::new()));
+        let subscriber = Registry::default().with(CapturingLayer {
+            events: Arc::clone(&events),
+        });
+        let _guard = tracing::subscriber::set_default(subscriber);
+
+        drop(request_send);
+
+        let mut target = PoolThread::new(1, request_receive);
+
+        target.message_loop();
+
+        let captured_events = events.lock().expect("events mutex poisoned");
+        assert!(
+            captured_events.contains(&Level::INFO),
+            "expected at least one INFO-level log when request sender is dropped"
+        );
     }
 }
