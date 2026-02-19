@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.0.3]
+
+### Fixed
+
+* Replaced unsafe shared writer internals in `CloneableIdBasedWriter` (`Rc<UnsafeCell<_>>` + `unsafe impl Send/Sync`) with `Arc<Mutex<_>>`, and added explicit lock-failure handling.
+* Replaced panic/assert paths with `SendError` returns in request/response APIs (`send`, `send_and_receive_once`, and `SenderAndReceiver::send_and_receive_one`).
+* Added a centralized helper for constructing abort-style send errors and standardized sentinel-id handling for "no thread available" error paths.
+* Fixed `SenderAndReceiverMock` to avoid panic when fewer mock responses are available than requested.
+* `PoolThread::message_loop` now exits cleanly with an INFO log when the request channel is closed, instead of panicking.
+* Implemented `Clone` for `IdProviderMutex` and documented snapshot clone semantics.
+
+### Performance
+
+* Reduced hot-path overhead in `send` and `message_loop` by gating debug/trace events and removing unnecessary sender cloning in the send path.
+
+### Added
+
+* Added `tests/regression_tests.rs` covering previously broken behavior around shutdown sends, missing responses, missing pool-item IDs, and `IdProviderMutex` cloning.
+* Added `miri_loom_todo.md` documenting phased Miri/Loom concurrency testing follow-up work.
+
 ## [5.0.2]
 
 ### Changed
